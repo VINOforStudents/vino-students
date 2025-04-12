@@ -1,5 +1,7 @@
 import os
 import glob
+from pydantic import BaseModel, Field
+from typing import List, Optional
 
 import chromadb
 import chromadb.utils.embedding_functions as embedding_functions
@@ -15,8 +17,34 @@ USER_UPLOADS_DIR = os.path.join(os.getcwd(), "user_uploads")  # Directory for us
 CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 200
 
+# Pydantic models for data validation
+class DocumentMetadata(BaseModel):
+    source: str
+    filename: str
+    chunk: int
+
+class DocumentChunk(BaseModel):
+    text: str
+    metadata: DocumentMetadata
+    id: str
+
+class ProcessingResult(BaseModel):
+    documents: List[str] = Field(default_factory=list)
+    metadatas: List[DocumentMetadata] = Field(default_factory=list)
+    ids: List[str] = Field(default_factory=list)
+    chunk_count: int = 0
+
 # Function to extract text from PDF
-def extract_text_from_pdf(pdf_path):
+def extract_text_from_pdf(pdf_path: str) -> str:
+    """
+    Extract text content from a PDF file.
+    
+    Args:
+        pdf_path: Path to the PDF file
+        
+    Returns:
+        Extracted text as a string
+    """
     text = ""
     try:
         with open(pdf_path, 'rb') as file:
@@ -29,11 +57,22 @@ def extract_text_from_pdf(pdf_path):
     return text
 
 # Function to process document content into chunks
-def process_document_content(file_path, content):
-    """Process document content into chunks with metadata and IDs."""
-    documents = []
-    metadatas = []
-    ids = []
+def process_document_content(file_path: str, content: str, 
+                            chunk_size: int = CHUNK_SIZE, 
+                            chunk_overlap: int = CHUNK_OVERLAP) -> ProcessingResult:
+    """
+    Process document content into chunks with metadata and IDs.
+    
+    Args:
+        file_path: Path to the source document
+        content: Text content to be chunked
+        chunk_size: Size of each chunk in characters
+        chunk_overlap: Number of characters to overlap between chunks
+        
+    Returns:
+        ProcessingResult containing document chunks, metadata, ids and chunk count
+    """
+    result = ProcessingResult()
     
     file_name = os.path.basename(file_path)
     doc_id_base = os.path.splitext(file_name)[0]
@@ -41,23 +80,28 @@ def process_document_content(file_path, content):
     # Skip if no content was extracted
     if not content.strip():
         print(f"Warning: No content extracted from {file_name}")
-        return documents, metadatas, ids
+        return result
     
     # Implement fixed-size chunking
     start_index = 0
     chunk_number = 1
     while start_index < len(content):
-        end_index = min(start_index + CHUNK_SIZE, len(content))
+        end_index = min(start_index + chunk_size, len(content))
         chunk = content[start_index:end_index]
 
-        documents.append(chunk)
-        metadatas.append({"source": file_path, "filename": file_name, "chunk": chunk_number})
-        ids.append(f"{doc_id_base}_chunk_{chunk_number}")
+        result.documents.append(chunk)
+        result.metadatas.append(DocumentMetadata(
+            source=file_path, 
+            filename=file_name, 
+            chunk=chunk_number
+        ))
+        result.ids.append(f"{doc_id_base}_chunk_{chunk_number}")
 
-        start_index += CHUNK_SIZE - CHUNK_OVERLAP
+        start_index += chunk_size - chunk_overlap
         chunk_number += 1
     
-    return documents, metadatas, ids, chunk_number - 1
+    result.chunk_count = chunk_number - 1
+    return result
 
 # Function to read text files and PDFs from a directory
 def load_documents_from_directory(directory_path):
@@ -80,14 +124,14 @@ def load_documents_from_directory(directory_path):
                     content = file.read()
 
             # Process the document content
-            docs, metas, ids, num_chunks = process_document_content(file_path, content)
+            result = process_document_content(file_path, content)
             
-            all_documents.extend(docs)
-            all_metadatas.extend(metas)
-            all_ids.extend(ids)
+            all_documents.extend(result.documents)
+            all_metadatas.extend(result.metadatas)
+            all_ids.extend(result.ids)
             
             file_name = os.path.basename(file_path)
-            print(f"Loaded {num_chunks} chunks from document: {file_name}")
+            print(f"Loaded {result.chunk_count} chunks from document: {file_name}")
 
         except Exception as e:
             print(f"Error loading {file_path}: {e}")
@@ -107,12 +151,12 @@ def load_user_document(file_path):
             return None, None, None, f"Unsupported file type: {file_path}. Supported types are PDF and text files."
 
         # Process the document content
-        docs, metas, ids, num_chunks = process_document_content(file_path, content)
+        result = process_document_content(file_path, content)
         
-        if not docs:
+        if not result.documents:
             return None, None, None, f"No content extracted from {os.path.basename(file_path)}"
             
-        return docs, metas, ids, f"Successfully processed {os.path.basename(file_path)} into {num_chunks} chunks"
+        return result.documents, result.metadatas, result.ids, f"Successfully processed {os.path.basename(file_path)} into {result.chunk_count} chunks"
     
     except Exception as e:
         return None, None, None, f"Error loading {file_path}: {str(e)}"
