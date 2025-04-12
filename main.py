@@ -11,6 +11,7 @@ from langchain_core.prompts import ChatPromptTemplate
 # Constants and Configuration
 CHROMA_DB_PATH = os.path.join(os.getcwd(), "chromadb")
 DOCUMENTS_DIR = os.path.join(os.getcwd(), "documents")
+USER_UPLOADS_DIR = os.path.join(os.getcwd(), "user_uploads")  # Directory for user uploads
 CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 200
 
@@ -27,22 +28,50 @@ def extract_text_from_pdf(pdf_path):
         print(f"Error extracting text from PDF {pdf_path}: {e}")
     return text
 
-# Function to read text files and PDFs from a directory
-def load_documents_from_directory(directory_path):
+# Function to process document content into chunks
+def process_document_content(file_path, content):
+    """Process document content into chunks with metadata and IDs."""
     documents = []
     metadatas = []
     ids = []
+    
+    file_name = os.path.basename(file_path)
+    doc_id_base = os.path.splitext(file_name)[0]
+    
+    # Skip if no content was extracted
+    if not content.strip():
+        print(f"Warning: No content extracted from {file_name}")
+        return documents, metadatas, ids
+    
+    # Implement fixed-size chunking
+    start_index = 0
+    chunk_number = 1
+    while start_index < len(content):
+        end_index = min(start_index + CHUNK_SIZE, len(content))
+        chunk = content[start_index:end_index]
+
+        documents.append(chunk)
+        metadatas.append({"source": file_path, "filename": file_name, "chunk": chunk_number})
+        ids.append(f"{doc_id_base}_chunk_{chunk_number}")
+
+        start_index += CHUNK_SIZE - CHUNK_OVERLAP
+        chunk_number += 1
+    
+    return documents, metadatas, ids, chunk_number - 1
+
+# Function to read text files and PDFs from a directory
+def load_documents_from_directory(directory_path):
+    all_documents = []
+    all_metadatas = []
+    all_ids = []
 
     # Get all .txt and .pdf files in the directory
     txt_files = glob.glob(os.path.join(directory_path, "*.txt"))
     pdf_files = glob.glob(os.path.join(directory_path, "*.pdf"))
     file_paths = txt_files + pdf_files
 
-    for i, file_path in enumerate(file_paths):
+    for file_path in file_paths:
         try:
-            file_name = os.path.basename(file_path)
-            doc_id_base = os.path.splitext(file_name)[0]
-
             # Handle different file types
             if file_path.lower().endswith('.pdf'):
                 content = extract_text_from_pdf(file_path)
@@ -50,35 +79,52 @@ def load_documents_from_directory(directory_path):
                 with open(file_path, 'r', encoding='utf-8') as file:
                     content = file.read()
 
-            # Skip if no content was extracted
-            if not content.strip():
-                print(f"Warning: No content extracted from {file_name}")
-                continue
-
-            # Implement fixed-size chunking
-            start_index = 0
-            chunk_number = 1
-            while start_index < len(content):
-                end_index = min(start_index + CHUNK_SIZE, len(content))
-                chunk = content[start_index:end_index]
-
-                documents.append(chunk)
-                metadatas.append({"source": file_path, "filename": file_name, "chunk": chunk_number})
-                ids.append(f"{doc_id_base}_chunk_{chunk_number}")
-
-                print(f"Loaded chunk {chunk_number} from document: {file_name}")
-
-                start_index += CHUNK_SIZE - CHUNK_OVERLAP
-                chunk_number += 1
+            # Process the document content
+            docs, metas, ids, num_chunks = process_document_content(file_path, content)
+            
+            all_documents.extend(docs)
+            all_metadatas.extend(metas)
+            all_ids.extend(ids)
+            
+            file_name = os.path.basename(file_path)
+            print(f"Loaded {num_chunks} chunks from document: {file_name}")
 
         except Exception as e:
             print(f"Error loading {file_path}: {e}")
 
-    return documents, metadatas, ids
+    return all_documents, all_metadatas, all_ids
 
-def query_and_respond(query_text, conversation_history):
+def load_user_document(file_path):
+    """Load a single document provided by the user."""
+    try:
+        # Handle different file types
+        if file_path.lower().endswith('.pdf'):
+            content = extract_text_from_pdf(file_path)
+        elif file_path.lower().endswith(('.txt', '.md', '.py', '.js', '.html', '.css', '.json')):
+            with open(file_path, 'r', encoding='utf-8') as file:
+                content = file.read()
+        else:
+            return None, None, None, f"Unsupported file type: {file_path}. Supported types are PDF and text files."
+
+        # Process the document content
+        docs, metas, ids, num_chunks = process_document_content(file_path, content)
+        
+        if not docs:
+            return None, None, None, f"No content extracted from {os.path.basename(file_path)}"
+            
+        return docs, metas, ids, f"Successfully processed {os.path.basename(file_path)} into {num_chunks} chunks"
+    
+    except Exception as e:
+        return None, None, None, f"Error loading {file_path}: {str(e)}"
+
+def query_and_respond(query_text, conversation_history, collection=None):
+    """Query collection and generate a response."""
+    # If collection not specified, use the framework collection by default
+    if collection is None:
+        collection = collection_fw
+    
     # Increase the number of results to get more context
-    query_results = collection_fw.query(
+    query_results = collection.query(
         query_texts=[query_text],
         n_results=5  # Increased from 3 to get more context
     )
@@ -110,8 +156,97 @@ def query_and_respond(query_text, conversation_history):
     else:
         return "No relevant information found. Please try a different question."
 
+def process_command(command):
+    """Process special commands."""
+    if command.startswith("/upload") or command.startswith("/add"):
+        # Extract file path from command if provided
+        parts = command.split(" ", 1)
+        if len(parts) > 1 and parts[1].strip():
+            file_path = parts[1].strip()
+            return upload_file(file_path)
+        else:
+            # Prompt for file path
+            file_path = input("Enter the path to the file you want to upload: ")
+            return upload_file(file_path)
+    elif command.startswith("/list"):
+        return list_uploaded_files()
+    elif command.startswith("/process"):
+        return process_uploaded_files()
+    
+    return None  # Not a command
+
+def list_uploaded_files():
+    """List all files that have been uploaded by the user."""
+    if not os.path.exists(USER_UPLOADS_DIR) or not os.listdir(USER_UPLOADS_DIR):
+        return "No files have been uploaded yet."
+    
+    files = os.listdir(USER_UPLOADS_DIR)
+    
+    # Get the details from the collection
+    user_docs = {}
+    try:
+        all_ids = collection_user.get(include=["metadatas"])
+        if all_ids and "metadatas" in all_ids:
+            for metadata in all_ids["metadatas"]:
+                if metadata and "filename" in metadata:
+                    filename = metadata["filename"]
+                    if filename not in user_docs:
+                        user_docs[filename] = 0
+                    user_docs[filename] += 1
+    except Exception as e:
+        return f"Error retrieving document information: {str(e)}"
+    
+    # Format the output
+        chunks = user_docs.get(file, "Unknown")
+        result += f"  - {file} ({chunks} chunks in database)\n"
+    
+    return result
+
+def upload_file(file_path):
+    """Upload a file to the user collection."""
+    # Handle relative paths - convert to absolute
+    if not os.path.isabs(file_path):
+        file_path = os.path.join(os.getcwd(), file_path)
+    
+    if not os.path.exists(file_path):
+        return f"File not found: {file_path}"
+    
+    # Create a copy in the user_uploads directory
+    os.makedirs(USER_UPLOADS_DIR, exist_ok=True)
+    file_name = os.path.basename(file_path)
+    destination_path = os.path.join(USER_UPLOADS_DIR, file_name)
+    
+    try:
+        # Copy the file to our uploads directory
+        with open(file_path, 'rb') as src_file:
+            with open(destination_path, 'wb') as dest_file:
+                dest_file.write(src_file.read())
+        print(f"Copied file to {destination_path}")
+    except Exception as e:
+        return f"Error copying file to uploads directory: {str(e)}"
+    
+    # Process the file
+    docs, metas, ids, message = load_user_document(destination_path)
+    
+    if docs is None:
+        return message
+    
+    # Add to user collection
+    try:
+        collection_user.add(
+            documents=docs,
+            metadatas=metas,
+            ids=ids
+        )
+        return f"{message}. Added to your documents collection."
+    except Exception as e:
+        return f"Error adding document to collection: {str(e)}"
+
 def run_chat_interface():
     print("Chat with Gemini 1.5 Pro (type 'exit' to quit)")
+    print("Special commands:")
+    print("  /upload or /add [filepath] - Upload a document (absolute or relative path)")
+    print("  /list - List all uploaded documents")
     print("-" * 50)
 
     while True:
@@ -120,6 +255,14 @@ def run_chat_interface():
         if user_input.lower() == "exit":
             print("Goodbye!")
             break
+            
+        # Check if this is a special command
+        if user_input.startswith("/"):
+            result = process_command(user_input)
+            if result:
+                print(f"System: {result}")
+                print("-" * 50)
+                continue
 
         # Get document context and response
         answer = query_and_respond(user_input, conversation_history)
@@ -155,15 +298,21 @@ def initialize_vector_db():
     google_ef = embedding_functions.GoogleGenerativeAiEmbeddingFunction(api_key=api_key)
     
     try:
-        # Create or get collection
+        # Create or get the frameworks collection
         collection_fw = client.get_or_create_collection(
             name="frameworks", 
             embedding_function=google_ef
         )
         
+        # Create or get the user documents collection
+        collection_user = client.get_or_create_collection(
+            name="user_documents",
+            embedding_function=google_ef
+        )
+        
         # Process documents only if needed
         if collection_fw.count() == 0:
-            print("Collection is empty. Loading documents...")
+            print("Frameworks collection is empty. Loading documents...")
             docs, metas, ids = load_documents_from_directory(DOCUMENTS_DIR)
             
             # Add documents to collection if any were loaded
@@ -173,13 +322,15 @@ def initialize_vector_db():
                     metadatas=metas,
                     ids=ids
                 )
-                print(f"Added {len(docs)} document chunks to the collection.")
+                print(f"Added {len(docs)} document chunks to the frameworks collection.")
             else:
                 print("No documents were loaded. Please check the directory path.")
         else:
-            print(f"Using existing collection with {collection_fw.count()} document chunks.")
+            print(f"Using existing frameworks collection with {collection_fw.count()} document chunks.")
         
-        return collection_fw
+        print(f"User documents collection has {collection_user.count()} document chunks.")
+        
+        return collection_fw, collection_user
         
     except Exception as e:
         print(f"Error initializing ChromaDB collection: {e}")
@@ -188,9 +339,9 @@ def initialize_vector_db():
 def main():
     """Main application entry point."""
     # Initialize the model and conversation
-    global collection_fw, chain, conversation_history
+    global collection_fw, collection_user, chain, conversation_history
     
-    collection_fw = initialize_vector_db()
+    collection_fw, collection_user = initialize_vector_db()
     conversation_history = []
     chain = prompt | model
     
@@ -199,6 +350,9 @@ def main():
 
 if __name__ == "__main__":
     load_dotenv()
+    
+    # Ensure upload directory exists
+    os.makedirs(USER_UPLOADS_DIR, exist_ok=True)
     
     api_key = os.getenv("GOOGLE_API_KEY")
     if not api_key:
