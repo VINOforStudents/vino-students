@@ -197,10 +197,58 @@ def list_uploaded_files():
         return f"Error retrieving document information: {str(e)}"
     
     # Format the output
+    result = "Uploaded files:\n"
+    for file in files:
         chunks = user_docs.get(file, "Unknown")
         result += f"  - {file} ({chunks} chunks in database)\n"
     
     return result
+
+def process_uploaded_files():
+    """Process all files in the user_uploads directory that haven't been processed yet."""
+    if not os.path.exists(USER_UPLOADS_DIR) or not os.listdir(USER_UPLOADS_DIR):
+        return "No files found in the uploads directory."
+    
+    # Get all files in the user_uploads directory
+    files = os.listdir(USER_UPLOADS_DIR)
+    processed_count = 0
+    error_count = 0
+    results = []
+    
+    # Process each file
+    for file_name in files:
+        file_path = os.path.join(USER_UPLOADS_DIR, file_name)
+        
+        # Skip directories
+        if os.path.isdir(file_path):
+            continue
+            
+        # Process the file
+        docs, metas, ids, message = load_user_document(file_path)
+        
+        if docs is None:
+            results.append(f"Error: {message}")
+            error_count += 1
+        else:
+            # Add to user collection
+            try:
+                collection_user.add(
+                    documents=docs,
+                    metadatas=metas,
+                    ids=ids
+                )
+                results.append(f"Success: {message}")
+                processed_count += 1
+            except Exception as e:
+                results.append(f"Error adding {file_name} to collection: {str(e)}")
+                error_count += 1
+    
+    # Prepare result message
+    if processed_count == 0 and error_count == 0:
+        return "No compatible files found to process."
+    
+    summary = f"Processed {processed_count} files with {error_count} errors.\n"
+    return summary + "\n".join(results)
 
 def upload_file(file_path):
     """Upload a file to the user collection."""
@@ -247,6 +295,7 @@ def run_chat_interface():
     print("Special commands:")
     print("  /upload or /add [filepath] - Upload a document (absolute or relative path)")
     print("  /list - List all uploaded documents")
+    print("  /process - Process all files in the uploads directory")
     print("-" * 50)
 
     while True:
