@@ -77,9 +77,10 @@ def load_documents_from_directory(directory_path):
     return documents, metadatas, ids
 
 def query_and_respond(query_text, conversation_history):
+    # Increase the number of results to get more context
     query_results = collection_fw.query(
         query_texts=[query_text],
-        n_results=3
+        n_results=5  # Increased from 3 to get more context
     )
 
     # Build conversation context from history
@@ -90,12 +91,17 @@ def query_and_respond(query_text, conversation_history):
             content = entry["content"]
             conversation_context += f"{role.capitalize()}: {content}\n"
 
+    # Combine all retrieved document chunks into a comprehensive context
+    combined_context = ""
     if query_results['documents'] and query_results['documents'][0]:
-        context = query_results['documents'][0][0]
-
-        # Use the template variables directly
+        # Join all retrieved chunks with separators for better context
+        for i, doc in enumerate(query_results['documents'][0]):
+            source = query_results['metadatas'][0][i]['filename'] if 'metadatas' in query_results and query_results['metadatas'][0] else "Unknown source"
+            combined_context += f"\n--- From {source} ---\n{doc}\n"
+        
+        # Use the template variables with the combined context
         response = chain.invoke({
-            "context": context,
+            "context": combined_context,
             "history": conversation_context,
             "question": query_text
         })
@@ -105,7 +111,6 @@ def query_and_respond(query_text, conversation_history):
         return "No relevant information found. Please try a different question."
 
 def run_chat_interface():
-
     print("Chat with Gemini 1.5 Pro (type 'exit' to quit)")
     print("-" * 50)
 
@@ -126,20 +131,6 @@ def run_chat_interface():
         print(f"Gemini: {answer}")
         print("-" * 50)
 
-load_dotenv()
-
-api_key = os.getenv("GOOGLE_API_KEY")
-if not api_key:
-    raise ValueError("API key not found. Please set the GOOGLE_API_KEY environment variable.")
-
-model = ChatGoogleGenerativeAI(
-    model="gemini-1.5-pro",
-    temperature=0,
-    max_tokens=None,
-    timeout=None,
-    max_retries=2
-)
-
 # System prompt
 prompt = ChatPromptTemplate.from_messages([
     (
@@ -149,7 +140,6 @@ prompt = ChatPromptTemplate.from_messages([
     (
         "human",
         """I have the following context:
-
         {context}
 
         Conversation history:
@@ -159,32 +149,67 @@ prompt = ChatPromptTemplate.from_messages([
     )
 ])
 
-# Initialize ChromaDB client
-client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
-google_ef = embedding_functions.GoogleGenerativeAiEmbeddingFunction(api_key=api_key)
+def initialize_vector_db():
+    """Initialize ChromaDB and load documents if needed."""
+    client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
+    google_ef = embedding_functions.GoogleGenerativeAiEmbeddingFunction(api_key=api_key)
+    
+    try:
+        # Create or get collection
+        collection_fw = client.get_or_create_collection(
+            name="frameworks", 
+            embedding_function=google_ef
+        )
+        
+        # Process documents only if needed
+        if collection_fw.count() == 0:
+            print("Collection is empty. Loading documents...")
+            docs, metas, ids = load_documents_from_directory(DOCUMENTS_DIR)
+            
+            # Add documents to collection if any were loaded
+            if docs:
+                collection_fw.add(
+                    documents=docs,
+                    metadatas=metas,
+                    ids=ids
+                )
+                print(f"Added {len(docs)} document chunks to the collection.")
+            else:
+                print("No documents were loaded. Please check the directory path.")
+        else:
+            print(f"Using existing collection with {collection_fw.count()} document chunks.")
+        
+        return collection_fw
+        
+    except Exception as e:
+        print(f"Error initializing ChromaDB collection: {e}")
+        raise
 
-
-collection_fw = client.get_collection(name="frameworks", embedding_function=google_ef)
-
-# Specify  directory containing .txt  and .pdf files
-documents_dir = DOCUMENTS_DIR
-
-# Load documents from the directory
-docs, metas, ids = load_documents_from_directory(documents_dir)
-
-# Add documents to collection
-if docs:
-    collection_fw.add(
-        documents=docs,
-        metadatas=metas,
-        ids=ids
-    )
-else:
-    print("No documents were loaded. Please check the directory path.")
-
-conversation_history = []
-
-chain = prompt | model
+def main():
+    """Main application entry point."""
+    # Initialize the model and conversation
+    global collection_fw, chain, conversation_history
+    
+    collection_fw = initialize_vector_db()
+    conversation_history = []
+    chain = prompt | model
+    
+    # Start chat interface
+    run_chat_interface()
 
 if __name__ == "__main__":
-    run_chat_interface()
+    load_dotenv()
+    
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        raise ValueError("API key not found. Please set the GOOGLE_API_KEY environment variable.")
+    
+    model = ChatGoogleGenerativeAI(
+        model="gemini-1.5-pro",
+        temperature=0,
+        max_tokens=None,
+        timeout=None,
+        max_retries=2
+    )
+    
+    main()
