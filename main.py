@@ -117,16 +117,28 @@ def load_user_document(file_path):
     except Exception as e:
         return None, None, None, f"Error loading {file_path}: {str(e)}"
 
+def add_results_to_context(results, section_title, context=""):
+    """Add search results to the context string with proper formatting."""
+    if results['documents'] and results['documents'][0]:
+        context += f"\n--- {section_title} ---\n"
+        for i, doc in enumerate(results['documents'][0]):
+            source = results['metadatas'][0][i]['filename'] if 'metadatas' in results and results['metadatas'][0] else "Unknown source"
+            context += f"\n--- From {source} ---\n{doc}\n"
+        return context, True
+    return context, False
+
 def query_and_respond(query_text, conversation_history, collection=None):
-    """Query collection and generate a response."""
-    # If collection not specified, use the framework collection by default
-    if collection is None:
-        collection = collection_fw
-    
-    # Increase the number of results to get more context
-    query_results = collection.query(
+    """Query collections and generate a response."""
+    # Query frameworks collection
+    fw_results = collection_fw.query(
         query_texts=[query_text],
-        n_results=5  # Increased from 3 to get more context
+        n_results=3  # Get top 3 from frameworks
+    )
+    
+    # Query user collection
+    user_results = collection_user.query(
+        query_texts=[query_text],
+        n_results=3  # Get top 3 from user docs
     )
 
     # Build conversation context from history
@@ -139,19 +151,18 @@ def query_and_respond(query_text, conversation_history, collection=None):
 
     # Combine all retrieved document chunks into a comprehensive context
     combined_context = ""
-    if query_results['documents'] and query_results['documents'][0]:
-        # Join all retrieved chunks with separators for better context
-        for i, doc in enumerate(query_results['documents'][0]):
-            source = query_results['metadatas'][0][i]['filename'] if 'metadatas' in query_results and query_results['metadatas'][0] else "Unknown source"
-            combined_context += f"\n--- From {source} ---\n{doc}\n"
-        
-        # Use the template variables with the combined context
+    
+    # Add both collections' results
+    combined_context, has_fw_results = add_results_to_context(fw_results, "From Framework Documents", combined_context)
+    combined_context, has_user_results = add_results_to_context(user_results, "From Your Documents", combined_context)
+    
+    # If we have context, generate a response
+    if has_fw_results or has_user_results:
         response = chain.invoke({
             "context": combined_context,
             "history": conversation_context,
             "question": query_text
         })
-
         return response.content
     else:
         return "No relevant information found. Please try a different question."
