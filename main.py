@@ -9,8 +9,8 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 
 # Constants and Configuration
-CHROMA_DB_PATH = "D:\\chromadb"
-DOCUMENTS_DIR = "D:\\programs\\exploration\\chatbot_env\\documents"
+CHROMA_DB_PATH = os.path.join(os.getcwd(), "chromadb")
+DOCUMENTS_DIR = os.path.join(os.getcwd(), "documents")
 CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 200
 
