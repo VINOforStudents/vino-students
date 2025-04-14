@@ -25,6 +25,9 @@ except Exception as e:
 
 class State(rx.State):
     """The app state."""
+    # Maximum number of entries to keep in chat history
+    MAX_HISTORY_LENGTH = 10  
+    
     # The current question being asked.
     question: str = "" # Initialize with an empty string
 
@@ -40,6 +43,12 @@ class State(rx.State):
         self.question = question
 
     @rx.event
+    def clear_chat_history(self):
+        """Clear the entire chat history to free up memory."""
+        self.chat_history = []
+        return
+
+    @rx.event
     async def answer(self):
         """
         Processes the user question, streams response from Gemini, updates history.
@@ -50,6 +59,11 @@ class State(rx.State):
             print("❓ Question is empty, skipping API call.")
             return
 
+        # Trim chat history if it exceeds maximum length
+        if len(self.chat_history) >= self.MAX_HISTORY_LENGTH:
+            # Keep only the most recent entries
+            self.chat_history = self.chat_history[-(self.MAX_HISTORY_LENGTH-1):]
+            
         question_to_log = self.question # Store before clearing the input field
         print(f"Processing question: {question_to_log}")
 
@@ -73,8 +87,8 @@ class State(rx.State):
             # 2. Prepare generation configuration (optional)
             generation_config = genai.types.GenerationConfig(
                 temperature=0.7,
+                max_output_tokens=1024,  # Limit token size to prevent memory issues
                 # You can add other parameters like:
-                # max_output_tokens=2048,
                 # stop_sequences=["\n\n", "---"]
             )
 
