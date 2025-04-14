@@ -9,7 +9,7 @@ message_style = dict(
     border_radius="5px",
     margin_y="0.5em",
     box_shadow=shadow,
-    max_width="30em",
+    max_width="40em",
     display="inline-block",
 )
 
@@ -28,7 +28,7 @@ input_style = dict(
     border_width="1px",
     padding="0.5em",
     box_shadow=shadow,
-    width="350px",
+    width="40em",
 )
 button_style = dict(
     background_color=rx.color("accent", 10),

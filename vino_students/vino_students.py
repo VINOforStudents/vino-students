@@ -36,7 +36,7 @@ def action_bar() -> rx.Component:
             style=style.input_style,
         ),
         rx.button(
-            "Ask",
+            "Send",
             on_click=State.answer,
             style=style.button_style,
         ),
