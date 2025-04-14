@@ -6,4 +6,14 @@ assets/external/
 __pycache__/
 .venv/
 .env
+<<<<<<< HEAD
 chromadb/
+=======
+
+# ChromaDB
+chroma_db/
+.chroma/
+chromadb/
+*.sqlite3
+*.parquet
+>>>>>>> 981b911548ae1ad38eb3803ffe5c5d1ac96a912e
