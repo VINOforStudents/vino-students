@@ -12,35 +12,6 @@ import NextHead from "next/head"
 
 
 
-export function Comp_6ed195c6e7c81364b7d78c0830607748 () {
-  
-  const ref_my_upload = useRef(null); refs["ref_my_upload"] = ref_my_upload;
-  const [addEvents, connectErrors] = useContext(EventLoopContext);
-  const [filesById, setFilesById] = useContext(UploadFilesContext);
-  const on_drop_efb1646e227894bf574e6bf836c0ccee = useCallback(e => setFilesById(filesById => {
-    const updatedFilesById = Object.assign({}, filesById);
-    updatedFilesById["my_upload"] = e;
-    return updatedFilesById;
-  })
-    , [addEvents, Event, filesById, setFilesById])
-  const {getRootProps: hpzmdmgo, getInputProps: xoxelmrs}  = useDropzone(({ ["onDrop"] : on_drop_efb1646e227894bf574e6bf836c0ccee, ["multiple"] : true, ["id"] : "my_upload" }));
-
-
-
-
-
-  
-  return (
-    <>
-
-<RadixThemesBox className={"rx-Upload"} css={({ ["text"] : "Upload a file", ["width"] : "20%", ["marginTop"] : "1em", ["marginBottom"] : "1em", ["border"] : "1px dashed var(--accent-12)", ["padding"] : "5em", ["textAlign"] : "center" })} id={"my_upload"} ref={ref_my_upload} {...hpzmdmgo()}>
-
-<input type={"file"} {...xoxelmrs()}/>
-</RadixThemesBox>
-</>
-  )
-}
-
 export function Button_ab0170d6094145421d8a6ddcc4b3b4f7 () {
   
   const [addEvents, connectErrors] = useContext(EventLoopContext);
@@ -59,7 +30,23 @@ export function Button_ab0170d6094145421d8a6ddcc4b3b4f7 () {
   )
 }
 
-export function Box_44b97ca4c47754923fc2894850b22819 () {
+export function Debounceinput_34d47963b3f03d69c2e036c53c9ca8e8 () {
+  
+  const reflex___state____state__vino_students___state____state = useContext(StateContexts.reflex___state____state__vino_students___state____state)
+  const [addEvents, connectErrors] = useContext(EventLoopContext);
+
+
+  const on_change_994401bfc05f073394175594a8d43ab8 = useCallback(((_e) => (addEvents([(Event("reflex___state____state.vino_students___state____state.set_question", ({ ["question"] : _e["target"]["value"] }), ({  })))], [_e], ({  })))), [addEvents, Event])
+
+
+
+  
+  return (
+    <DebounceInput css={({ ["borderWidth"] : "1px", ["padding"] : "0.5em", ["boxShadow"] : "rgba(0, 0, 0, 0.15) 0px 2px 8px", ["width"] : "40em" })} debounceTimeout={300} element={RadixThemesTextField.Root} onChange={on_change_994401bfc05f073394175594a8d43ab8} placeholder={"Ask a question"} value={reflex___state____state__vino_students___state____state.question}/>
+  )
+}
+
+export function Box_48710e3950eb2954005c71714b7f074e () {
   
   const reflex___state____state__vino_students___state____state = useContext(StateContexts.reflex___state____state__vino_students___state____state)
 
@@ -71,8 +58,8 @@ export function Box_44b97ca4c47754923fc2894850b22819 () {
   return (
     <RadixThemesBox>
 
-<>{ reflex___state____state__vino_students___state____state.chat_history.map((messages, index_24a3764f9ed187ce) => (
-  <RadixThemesBox css={({ ["marginTop"] : "1em", ["marginBottom"] : "1em", ["width"] : "100%" })} key={index_24a3764f9ed187ce}>
+<>{ reflex___state____state__vino_students___state____state.chat_history.map((messages, index_ac1e201e6488cc8e) => (
+  <RadixThemesBox css={({ ["marginTop"] : "1em", ["marginBottom"] : "1em", ["width"] : "100%" })} key={index_ac1e201e6488cc8e}>
 
 <RadixThemesBox css={({ ["textAlign"] : "right" })}>
 
@@ -94,19 +81,32 @@ export function Box_44b97ca4c47754923fc2894850b22819 () {
   )
 }
 
-export function Debounceinput_34d47963b3f03d69c2e036c53c9ca8e8 () {
+export function Comp_8ed2595efe4b62f2ec7b684c1e31085f () {
   
-  const reflex___state____state__vino_students___state____state = useContext(StateContexts.reflex___state____state__vino_students___state____state)
+  const ref_my_upload = useRef(null); refs["ref_my_upload"] = ref_my_upload;
   const [addEvents, connectErrors] = useContext(EventLoopContext);
+  const [filesById, setFilesById] = useContext(UploadFilesContext);
+  const on_drop_efb1646e227894bf574e6bf836c0ccee = useCallback(e => setFilesById(filesById => {
+    const updatedFilesById = Object.assign({}, filesById);
+    updatedFilesById["my_upload"] = e;
+    return updatedFilesById;
+  })
+    , [addEvents, Event, filesById, setFilesById])
+  const {getRootProps: oygekpvi, getInputProps: nmoilvsv}  = useDropzone(({ ["onDrop"] : on_drop_efb1646e227894bf574e6bf836c0ccee, ["multiple"] : true, ["id"] : "my_upload" }));
 
 
-  const on_change_994401bfc05f073394175594a8d43ab8 = useCallback(((_e) => (addEvents([(Event("reflex___state____state.vino_students___state____state.set_question", ({ ["question"] : _e["target"]["value"] }), ({  })))], [_e], ({  })))), [addEvents, Event])
 
 
 
   
   return (
-    <DebounceInput css={({ ["borderWidth"] : "1px", ["padding"] : "0.5em", ["boxShadow"] : "rgba(0, 0, 0, 0.15) 0px 2px 8px", ["width"] : "40em" })} debounceTimeout={300} element={RadixThemesTextField.Root} onChange={on_change_994401bfc05f073394175594a8d43ab8} placeholder={"Ask a question"} value={reflex___state____state__vino_students___state____state.question}/>
+    <>
+
+<RadixThemesBox className={"rx-Upload"} css={({ ["text"] : "Upload a file", ["width"] : "20%", ["marginTop"] : "1em", ["marginBottom"] : "1em", ["border"] : "1px dashed var(--accent-12)", ["padding"] : "5em", ["textAlign"] : "center" })} id={"my_upload"} ref={ref_my_upload} {...oygekpvi()}>
+
+<input type={"file"} {...nmoilvsv()}/>
+</RadixThemesBox>
+</>
   )
 }
 
@@ -123,14 +123,14 @@ export default function Component() {
 
 <RadixThemesFlex align={"center"} className={"rx-Stack"} css={({ ["height"] : "100vh" })} direction={"column"} gap={"4"}>
 
-<Box_44b97ca4c47754923fc2894850b22819/>
+<Box_48710e3950eb2954005c71714b7f074e/>
 <RadixThemesFlex css={({ ["flex"] : 1, ["justifySelf"] : "stretch", ["alignSelf"] : "stretch" })}/>
 <RadixThemesFlex align={"start"} className={"rx-Stack"} direction={"row"} gap={"3"}>
 
 <Debounceinput_34d47963b3f03d69c2e036c53c9ca8e8/>
 <Button_ab0170d6094145421d8a6ddcc4b3b4f7/>
 </RadixThemesFlex>
-<Comp_6ed195c6e7c81364b7d78c0830607748/>
+<Comp_8ed2595efe4b62f2ec7b684c1e31085f/>
 </RadixThemesFlex>
 </RadixThemesContainer>
 <NextHead>
