@@ -457,7 +457,7 @@ def main():
     run_chat_interface()
 
 if __name__ == "__main__":
-    load_dotenv()
+    load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
     
     # Ensure upload directory exists
     os.makedirs(USER_UPLOADS_DIR, exist_ok=True)

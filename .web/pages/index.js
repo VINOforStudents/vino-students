@@ -12,70 +12,6 @@ import NextHead from "next/head"
 
 
 
-export function Box_acb95edbb969c5ceccc9d6e1802fe1c4 () {
-  
-  const reflex___state____state__vino_students___state____state = useContext(StateContexts.reflex___state____state__vino_students___state____state)
-
-
-
-
-
-  
-  return (
-    <RadixThemesBox>
-
-<>{ reflex___state____state__vino_students___state____state.chat_history.map((messages, index_d5797f8bed0e4812) => (
-  <RadixThemesBox css={({ ["marginTop"] : "1em", ["marginBottom"] : "1em", ["width"] : "100%" })} key={index_d5797f8bed0e4812}>
-
-<RadixThemesBox css={({ ["textAlign"] : "right" })}>
-
-<RadixThemesText as={"p"} css={({ ["padding"] : "1em", ["borderRadius"] : "5px", ["marginTop"] : "0.5em", ["marginBottom"] : "0.5em", ["boxShadow"] : "rgba(0, 0, 0, 0.15) 0px 2px 8px", ["maxWidth"] : "40em", ["display"] : "inline-block", ["marginLeft"] : "20%", ["backgroundColor"] : "var(--gray-4)" })}>
-
-{messages.at(0)}
-</RadixThemesText>
-</RadixThemesBox>
-<RadixThemesBox css={({ ["textAlign"] : "left" })}>
-
-<RadixThemesText as={"p"} css={({ ["padding"] : "1em", ["borderRadius"] : "5px", ["marginTop"] : "0.5em", ["marginBottom"] : "0.5em", ["boxShadow"] : "rgba(0, 0, 0, 0.15) 0px 2px 8px", ["maxWidth"] : "40em", ["display"] : "inline-block", ["marginRight"] : "20%", ["backgroundColor"] : "var(--cyan-8)" })}>
-
-{messages.at(1)}
-</RadixThemesText>
-</RadixThemesBox>
-</RadixThemesBox>
-))}</>
-</RadixThemesBox>
-  )
-}
-
-export function Comp_08ec5777f9de1896199c4ff104232423 () {
-  
-  const ref_my_upload = useRef(null); refs["ref_my_upload"] = ref_my_upload;
-  const [addEvents, connectErrors] = useContext(EventLoopContext);
-  const [filesById, setFilesById] = useContext(UploadFilesContext);
-  const on_drop_efb1646e227894bf574e6bf836c0ccee = useCallback(e => setFilesById(filesById => {
-    const updatedFilesById = Object.assign({}, filesById);
-    updatedFilesById["my_upload"] = e;
-    return updatedFilesById;
-  })
-    , [addEvents, Event, filesById, setFilesById])
-  const {getRootProps: azbcvzwn, getInputProps: eoxybnvq}  = useDropzone(({ ["onDrop"] : on_drop_efb1646e227894bf574e6bf836c0ccee, ["multiple"] : true, ["id"] : "my_upload" }));
-
-
-
-
-
-  
-  return (
-    <>
-
-<RadixThemesBox className={"rx-Upload"} css={({ ["text"] : "Upload a file", ["width"] : "20%", ["marginTop"] : "1em", ["marginBottom"] : "1em", ["border"] : "1px dashed var(--accent-12)", ["padding"] : "5em", ["textAlign"] : "center" })} id={"my_upload"} ref={ref_my_upload} {...azbcvzwn()}>
-
-<input type={"file"} {...eoxybnvq()}/>
-</RadixThemesBox>
-</>
-  )
-}
-
 export function Debounceinput_d14b5dccd36bca94038dff934954cf5b () {
   
   const reflex___state____state__vino_students___state____state = useContext(StateContexts.reflex___state____state__vino_students___state____state)
@@ -110,6 +46,70 @@ export function Button_ab0170d6094145421d8a6ddcc4b3b4f7 () {
   )
 }
 
+export function Box_69b5645dec774feb11bfd7428045a673 () {
+  
+  const reflex___state____state__vino_students___state____state = useContext(StateContexts.reflex___state____state__vino_students___state____state)
+
+
+
+
+
+  
+  return (
+    <RadixThemesBox>
+
+<>{ reflex___state____state__vino_students___state____state.chat_history.map((messages, index_495b100dc09c44c2) => (
+  <RadixThemesBox css={({ ["marginTop"] : "1em", ["marginBottom"] : "1em", ["width"] : "100%" })} key={index_495b100dc09c44c2}>
+
+<RadixThemesBox css={({ ["textAlign"] : "right" })}>
+
+<RadixThemesText as={"p"} css={({ ["padding"] : "1em", ["borderRadius"] : "5px", ["marginTop"] : "0.5em", ["marginBottom"] : "0.5em", ["boxShadow"] : "rgba(0, 0, 0, 0.15) 0px 2px 8px", ["maxWidth"] : "40em", ["display"] : "inline-block", ["marginLeft"] : "20%", ["backgroundColor"] : "var(--gray-4)" })}>
+
+{messages.at(0)}
+</RadixThemesText>
+</RadixThemesBox>
+<RadixThemesBox css={({ ["textAlign"] : "left" })}>
+
+<RadixThemesText as={"p"} css={({ ["padding"] : "1em", ["borderRadius"] : "5px", ["marginTop"] : "0.5em", ["marginBottom"] : "0.5em", ["boxShadow"] : "rgba(0, 0, 0, 0.15) 0px 2px 8px", ["maxWidth"] : "40em", ["display"] : "inline-block", ["marginRight"] : "20%", ["backgroundColor"] : "var(--cyan-8)" })}>
+
+{messages.at(1)}
+</RadixThemesText>
+</RadixThemesBox>
+</RadixThemesBox>
+))}</>
+</RadixThemesBox>
+  )
+}
+
+export function Comp_282eb7689e4b107713c1710f37d25dcd () {
+  
+  const ref_my_upload = useRef(null); refs["ref_my_upload"] = ref_my_upload;
+  const [addEvents, connectErrors] = useContext(EventLoopContext);
+  const [filesById, setFilesById] = useContext(UploadFilesContext);
+  const on_drop_efb1646e227894bf574e6bf836c0ccee = useCallback(e => setFilesById(filesById => {
+    const updatedFilesById = Object.assign({}, filesById);
+    updatedFilesById["my_upload"] = e;
+    return updatedFilesById;
+  })
+    , [addEvents, Event, filesById, setFilesById])
+  const {getRootProps: qtujxirr, getInputProps: seieoigx}  = useDropzone(({ ["onDrop"] : on_drop_efb1646e227894bf574e6bf836c0ccee, ["multiple"] : true, ["id"] : "my_upload" }));
+
+
+
+
+
+  
+  return (
+    <>
+
+<RadixThemesBox className={"rx-Upload"} css={({ ["text"] : "Upload a file", ["width"] : "20%", ["marginTop"] : "1em", ["marginBottom"] : "1em", ["border"] : "1px dashed var(--accent-12)", ["padding"] : "5em", ["textAlign"] : "center" })} id={"my_upload"} ref={ref_my_upload} {...qtujxirr()}>
+
+<input type={"file"} {...seieoigx()}/>
+</RadixThemesBox>
+</>
+  )
+}
+
 export default function Component() {
     
 
@@ -123,14 +123,14 @@ export default function Component() {
 
 <RadixThemesFlex align={"center"} className={"rx-Stack"} css={({ ["height"] : "100vh" })} direction={"column"} gap={"4"}>
 
-<Box_acb95edbb969c5ceccc9d6e1802fe1c4/>
+<Box_69b5645dec774feb11bfd7428045a673/>
 <RadixThemesFlex css={({ ["flex"] : 1, ["justifySelf"] : "stretch", ["alignSelf"] : "stretch" })}/>
 <RadixThemesFlex align={"start"} className={"rx-Stack"} direction={"row"} gap={"3"}>
 
 <Debounceinput_d14b5dccd36bca94038dff934954cf5b/>
 <Button_ab0170d6094145421d8a6ddcc4b3b4f7/>
 </RadixThemesFlex>
-<Comp_08ec5777f9de1896199c4ff104232423/>
+<Comp_282eb7689e4b107713c1710f37d25dcd/>
 </RadixThemesFlex>
 </RadixThemesContainer>
 <NextHead>
