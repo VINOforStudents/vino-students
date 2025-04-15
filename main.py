@@ -349,38 +349,38 @@ def upload_file(file_path):
     except Exception as e:
         return f"Error adding document to collection: {str(e)}"
 
-def run_chat_interface():
-    print("Chat with Gemini 1.5 Pro (type 'exit' to quit)")
-    print("Special commands:")
-    print("  /upload or /add [filepath] - Upload a document (absolute or relative path)")
-    print("  /list - List all uploaded documents")
-    print("  /process - Process all files in the uploads directory")
-    print("-" * 50)
+# def run_chat_interface():
+#     print("Chat with Gemini 1.5 Pro (type 'exit' to quit)")
+#     print("Special commands:")
+#     print("  /upload or /add [filepath] - Upload a document (absolute or relative path)")
+#     print("  /list - List all uploaded documents")
+#     print("  /process - Process all files in the uploads directory")
+#     print("-" * 50)
 
-    while True:
-        user_input = input("You: ")
+#     while True:
+#         user_input = input("You: ")
 
-        if user_input.lower() == "exit":
-            print("Goodbye!")
-            break
+#         if user_input.lower() == "exit":
+#             print("Goodbye!")
+#             break
             
-        # Check if this is a special command
-        if user_input.startswith("/"):
-            result = process_command(user_input)
-            if result:
-                print(f"System: {result}")
-                print("-" * 50)
-                continue
+#         # Check if this is a special command
+#         if user_input.startswith("/"):
+#             result = process_command(user_input)
+#             if result:
+#                 print(f"System: {result}")
+#                 print("-" * 50)
+#                 continue
 
-        # Get document context and response
-        answer = query_and_respond(user_input, conversation_history)
+#         # Get document context and response
+#         answer = query_and_respond(user_input, conversation_history)
 
-        # Add this exchange to history
-        conversation_history.append({"role": "user", "content": user_input})
-        conversation_history.append({"role": "assistant", "content": answer})
+#         # Add this exchange to history
+#         conversation_history.append({"role": "user", "content": user_input})
+#         conversation_history.append({"role": "assistant", "content": answer})
 
-        print(f"Gemini: {answer}")
-        print("-" * 50)
+#         print(f"Gemini: {answer}")
+#         print("-" * 50)
 
 # System prompt
 prompt = ChatPromptTemplate.from_messages([
@@ -444,34 +444,30 @@ def initialize_vector_db():
         print(f"Error initializing ChromaDB collection: {e}")
         raise
 
-def main():
-    """Main application entry point."""
-    # Initialize the model and conversation
-    global collection_fw, collection_user, chain, conversation_history
+# def main():
+#     """Main application entry point."""
+#     # Initialize the model and conversation
+#     global collection_fw, collection_user, chain, conversation_history
     
-    collection_fw, collection_user = initialize_vector_db()
-    conversation_history = []
-    chain = prompt | model
+#     collection_fw, collection_user = initialize_vector_db()
+#     conversation_history = []
+#     chain = prompt | model
     
-    # Start chat interface
-    run_chat_interface()
+#     # Start chat interface
+#     run_chat_interface()
+load_dotenv()
+    
+# Ensure upload directory exists
+os.makedirs(USER_UPLOADS_DIR, exist_ok=True)
 
-if __name__ == "__main__":
-    load_dotenv()
-    
-    # Ensure upload directory exists
-    os.makedirs(USER_UPLOADS_DIR, exist_ok=True)
-    
-    api_key = os.getenv("GOOGLE_API_KEY")
-    if not api_key:
-        raise ValueError("API key not found. Please set the GOOGLE_API_KEY environment variable.")
-    
-    model = ChatGoogleGenerativeAI(
-        model="gemini-1.5-pro",
-        temperature=0,
-        max_tokens=None,
-        timeout=None,
-        max_retries=2
-    )
-    
-    main()
+api_key = os.getenv("GOOGLE_API_KEY")
+if not api_key:
+    raise ValueError("API key not found. Please set the GOOGLE_API_KEY environment variable.")
+
+model = ChatGoogleGenerativeAI(
+    model="gemini-1.5-pro",
+    temperature=0,
+    max_tokens=None,
+    timeout=None,
+    max_retries=2
+)
