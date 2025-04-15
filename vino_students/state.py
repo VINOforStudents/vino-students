@@ -1,26 +1,9 @@
 import reflex as rx
-import google.generativeai as genai
 import os
-import asyncio # May not be strictly needed if reflex manages the event loop
+import asyncio
+import httpx
 
-# --- Google GenAI Configuration ---
-# Ensure the Google API Key is set in your environment variables
-# e.g., export GOOGLE_API_KEY='YOUR_API_KEY'
-# This configuration should ideally run once when your application starts.
-try:
-    api_key = os.environ.get("GOOGLE_API_KEY")
-    if not api_key:
-        raise ValueError(
-            "🔴 Error: GOOGLE_API_KEY environment variable not set. "
-            "Please set it and restart the application."
-        )
-    genai.configure(api_key=api_key)
-    print("✅ Google GenAI configured successfully.")
-except Exception as e:
-    print(f"🔴 Error configuring Google GenAI: {e}")
-    # You might want to prevent the app from fully starting or show an error state
-    # depending on your application's requirements.
-
+BACKEND_API_URL = "http://127.0.0.1:8000"
 # ---------------------------------
 
 class State(rx.State):
@@ -29,103 +12,122 @@ class State(rx.State):
     MAX_HISTORY_LENGTH = 10  
     
     # The current question being asked.
-    question: str = "" # Initialize with an empty string
+    question: str = ""  # Initialize with an empty string
 
     # Keep track of the chat history as a list of (question, answer) tuples.
     chat_history: list[tuple[str, str]] = []
 
-    # Note: set_question is usually not needed if you bind the input field directly
-    # to self.question using rx.Input(value=State.question, on_change=State.set_question)
-    # or preferably just rx.Input(value=State.question, on_change=State.set_question) -> State.question
-    # Let's keep it for now if you have a specific use case.
+    is_loading: bool = False
+    error_message: str = ""
+
     def set_question(self, question: str):
-        """Set the question."""
+        """Set the current question text."""
         self.question = question
 
     @rx.event
     def clear_chat_history(self):
-        """Clear the entire chat history to free up memory."""
+        """Clear the chat history and any error messages."""
         self.chat_history = []
-        return
+        self.error_message = ""
 
     @rx.event
     async def answer(self):
-        """
-        Processes the user question, streams response from Gemini, updates history.
-        This replaces the previous placeholder 'answer' method.
-        """
-        # Immediately return if the question is empty or whitespace only
+        """Process the current question and get an answer from the backend API."""
+        # Skip empty questions
         if not self.question or not self.question.strip():
             print("❓ Question is empty, skipping API call.")
             return
 
-        # Trim chat history if it exceeds maximum length
-        if len(self.chat_history) >= self.MAX_HISTORY_LENGTH:
-            # Keep only the most recent entries
-            self.chat_history = self.chat_history[-(self.MAX_HISTORY_LENGTH-1):]
-            
-        question_to_log = self.question # Store before clearing the input field
-        print(f"Processing question: {question_to_log}")
+        # Start loading state
+        self.is_loading = True
+        self.error_message = ""
+        yield  # Update UI to show loading state
 
-        # Add a placeholder answer to the history immediately
-        # Use a temporary marker or empty string for the answer part
-        placeholder_answer = "..." # Or simply ""
-        self.chat_history.append((question_to_log, placeholder_answer))
+        # Prepare question and add placeholder in chat history
+        question_to_send = self.question
+        self.chat_history.append((question_to_send, "..."))
+        self.question = ""  # Clear input field
+        yield  # Update UI with placeholder
 
-        # Clear the question input field on the frontend
-        self.question = ""
+        try:
+            # Call backend API
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{BACKEND_API_URL}/chat",
+                    json={"question": question_to_send},
+                    timeout=30.0
+                )
+                response.raise_for_status()
+                
+                # Process response
+                response_data = response.json()
+                backend_answer = response_data.get("answer", "Error: No answer received.")
+                
+                # Update chat history with actual response
+                self.chat_history[-1] = (question_to_send, backend_answer)
 
-        # Yield state update to clear input and show placeholder before API call
+        except httpx.HTTPStatusError as e:
+            # Handle HTTP errors (e.g., 404, 500) from backend
+            error_detail = e.response.json().get("detail", e.response.text)
+            print(f"🔴 HTTP error calling backend: {e.response.status_code} - {error_detail}")
+            self.error_message = f"Error: {error_detail}"
+            self.chat_history[-1] = (
+                question_to_send, 
+                f"Error: Failed to get response ({e.response.status_code})"
+            )
+        except httpx.RequestError as e:
+            # Handle network errors (e.g., connection refused)
+            print(f"🔴 Network error calling backend: {e}")
+            self.error_message = "Error: Could not connect to the backend service."
+            self.chat_history[-1] = (question_to_send, "Error: Connection failed.")
+        except Exception as e:
+            # Handle other unexpected errors
+            print(f"🔴 Unexpected error in answer handler: {e}")
+            self.error_message = "An unexpected error occurred."
+            self.chat_history[-1] = (question_to_send, "Error: An unexpected error occurred.")
+        finally:
+            # Stop loading indicator regardless of success or failure
+            self.is_loading = False
+            yield  # Update UI
+
+    # --- File Upload Handler ---
+    async def handle_upload(self, files: list[rx.UploadFile]):
+        """Handle files uploaded via rx.upload."""
+        self.is_loading = True  # Show loading indicator
+        self.error_message = ""
         yield
 
-        # --- Asynchronous Gemini API Call ---
-        try:
-            # 1. Get the generative model instance
-            # Using gemini-1.5-flash as a capable and fast default
-            model = genai.GenerativeModel("gemini-1.5-flash-latest")
+        upload_results = []
+        async with httpx.AsyncClient() as client:
+            for file in files:
+                try:
+                    # Read file content provided by Reflex
+                    file_content = await file.read()
 
-            # 2. Prepare generation configuration (optional)
-            generation_config = genai.types.GenerationConfig(
-                temperature=0.7,
-                max_output_tokens=1024,  # Limit token size to prevent memory issues
-                # You can add other parameters like:
-                # stop_sequences=["\n\n", "---"]
-            )
-
-            # 3. Start the asynchronous streaming call
-            print("📡 Calling Gemini API...")
-            stream = await model.generate_content_async(
-                question_to_log, # Use the stored question
-                generation_config=generation_config,
-            )
-            print("✅ Stream started.")
-
-            # 4. Process the stream chunk by chunk
-            accumulated_answer = ""
-            async for chunk in stream:
-                # Check if the chunk contains text (safer access)
-                if hasattr(chunk, 'text') and chunk.text:
-                    accumulated_answer += chunk.text
-                    # Update the last entry in chat_history with the streamed content
-                    self.chat_history[-1] = (
-                        question_to_log,
-                        accumulated_answer,
+                    # Send file to backend /upload endpoint
+                    response = await client.post(
+                        f"{BACKEND_API_URL}/upload",
+                        files={"file": (file.filename, file_content, file.content_type)},
+                        timeout=60.0  # Allow more time for uploads
                     )
-                    yield # Yield to update the frontend progressively
+                    response.raise_for_status()
 
-            print("✅ Stream finished.")
+                    # Add success message (you could display this in the UI)
+                    result_detail = response.json().get("detail", f"Uploaded {file.filename}")
+                    upload_results.append(result_detail)
+                    print(f"✅ {result_detail}")
 
-        except Exception as e:
-            # Handle potential API errors or other issues during generation
-            print(f"🔴 An error occurred during Gemini API call: {e}")
-            # Update the placeholder answer with an error message
-            error_message = f"Error: Could not get response. ({e})"
-            # Ensure we are updating the correct entry if history changed unexpectedly
-            # (though with yield, it should be the last one)
-            if self.chat_history and self.chat_history[-1][0] == question_to_log:
-                 self.chat_history[-1] = (question_to_log, error_message)
-            else:
-                 # This case is unlikely if placeholder was added correctly
-                 self.chat_history.append((question_to_log, error_message))
-            yield # Yield to update UI with the error message
-        # --- End Asynchronous Gemini API Call ---
+                except httpx.HTTPStatusError as e:
+                    error_detail = e.response.json().get("detail", e.response.text)
+                    print(f"🔴 HTTP error uploading {file.filename}: {e.response.status_code} - {error_detail}")
+                    self.error_message = f"Error uploading {file.filename}: {error_detail}"
+                    upload_results.append(f"Error uploading {file.filename}")
+                    # Optionally break or continue on error
+                except Exception as e:
+                    print(f"🔴 Error processing upload {file.filename}: {e}")
+                    self.error_message = f"Error uploading {file.filename}."
+                    upload_results.append(f"Error uploading {file.filename}")
+
+        self.is_loading = False
+        # Optionally update UI with upload_results details
+        yield
