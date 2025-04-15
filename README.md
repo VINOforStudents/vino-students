@@ -33,6 +33,16 @@ cd vino-students
 
 **2.. Install uv(if not installed):**
 
+uv offers several advantages:
+
+* Faster package installation
+* Better dependency resolution
+* Built-in venv management
+* Written in Rust for improved performance
+* Compatible with existing Python tooling
+* The rest of the README can remain the same.
+
+
 ```bash
 pip install uv
 ```
