@@ -4,7 +4,6 @@ import reflex as rx
 from rxconfig import config
 from vino_students.state import State
 from vino_students import style
-import httpx
 
 def chat() -> rx.Component:
     return rx.box(
