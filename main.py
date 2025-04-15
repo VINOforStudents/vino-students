@@ -89,12 +89,16 @@ def process_document_content(file_path: str, content: str,
         end_index = min(start_index + chunk_size, len(content))
         chunk = content[start_index:end_index]
 
-        result.documents.append(chunk)
-        result.metadatas.append(DocumentMetadata(
+        # Create DocumentMetadata object then convert to dict
+        metadata = DocumentMetadata(
             source=file_path, 
             filename=file_name, 
             chunk=chunk_number
-        ))
+        ).model_dump()  # For newer Pydantic (v2)
+        # Use .dict() instead if using Pydantic v1
+
+        result.documents.append(chunk)
+        result.metadatas.append(metadata)  # Store dict instead of Pydantic model
         result.ids.append(f"{doc_id_base}_chunk_{chunk_number}")
 
         start_index += chunk_size - chunk_overlap
