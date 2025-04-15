@@ -44,38 +44,42 @@ def action_bar() -> rx.Component:
     )
 
 def index() -> rx.Component:
-    return rx.container(
-        rx.vstack(
-            chat(),
-            rx.spacer(),
-            action_bar(),
-            # Configure the upload component
-            rx.upload(
-                rx.vstack(
-                    rx.button("Select File(s)"),
-                    rx.text("Drag and drop files here or click to select files."),
+    return rx.box(
+        # Clear history button fixed in top right
+        rx.button(
+            "Clear History",
+            on_click=State.clear_chat_history,
+            color_scheme="red",
+            size="2",
+            variant="outline",
+            position="fixed",
+            top="1em",
+            right="1em",
+            z_index="999",  # Ensures button stays on top of other content
+        ),
+        # Main container with the rest of your content
+        rx.container(
+            rx.vstack(
+                chat(),
+                rx.spacer(),
+                action_bar(),
+                # Configure the upload component
+                rx.upload(
+                    # ...existing upload component code...
                 ),
-                id="my_upload",
-                border="1px dotted rgb(107,114,128)",
-                padding="2em",
-                width="40em", # Match input width maybe?
-                margin_top="1em",
-                margin_bottom="1em",
-                # --- Connect the upload handler ---
-                on_drop=State.handle_upload(rx.upload_files()), # Call handler on drop/select
-                # You might want multiple=True if allowing multiple uploads
-            ),
-            # Add loading/error indicators
-            rx.cond(
-                State.is_loading,
-                rx.spinner(size="2"), 
-                rx.text(State.error_message, color="red", margin_top="0.5em")
+                # Add loading/error indicators
+                rx.cond(
+                    State.is_loading,
+                    rx.spinner(size="2"), 
+                    rx.text(State.error_message, color="red", margin_top="0.5em")
+                ),
+                align="center",
+                height="100vh",
+                spacing="4",
             ),
             align="center",
-            height="100vh",
-            spacing="4",
         ),
-        align="center",
+        width="100%",
     )
 
 app = rx.App()
