@@ -9,12 +9,21 @@
 
 # System Architecture
 
-Based on:
+Based on a possible MVP architecture discussed and presented during meetings:
 
 ![Discussed Architecture](image.png)
 
-Focused to establish a simplicstic RAG and CAG system.
+Focused to establish a simplicstic RAG and CAG system, connecting it through an API and attaching the corresponding services to it.
 
+
+
+**Scoped out features for Sprint 2[ending on 17/04]:**
+ * Users
+ * API for whole application
+ * LLM Service
+ * Advanced Preprocessing
+
+After scoping down to a POC instead of including an API and LLM service as shown above, we put everything into one simplified codebase that implements the following:
 
 ```mermaid
 ---
