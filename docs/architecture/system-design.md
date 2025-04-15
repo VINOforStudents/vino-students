@@ -3,6 +3,12 @@
 Focused to establish a simplicstic RAG and CAG system.
 
 ```mermaid
+---
+config:
+    layout: default
+    look: handDrawn
+    theme: dark
+---
 graph TD
     subgraph "Frontend"
         GUI[Reflex Web GUI]
@@ -29,10 +35,6 @@ graph TD
     UD --> DOC
     VDB <--> LLM
     GUI --> UD
-
-    classDef frontend fill:#d0e1f9,stroke:#333;
-    classDef backend fill:#e1f9d0,stroke:#333;
-    classDef storage fill:#f9e1d0,stroke:#333;
 
     class GUI,CLI frontend;
     class VDB,LLM,DOC backend;
