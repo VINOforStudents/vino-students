@@ -61,7 +61,6 @@ graph TD
 5. User queries trigger similarity search
 6. Relevant context is sent to LLM
 7. LLM generates response
-// ...existing code...
 
 ## Sequence Diagram
 
