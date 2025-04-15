@@ -1,6 +1,20 @@
+
+# Table of Contents
+
+- [Table of Contents](#table-of-contents)
+- [System Architecture](#system-architecture)
+  - [Component Description](#component-description)
+  - [Data Flow](#data-flow)
+  - [Sequence Diagram](#sequence-diagram)
+
 # System Architecture
 
+Based on:
+
+![Discussed Architecture](image.png)
+
 Focused to establish a simplicstic RAG and CAG system.
+
 
 ```mermaid
 ---
