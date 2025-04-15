@@ -1,40 +1,113 @@
+"""
+Document processing and retrieval system using ChromaDB and LLM.
+This module provides functions for document handling, vector database operations,
+and LLM-based question answering to be used by API endpoints.
+"""
+
+# Standard library imports
 import os
 import glob
-from pydantic import BaseModel, Field
 from typing import List, Optional
 
+# Third-party imports
 import chromadb
 import chromadb.utils.embedding_functions as embedding_functions
 import PyPDF2
+from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 
-# Constants and Configuration
+#------------------------------------------------------------------------------
+# CONSTANTS AND CONFIGURATION
+#------------------------------------------------------------------------------
+
 CHROMA_DB_PATH = os.path.join(os.getcwd(), "chromadb")
 DOCUMENTS_DIR = os.path.join(os.getcwd(), "documents")
-USER_UPLOADS_DIR = os.path.join(os.getcwd(), "user_uploads")  # Directory for user uploads
+USER_UPLOADS_DIR = os.path.join(os.getcwd(), "user_uploads")
 CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 200
 
-# Pydantic models for data validation
+#------------------------------------------------------------------------------
+# DATA MODELS
+#------------------------------------------------------------------------------
+
 class DocumentMetadata(BaseModel):
+    """Metadata for a document chunk."""
     source: str
     filename: str
     chunk: int
 
 class DocumentChunk(BaseModel):
+    """A chunk of text with its metadata and ID."""
     text: str
     metadata: DocumentMetadata
     id: str
 
 class ProcessingResult(BaseModel):
+    """Results from processing a document."""
     documents: List[str] = Field(default_factory=list)
     metadatas: List[DocumentMetadata] = Field(default_factory=list)
     ids: List[str] = Field(default_factory=list)
     chunk_count: int = 0
 
-# Function to extract text from PDF
+#------------------------------------------------------------------------------
+# DATABASE OPERATIONS
+#------------------------------------------------------------------------------
+
+def initialize_vector_db():
+    """
+    Initialize ChromaDB and load documents if needed.
+    
+    Returns:
+        tuple: (frameworks_collection, user_documents_collection)
+    """
+    client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
+    google_ef = embedding_functions.GoogleGenerativeAiEmbeddingFunction(api_key=api_key)
+    
+    try:
+        # Create or get the frameworks collection
+        collection_fw = client.get_or_create_collection(
+            name="frameworks", 
+            embedding_function=google_ef
+        )
+        
+        # Create or get the user documents collection
+        collection_user = client.get_or_create_collection(
+            name="user_documents",
+            embedding_function=google_ef
+        )
+        
+        # Process documents only if needed
+        if collection_fw.count() == 0:
+            print("Frameworks collection is empty. Loading documents...")
+            docs, metas, ids = load_documents_from_directory(DOCUMENTS_DIR)
+            
+            # Add documents to collection if any were loaded
+            if docs:
+                collection_fw.add(
+                    documents=docs,
+                    metadatas=metas,
+                    ids=ids
+                )
+                print(f"Added {len(docs)} document chunks to the frameworks collection.")
+            else:
+                print("No documents were loaded. Please check the directory path.")
+        else:
+            print(f"Using existing frameworks collection with {collection_fw.count()} document chunks.")
+        
+        print(f"User documents collection has {collection_user.count()} document chunks.")
+        
+        return collection_fw, collection_user
+        
+    except Exception as e:
+        print(f"Error initializing ChromaDB collection: {e}")
+        raise
+
+#------------------------------------------------------------------------------
+# DOCUMENT PROCESSING
+#------------------------------------------------------------------------------
+
 def extract_text_from_pdf(pdf_path: str) -> str:
     """
     Extract text content from a PDF file.
@@ -43,7 +116,7 @@ def extract_text_from_pdf(pdf_path: str) -> str:
         pdf_path: Path to the PDF file
         
     Returns:
-        Extracted text as a string
+        str: Extracted text as a string
     """
     text = ""
     try:
@@ -56,7 +129,6 @@ def extract_text_from_pdf(pdf_path: str) -> str:
         print(f"Error extracting text from PDF {pdf_path}: {e}")
     return text
 
-# Function to process document content into chunks
 def process_document_content(file_path: str, content: str, 
                             chunk_size: int = CHUNK_SIZE, 
                             chunk_overlap: int = CHUNK_OVERLAP) -> ProcessingResult:
@@ -107,8 +179,16 @@ def process_document_content(file_path: str, content: str,
     result.chunk_count = chunk_number - 1
     return result
 
-# Function to read text files and PDFs from a directory
 def load_documents_from_directory(directory_path):
+    """
+    Read and process all supported documents from a directory.
+    
+    Args:
+        directory_path: Path to the directory containing documents
+        
+    Returns:
+        tuple: (documents, metadatas, ids)
+    """
     all_documents = []
     all_metadatas = []
     all_ids = []
@@ -143,7 +223,15 @@ def load_documents_from_directory(directory_path):
     return all_documents, all_metadatas, all_ids
 
 def load_user_document(file_path):
-    """Load a single document provided by the user."""
+    """
+    Load a single document provided by the user.
+    
+    Args:
+        file_path: Path to the document file
+        
+    Returns:
+        tuple: (documents, metadatas, ids, message)
+    """
     try:
         # Handle different file types
         if file_path.lower().endswith('.pdf'):
@@ -165,8 +253,22 @@ def load_user_document(file_path):
     except Exception as e:
         return None, None, None, f"Error loading {file_path}: {str(e)}"
 
+#------------------------------------------------------------------------------
+# QUERY AND RESPONSE
+#------------------------------------------------------------------------------
+
 def add_results_to_context(results, section_title, context=""):
-    """Add search results to the context string with proper formatting."""
+    """
+    Add search results to the context string with proper formatting.
+    
+    Args:
+        results: Search results from ChromaDB
+        section_title: Title for this section of results
+        context: Existing context to append to
+        
+    Returns:
+        tuple: (updated_context, has_results)
+    """
     if results['documents'] and results['documents'][0]:
         context += f"\n--- {section_title} ---\n"
         for i, doc in enumerate(results['documents'][0]):
@@ -176,7 +278,18 @@ def add_results_to_context(results, section_title, context=""):
     return context, False
 
 def query_and_respond(query_text, conversation_history, collection_fw=None, collection_user=None):
-    """Query collections and generate a response."""
+    """
+    Query collections and generate a response.
+    
+    Args:
+        query_text: User's question
+        conversation_history: List of previous conversation entries
+        collection_fw: Frameworks collection
+        collection_user: User documents collection
+        
+    Returns:
+        str: Generated response
+    """
     # Use the passed collections instead of trying to access global variables
     if collection_fw is None or collection_user is None:
         raise ValueError("Both collection_fw and collection_user must be provided")
@@ -219,8 +332,20 @@ def query_and_respond(query_text, conversation_history, collection_fw=None, coll
     else:
         return "No relevant information found. Please try a different question."
 
+#------------------------------------------------------------------------------
+# FILE MANAGEMENT
+#------------------------------------------------------------------------------
+
 def process_command(command):
-    """Process special commands."""
+    """
+    Process special commands.
+    
+    Args:
+        command: Command string from the user
+        
+    Returns:
+        str or None: Command result message or None if not a recognized command
+    """
     if command.startswith("/upload") or command.startswith("/add"):
         # Extract file path from command if provided
         parts = command.split(" ", 1)
@@ -239,7 +364,12 @@ def process_command(command):
     return None  # Not a command
 
 def list_uploaded_files():
-    """List all files that have been uploaded by the user."""
+    """
+    List all files that have been uploaded by the user.
+    
+    Returns:
+        str: Formatted list of files
+    """
     if not os.path.exists(USER_UPLOADS_DIR) or not os.listdir(USER_UPLOADS_DIR):
         return "No files have been uploaded yet."
     
@@ -268,7 +398,12 @@ def list_uploaded_files():
     return result
 
 def process_uploaded_files():
-    """Process all files in the user_uploads directory that haven't been processed yet."""
+    """
+    Process all files in the user_uploads directory that haven't been processed yet.
+    
+    Returns:
+        str: Processing results summary
+    """
     if not os.path.exists(USER_UPLOADS_DIR) or not os.listdir(USER_UPLOADS_DIR):
         return "No files found in the uploads directory."
     
@@ -314,7 +449,15 @@ def process_uploaded_files():
     return summary + "\n".join(results)
 
 def upload_file(file_path):
-    """Upload a file to the user collection."""
+    """
+    Upload a file to the user collection.
+    
+    Args:
+        file_path: Path to the file to upload
+        
+    Returns:
+        str: Upload result message
+    """
     # Handle relative paths - convert to absolute
     if not os.path.isabs(file_path):
         file_path = os.path.join(os.getcwd(), file_path)
@@ -353,40 +496,11 @@ def upload_file(file_path):
     except Exception as e:
         return f"Error adding document to collection: {str(e)}"
 
-# def run_chat_interface():
-#     print("Chat with Gemini 1.5 Pro (type 'exit' to quit)")
-#     print("Special commands:")
-#     print("  /upload or /add [filepath] - Upload a document (absolute or relative path)")
-#     print("  /list - List all uploaded documents")
-#     print("  /process - Process all files in the uploads directory")
-#     print("-" * 50)
+#------------------------------------------------------------------------------
+# INITIALIZATION
+#------------------------------------------------------------------------------
 
-#     while True:
-#         user_input = input("You: ")
-
-#         if user_input.lower() == "exit":
-#             print("Goodbye!")
-#             break
-            
-#         # Check if this is a special command
-#         if user_input.startswith("/"):
-#             result = process_command(user_input)
-#             if result:
-#                 print(f"System: {result}")
-#                 print("-" * 50)
-#                 continue
-
-#         # Get document context and response
-#         answer = query_and_respond(user_input, conversation_history)
-
-#         # Add this exchange to history
-#         conversation_history.append({"role": "user", "content": user_input})
-#         conversation_history.append({"role": "assistant", "content": answer})
-
-#         print(f"Gemini: {answer}")
-#         print("-" * 50)
-
-# System prompt
+# Setup prompt template for the LLM
 prompt = ChatPromptTemplate.from_messages([
     (
         "system",
@@ -404,70 +518,18 @@ prompt = ChatPromptTemplate.from_messages([
     )
 ])
 
-def initialize_vector_db():
-    """Initialize ChromaDB and load documents if needed."""
-    client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
-    google_ef = embedding_functions.GoogleGenerativeAiEmbeddingFunction(api_key=api_key)
-    
-    try:
-        # Create or get the frameworks collection
-        collection_fw = client.get_or_create_collection(
-            name="frameworks", 
-            embedding_function=google_ef
-        )
-        
-        # Create or get the user documents collection
-        collection_user = client.get_or_create_collection(
-            name="user_documents",
-            embedding_function=google_ef
-        )
-        
-        # Process documents only if needed
-        if collection_fw.count() == 0:
-            print("Frameworks collection is empty. Loading documents...")
-            docs, metas, ids = load_documents_from_directory(DOCUMENTS_DIR)
-            
-            # Add documents to collection if any were loaded
-            if docs:
-                collection_fw.add(
-                    documents=docs,
-                    metadatas=metas,
-                    ids=ids
-                )
-                print(f"Added {len(docs)} document chunks to the frameworks collection.")
-            else:
-                print("No documents were loaded. Please check the directory path.")
-        else:
-            print(f"Using existing frameworks collection with {collection_fw.count()} document chunks.")
-        
-        print(f"User documents collection has {collection_user.count()} document chunks.")
-        
-        return collection_fw, collection_user
-        
-    except Exception as e:
-        print(f"Error initializing ChromaDB collection: {e}")
-        raise
-
-# def main():
-#     """Main application entry point."""
-#     # Initialize the model and conversation
-#     global collection_fw, collection_user, chain, conversation_history
-    
-#     collection_fw, collection_user = initialize_vector_db()
-#     conversation_history = []
-#     
-    
-#     # Start chat interface
-#     run_chat_interface()
+# Initialize environment variables
 load_dotenv()
     
 # Ensure upload directory exists
 os.makedirs(USER_UPLOADS_DIR, exist_ok=True)
 
+# Get API key from environment
 api_key = os.getenv("GOOGLE_API_KEY")
 if not api_key:
     raise ValueError("API key not found. Please set the GOOGLE_API_KEY environment variable.")
 
+# Initialize LLM model
 model = ChatGoogleGenerativeAI(
     model="gemini-1.5-pro",
     temperature=0,
@@ -475,4 +537,6 @@ model = ChatGoogleGenerativeAI(
     timeout=None,
     max_retries=2
 )
+
+# Create the LLM chain
 chain = prompt | model
