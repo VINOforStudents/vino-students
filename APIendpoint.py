@@ -12,6 +12,7 @@ from main import (
     load_user_document,
     list_uploaded_files,
     prompt,  # If needed globally
+    chain,
     model,   # If needed globally
     USER_UPLOADS_DIR # Import constants
 )
@@ -46,8 +47,13 @@ app = FastAPI(
 async def handle_chat(request: ChatRequest):
     conversation_history = [] # Manage history as needed
     try:
-        # Call the imported function
-        answer = query_and_respond(request.question, conversation_history, collection_fw, collection_user)
+        # Pass both collections to the function
+        answer = query_and_respond(
+            request.question, 
+            conversation_history,
+            collection_fw=collection_fw,  # Pass as a keyword argument
+            collection_user=collection_user  # Pass as a keyword argument
+        )
         if not answer:
             raise HTTPException(status_code=404, detail="Could not generate an answer.")
         return ChatResponse(answer=answer)

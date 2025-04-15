@@ -175,8 +175,12 @@ def add_results_to_context(results, section_title, context=""):
         return context, True
     return context, False
 
-def query_and_respond(query_text, conversation_history, collection=None):
+def query_and_respond(query_text, conversation_history, collection_fw=None, collection_user=None):
     """Query collections and generate a response."""
+    # Use the passed collections instead of trying to access global variables
+    if collection_fw is None or collection_user is None:
+        raise ValueError("Both collection_fw and collection_user must be provided")
+    
     # Query frameworks collection
     fw_results = collection_fw.query(
         query_texts=[query_text],
@@ -451,7 +455,7 @@ def initialize_vector_db():
     
 #     collection_fw, collection_user = initialize_vector_db()
 #     conversation_history = []
-#     chain = prompt | model
+#     
     
 #     # Start chat interface
 #     run_chat_interface()
@@ -471,3 +475,4 @@ model = ChatGoogleGenerativeAI(
     timeout=None,
     max_retries=2
 )
+chain = prompt | model

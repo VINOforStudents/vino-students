@@ -5,6 +5,7 @@ from rxconfig import config
 from vino_students.state import State
 from vino_students import style
 
+
 def chat() -> rx.Component:
     return rx.box(
         rx.foreach(
@@ -46,17 +47,32 @@ def index() -> rx.Component:
     return rx.container(
         rx.vstack(
             chat(),
-            rx.spacer(),  # This pushes the elements below it to the bottom
+            rx.spacer(),
             action_bar(),
+            # Configure the upload component
             rx.upload(
+                rx.vstack(
+                    rx.button("Select File(s)"),
+                    rx.text("Drag and drop files here or click to select files."),
+                ),
                 id="my_upload",
-                text="Upload a file",
-                width="20%",
+                border="1px dotted rgb(107,114,128)",
+                padding="2em",
+                width="40em", # Match input width maybe?
                 margin_top="1em",
                 margin_bottom="1em",
+                # --- Connect the upload handler ---
+                on_drop=State.handle_upload(rx.upload_files()), # Call handler on drop/select
+                # You might want multiple=True if allowing multiple uploads
+            ),
+            # Add loading/error indicators
+            rx.cond(
+                State.is_loading,
+                rx.spinner(size="2"), 
+                rx.text(State.error_message, color="red", margin_top="0.5em")
             ),
             align="center",
-            height="100vh",  # Make the vstack take full viewport height
+            height="100vh",
             spacing="4",
         ),
         align="center",

@@ -36,7 +36,7 @@ class State(rx.State):
     # Keep track of the chat history as a list of (question, answer) tuples.
     chat_history: list[tuple[str, str]] = []
 
-     is_loading: bool = False
+    is_loading: bool = False
     error_message: str = ""
 
     def set_question(self, question: str):
@@ -104,43 +104,43 @@ class State(rx.State):
              yield # Update UI
 
      # --- Add File Upload Handler ---
-     async def handle_upload(self, files: list[rx.UploadFile]):
-         """Handle files uploaded via rx.upload."""
-         self.is_loading = True # Show loading indicator
-         self.error_message = ""
-         yield
+    async def handle_upload(self, files: list[rx.UploadFile]):
+        """Handle files uploaded via rx.upload."""
+        self.is_loading = True # Show loading indicator
+        self.error_message = ""
+        yield
 
-         upload_results = []
-         async with httpx.AsyncClient() as client:
-             for file in files:
-                 try:
-                     # Read file content provided by Reflex
-                     file_content = await file.read()
+        upload_results = []
+        async with httpx.AsyncClient() as client:
+            for file in files:
+                try:
+                    # Read file content provided by Reflex
+                    file_content = await file.read()
 
-                     # Send file to backend /upload endpoint
-                     response = await client.post(
-                         f"{BACKEND_API_URL}/upload",
-                         files={"file": (file.filename, file_content, file.content_type)},
-                         timeout=60.0 # Allow more time for uploads
-                     )
-                     response.raise_for_status()
+                    # Send file to backend /upload endpoint
+                    response = await client.post(
+                        f"{BACKEND_API_URL}/upload",
+                        files={"file": (file.filename, file_content, file.content_type)},
+                        timeout=60.0 # Allow more time for uploads
+                    )
+                    response.raise_for_status()
 
-                     # Add success message (you could display this in the UI)
-                     result_detail = response.json().get("detail", f"Uploaded {file.filename}")
-                     upload_results.append(result_detail)
-                     print(f"✅ {result_detail}")
+                    # Add success message (you could display this in the UI)
+                    result_detail = response.json().get("detail", f"Uploaded {file.filename}")
+                    upload_results.append(result_detail)
+                    print(f"✅ {result_detail}")
 
-                 except httpx.HTTPStatusError as e:
-                     error_detail = e.response.json().get("detail", e.response.text)
-                     print(f"🔴 HTTP error uploading {file.filename}: {e.response.status_code} - {error_detail}")
-                     self.error_message = f"Error uploading {file.filename}: {error_detail}"
-                     upload_results.append(f"Error uploading {file.filename}")
-                     # Optionally break or continue on error
-                 except Exception as e:
-                     print(f"🔴 Error processing upload {file.filename}: {e}")
-                     self.error_message = f"Error uploading {file.filename}."
-                     upload_results.append(f"Error uploading {file.filename}")
+                except httpx.HTTPStatusError as e:
+                    error_detail = e.response.json().get("detail", e.response.text)
+                    print(f"🔴 HTTP error uploading {file.filename}: {e.response.status_code} - {error_detail}")
+                    self.error_message = f"Error uploading {file.filename}: {error_detail}"
+                    upload_results.append(f"Error uploading {file.filename}")
+                    # Optionally break or continue on error
+                except Exception as e:
+                    print(f"🔴 Error processing upload {file.filename}: {e}")
+                    self.error_message = f"Error uploading {file.filename}."
+                    upload_results.append(f"Error uploading {file.filename}")
 
-         self.is_loading = False
-         # Optionally update UI with upload_results details
-         yield
+        self.is_loading = False
+        # Optionally update UI with upload_results details
+        yield

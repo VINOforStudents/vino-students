@@ -2,64 +2,17 @@
 
 
 import { Fragment, useCallback, useContext, useRef } from "react"
-import { Box as RadixThemesBox, Button as RadixThemesButton, Container as RadixThemesContainer, Flex as RadixThemesFlex, Text as RadixThemesText, TextField as RadixThemesTextField } from "@radix-ui/themes"
-import { EventLoopContext, StateContexts, UploadFilesContext } from "$/utils/context"
+import { Box as RadixThemesBox, Button as RadixThemesButton, Container as RadixThemesContainer, Flex as RadixThemesFlex, Spinner as RadixThemesSpinner, Text as RadixThemesText, TextField as RadixThemesTextField } from "@radix-ui/themes"
+import { EventLoopContext, StateContexts } from "$/utils/context"
 import { DebounceInput } from "react-debounce-input"
-import { Event, refs } from "$/utils/state"
+import { Event, isTrue, refs } from "$/utils/state"
 import {  } from "react-dropzone"
 import { useDropzone } from "react-dropzone"
 import NextHead from "next/head"
 
 
 
-export function Comp_6ed195c6e7c81364b7d78c0830607748 () {
-  
-  const ref_my_upload = useRef(null); refs["ref_my_upload"] = ref_my_upload;
-  const [addEvents, connectErrors] = useContext(EventLoopContext);
-  const [filesById, setFilesById] = useContext(UploadFilesContext);
-  const on_drop_efb1646e227894bf574e6bf836c0ccee = useCallback(e => setFilesById(filesById => {
-    const updatedFilesById = Object.assign({}, filesById);
-    updatedFilesById["my_upload"] = e;
-    return updatedFilesById;
-  })
-    , [addEvents, Event, filesById, setFilesById])
-  const {getRootProps: hpzmdmgo, getInputProps: xoxelmrs}  = useDropzone(({ ["onDrop"] : on_drop_efb1646e227894bf574e6bf836c0ccee, ["multiple"] : true, ["id"] : "my_upload" }));
-
-
-
-
-
-  
-  return (
-    <>
-
-<RadixThemesBox className={"rx-Upload"} css={({ ["text"] : "Upload a file", ["width"] : "20%", ["marginTop"] : "1em", ["marginBottom"] : "1em", ["border"] : "1px dashed var(--accent-12)", ["padding"] : "5em", ["textAlign"] : "center" })} id={"my_upload"} ref={ref_my_upload} {...hpzmdmgo()}>
-
-<input type={"file"} {...xoxelmrs()}/>
-</RadixThemesBox>
-</>
-  )
-}
-
-export function Button_ab0170d6094145421d8a6ddcc4b3b4f7 () {
-  
-  const [addEvents, connectErrors] = useContext(EventLoopContext);
-
-
-  const on_click_1500b56a8c097328485ce3ead669564f = useCallback(((...args) => (addEvents([(Event("reflex___state____state.vino_students___state____state.answer", ({  }), ({  })))], args, ({  })))), [addEvents, Event])
-
-
-
-  
-  return (
-    <RadixThemesButton css={({ ["backgroundColor"] : "var(--accent-10)", ["boxShadow"] : "rgba(0, 0, 0, 0.15) 0px 2px 8px" })} onClick={on_click_1500b56a8c097328485ce3ead669564f}>
-
-{"Send"}
-</RadixThemesButton>
-  )
-}
-
-export function Box_44b97ca4c47754923fc2894850b22819 () {
+export function Box_b56c6fc6ed41d96e60e71a0480097e35 () {
   
   const reflex___state____state__vino_students___state____state = useContext(StateContexts.reflex___state____state__vino_students___state____state)
 
@@ -71,8 +24,8 @@ export function Box_44b97ca4c47754923fc2894850b22819 () {
   return (
     <RadixThemesBox>
 
-<>{ reflex___state____state__vino_students___state____state.chat_history.map((messages, index_24a3764f9ed187ce) => (
-  <RadixThemesBox css={({ ["marginTop"] : "1em", ["marginBottom"] : "1em", ["width"] : "100%" })} key={index_24a3764f9ed187ce}>
+<>{ reflex___state____state__vino_students___state____state.chat_history.map((messages, index_5210a0c643aeed1a) => (
+  <RadixThemesBox css={({ ["marginTop"] : "1em", ["marginBottom"] : "1em", ["width"] : "100%" })} key={index_5210a0c643aeed1a}>
 
 <RadixThemesBox css={({ ["textAlign"] : "right" })}>
 
@@ -110,6 +63,88 @@ export function Debounceinput_34d47963b3f03d69c2e036c53c9ca8e8 () {
   )
 }
 
+export function Comp_c46f9d4761457e30a06737a6d13f3d72 () {
+  
+  const ref_my_upload = useRef(null); refs["ref_my_upload"] = ref_my_upload;
+  const [addEvents, connectErrors] = useContext(EventLoopContext);
+  const on_drop_568044fd82f65ffaf715a8edfab50180 = useCallback(((_files) => (addEvents([(Event("reflex___state____state.vino_students___state____state.handle_upload", ({ ["files"] : _files, ["upload_id"] : "default" }), ({  }), "uploadFiles"))], [_files], ({  })))), [addEvents, Event])
+  const {getRootProps: zsdmjzvr, getInputProps: vljivtfe}  = useDropzone(({ ["onDrop"] : on_drop_568044fd82f65ffaf715a8edfab50180, ["multiple"] : true, ["id"] : "my_upload" }));
+
+
+
+
+
+  
+  return (
+    <>
+
+<RadixThemesBox className={"rx-Upload"} css={({ ["border"] : "1px dotted rgb(107,114,128)", ["padding"] : "2em", ["width"] : "40em", ["marginTop"] : "1em", ["marginBottom"] : "1em", ["textAlign"] : "center" })} id={"my_upload"} ref={ref_my_upload} {...zsdmjzvr()}>
+
+<input type={"file"} {...vljivtfe()}/>
+<RadixThemesFlex align={"start"} className={"rx-Stack"} direction={"column"} gap={"3"}>
+
+<RadixThemesButton>
+
+{"Select File(s)"}
+</RadixThemesButton>
+<RadixThemesText as={"p"}>
+
+{"Drag and drop files here or click to select files."}
+</RadixThemesText>
+</RadixThemesFlex>
+</RadixThemesBox>
+</>
+  )
+}
+
+export function Fragment_8ce91279ce51cdd11865032ac56628ef () {
+  
+  const reflex___state____state__vino_students___state____state = useContext(StateContexts.reflex___state____state__vino_students___state____state)
+
+
+
+
+
+  
+  return (
+    <Fragment>
+
+{reflex___state____state__vino_students___state____state.is_loading ? (
+  <Fragment>
+
+<RadixThemesSpinner size={"2"}/>
+</Fragment>
+) : (
+  <Fragment>
+
+<RadixThemesText as={"p"} css={({ ["color"] : "red", ["marginTop"] : "0.5em" })}>
+
+{reflex___state____state__vino_students___state____state.error_message}
+</RadixThemesText>
+</Fragment>
+)}
+</Fragment>
+  )
+}
+
+export function Button_ab0170d6094145421d8a6ddcc4b3b4f7 () {
+  
+  const [addEvents, connectErrors] = useContext(EventLoopContext);
+
+
+  const on_click_1500b56a8c097328485ce3ead669564f = useCallback(((...args) => (addEvents([(Event("reflex___state____state.vino_students___state____state.answer", ({  }), ({  })))], args, ({  })))), [addEvents, Event])
+
+
+
+  
+  return (
+    <RadixThemesButton css={({ ["backgroundColor"] : "var(--accent-10)", ["boxShadow"] : "rgba(0, 0, 0, 0.15) 0px 2px 8px" })} onClick={on_click_1500b56a8c097328485ce3ead669564f}>
+
+{"Send"}
+</RadixThemesButton>
+  )
+}
+
 export default function Component() {
     
 
@@ -123,14 +158,15 @@ export default function Component() {
 
 <RadixThemesFlex align={"center"} className={"rx-Stack"} css={({ ["height"] : "100vh" })} direction={"column"} gap={"4"}>
 
-<Box_44b97ca4c47754923fc2894850b22819/>
+<Box_b56c6fc6ed41d96e60e71a0480097e35/>
 <RadixThemesFlex css={({ ["flex"] : 1, ["justifySelf"] : "stretch", ["alignSelf"] : "stretch" })}/>
 <RadixThemesFlex align={"start"} className={"rx-Stack"} direction={"row"} gap={"3"}>
 
 <Debounceinput_34d47963b3f03d69c2e036c53c9ca8e8/>
 <Button_ab0170d6094145421d8a6ddcc4b3b4f7/>
 </RadixThemesFlex>
-<Comp_6ed195c6e7c81364b7d78c0830607748/>
+<Comp_c46f9d4761457e30a06737a6d13f3d72/>
+<Fragment_8ce91279ce51cdd11865032ac56628ef/>
 </RadixThemesFlex>
 </RadixThemesContainer>
 <NextHead>
