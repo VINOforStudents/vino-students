@@ -12,70 +12,7 @@ import NextHead from "next/head"
 
 
 
-export function Comp_ba2d3bfaceb23b3a4e99982eff65cf26 () {
-  
-  const ref_my_upload = useRef(null); refs["ref_my_upload"] = ref_my_upload;
-  const [addEvents, connectErrors] = useContext(EventLoopContext);
-  const [filesById, setFilesById] = useContext(UploadFilesContext);
-  const on_drop_efb1646e227894bf574e6bf836c0ccee = useCallback(e => setFilesById(filesById => {
-    const updatedFilesById = Object.assign({}, filesById);
-    updatedFilesById["my_upload"] = e;
-    return updatedFilesById;
-  })
-    , [addEvents, Event, filesById, setFilesById])
-  const {getRootProps: ntnlggtg, getInputProps: hlvpjjku}  = useDropzone(({ ["onDrop"] : on_drop_efb1646e227894bf574e6bf836c0ccee, ["multiple"] : true, ["id"] : "my_upload" }));
-
-
-
-
-
-  
-  return (
-    <>
-
-<RadixThemesBox className={"rx-Upload"} css={({ ["text"] : "Upload a file", ["width"] : "20%", ["marginTop"] : "1em", ["marginBottom"] : "1em", ["border"] : "1px dashed var(--accent-12)", ["padding"] : "5em", ["textAlign"] : "center" })} id={"my_upload"} ref={ref_my_upload} {...ntnlggtg()}>
-
-<input type={"file"} {...hlvpjjku()}/>
-</RadixThemesBox>
-</>
-  )
-}
-
-export function Button_ab0170d6094145421d8a6ddcc4b3b4f7 () {
-  
-  const [addEvents, connectErrors] = useContext(EventLoopContext);
-
-
-  const on_click_1500b56a8c097328485ce3ead669564f = useCallback(((...args) => (addEvents([(Event("reflex___state____state.vino_students___state____state.answer", ({  }), ({  })))], args, ({  })))), [addEvents, Event])
-
-
-
-  
-  return (
-    <RadixThemesButton css={({ ["backgroundColor"] : "var(--accent-10)", ["boxShadow"] : "rgba(0, 0, 0, 0.15) 0px 2px 8px" })} onClick={on_click_1500b56a8c097328485ce3ead669564f}>
-
-{"Send"}
-</RadixThemesButton>
-  )
-}
-
-export function Debounceinput_d14b5dccd36bca94038dff934954cf5b () {
-  
-  const reflex___state____state__vino_students___state____state = useContext(StateContexts.reflex___state____state__vino_students___state____state)
-  const [addEvents, connectErrors] = useContext(EventLoopContext);
-
-
-  const on_change_994401bfc05f073394175594a8d43ab8 = useCallback(((_e) => (addEvents([(Event("reflex___state____state.vino_students___state____state.set_question", ({ ["question"] : _e["target"]["value"] }), ({  })))], [_e], ({  })))), [addEvents, Event])
-
-
-
-  
-  return (
-    <DebounceInput css={({ ["borderWidth"] : "1px", ["padding"] : "0.5em", ["boxShadow"] : "rgba(0, 0, 0, 0.15) 0px 2px 8px", ["width"] : "40em" })} debounceTimeout={300} element={RadixThemesTextField.Root} onChange={on_change_994401bfc05f073394175594a8d43ab8} placeholder={"Ask a question"} value={(isNotNullOrUndefined(reflex___state____state__vino_students___state____state.question) ? reflex___state____state__vino_students___state____state.question : "")}/>
-  )
-}
-
-export function Box_abe671330543d1228139715c64fb1add () {
+export function Box_acb95edbb969c5ceccc9d6e1802fe1c4 () {
   
   const reflex___state____state__vino_students___state____state = useContext(StateContexts.reflex___state____state__vino_students___state____state)
 
@@ -87,8 +24,8 @@ export function Box_abe671330543d1228139715c64fb1add () {
   return (
     <RadixThemesBox>
 
-<>{ reflex___state____state__vino_students___state____state.chat_history.map((messages, index_bda88ba4038f292b) => (
-  <RadixThemesBox css={({ ["marginTop"] : "1em", ["marginBottom"] : "1em", ["width"] : "100%" })} key={index_bda88ba4038f292b}>
+<>{ reflex___state____state__vino_students___state____state.chat_history.map((messages, index_d5797f8bed0e4812) => (
+  <RadixThemesBox css={({ ["marginTop"] : "1em", ["marginBottom"] : "1em", ["width"] : "100%" })} key={index_d5797f8bed0e4812}>
 
 <RadixThemesBox css={({ ["textAlign"] : "right" })}>
 
@@ -110,6 +47,69 @@ export function Box_abe671330543d1228139715c64fb1add () {
   )
 }
 
+export function Comp_08ec5777f9de1896199c4ff104232423 () {
+  
+  const ref_my_upload = useRef(null); refs["ref_my_upload"] = ref_my_upload;
+  const [addEvents, connectErrors] = useContext(EventLoopContext);
+  const [filesById, setFilesById] = useContext(UploadFilesContext);
+  const on_drop_efb1646e227894bf574e6bf836c0ccee = useCallback(e => setFilesById(filesById => {
+    const updatedFilesById = Object.assign({}, filesById);
+    updatedFilesById["my_upload"] = e;
+    return updatedFilesById;
+  })
+    , [addEvents, Event, filesById, setFilesById])
+  const {getRootProps: azbcvzwn, getInputProps: eoxybnvq}  = useDropzone(({ ["onDrop"] : on_drop_efb1646e227894bf574e6bf836c0ccee, ["multiple"] : true, ["id"] : "my_upload" }));
+
+
+
+
+
+  
+  return (
+    <>
+
+<RadixThemesBox className={"rx-Upload"} css={({ ["text"] : "Upload a file", ["width"] : "20%", ["marginTop"] : "1em", ["marginBottom"] : "1em", ["border"] : "1px dashed var(--accent-12)", ["padding"] : "5em", ["textAlign"] : "center" })} id={"my_upload"} ref={ref_my_upload} {...azbcvzwn()}>
+
+<input type={"file"} {...eoxybnvq()}/>
+</RadixThemesBox>
+</>
+  )
+}
+
+export function Debounceinput_d14b5dccd36bca94038dff934954cf5b () {
+  
+  const reflex___state____state__vino_students___state____state = useContext(StateContexts.reflex___state____state__vino_students___state____state)
+  const [addEvents, connectErrors] = useContext(EventLoopContext);
+
+
+  const on_change_994401bfc05f073394175594a8d43ab8 = useCallback(((_e) => (addEvents([(Event("reflex___state____state.vino_students___state____state.set_question", ({ ["question"] : _e["target"]["value"] }), ({  })))], [_e], ({  })))), [addEvents, Event])
+
+
+
+  
+  return (
+    <DebounceInput css={({ ["borderWidth"] : "1px", ["padding"] : "0.5em", ["boxShadow"] : "rgba(0, 0, 0, 0.15) 0px 2px 8px", ["width"] : "40em" })} debounceTimeout={300} element={RadixThemesTextField.Root} onChange={on_change_994401bfc05f073394175594a8d43ab8} placeholder={"Ask a question"} value={(isNotNullOrUndefined(reflex___state____state__vino_students___state____state.question) ? reflex___state____state__vino_students___state____state.question : "")}/>
+  )
+}
+
+export function Button_ab0170d6094145421d8a6ddcc4b3b4f7 () {
+  
+  const [addEvents, connectErrors] = useContext(EventLoopContext);
+
+
+  const on_click_1500b56a8c097328485ce3ead669564f = useCallback(((...args) => (addEvents([(Event("reflex___state____state.vino_students___state____state.answer", ({  }), ({  })))], args, ({  })))), [addEvents, Event])
+
+
+
+  
+  return (
+    <RadixThemesButton css={({ ["backgroundColor"] : "var(--accent-10)", ["boxShadow"] : "rgba(0, 0, 0, 0.15) 0px 2px 8px" })} onClick={on_click_1500b56a8c097328485ce3ead669564f}>
+
+{"Send"}
+</RadixThemesButton>
+  )
+}
+
 export default function Component() {
     
 
@@ -123,14 +123,14 @@ export default function Component() {
 
 <RadixThemesFlex align={"center"} className={"rx-Stack"} css={({ ["height"] : "100vh" })} direction={"column"} gap={"4"}>
 
-<Box_abe671330543d1228139715c64fb1add/>
+<Box_acb95edbb969c5ceccc9d6e1802fe1c4/>
 <RadixThemesFlex css={({ ["flex"] : 1, ["justifySelf"] : "stretch", ["alignSelf"] : "stretch" })}/>
 <RadixThemesFlex align={"start"} className={"rx-Stack"} direction={"row"} gap={"3"}>
 
 <Debounceinput_d14b5dccd36bca94038dff934954cf5b/>
 <Button_ab0170d6094145421d8a6ddcc4b3b4f7/>
 </RadixThemesFlex>
-<Comp_ba2d3bfaceb23b3a4e99982eff65cf26/>
+<Comp_08ec5777f9de1896199c4ff104232423/>
 </RadixThemesFlex>
 </RadixThemesContainer>
 <NextHead>
