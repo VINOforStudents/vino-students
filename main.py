@@ -504,19 +504,24 @@ def upload_file(file_path):
 prompt = ChatPromptTemplate.from_messages([
     (
         "system",
-        "You are a helpful assistant that answers questions based on document context."
+        "You are a helpful assistant that answers questions based on document context." // TODO Augemnt Prompting
     ),
     (
         "human",
         """I have the following context:
         {context}
 
-        Conversation history:
+        Conversation history: 
         {history}
 
-        Answer my question: {question}"""
+        Answer my question: {question}""" // TODO planner of 6 steps and UM
     )
 ])
+
+# // TODO Add 6 context windows for each step
+# // TODO Guide the useer through the first step
+# // TODO Transition to the next step
+# // TODO Add a planner to the prompt template
 
 # Initialize environment variables
 load_dotenv()
