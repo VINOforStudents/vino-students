@@ -2,13 +2,15 @@ import os
 import uvicorn
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from pydantic import BaseModel
+from fastapi import FastAPI, UploadFile, File, HTTPException, Body
+from fastapi.middleware.cors import CORSMiddleware
+from typing import List, Dict
 import shutil
 from main import (
     initialize_vector_db,
     query_and_respond,
     load_user_document,
     list_uploaded_files,
-    prompt,
     model,
     USER_UPLOADS_DIR
 )
@@ -19,10 +21,25 @@ app = FastAPI(
     description="A simple API endpoint to interact with an LLM."
 )
 
+# Configure CORS
+origins = [
+    "http://localhost:3000",  # Default Reflex frontend port
+    "http://127.0.0.1:3000", # Also allow this variant
+    # Add any other origins if needed (e.g., your deployed frontend URL)
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers
+)
+
 # Initialize database collections
 try:
     collection_fw, collection_user = initialize_vector_db()
-    chain = prompt | model
+    chain = model # Assign the imported model directly
 except Exception as e:
     print(f"FATAL: Could not initialize database or model: {e}")
     # In production, you might want to exit here with sys.exit(1)

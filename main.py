@@ -349,12 +349,35 @@ def query_and_respond(query_text, history_data, collection_fw=None, collection_u
     
     # If we have context, generate a response
     if has_fw_results or has_user_results:
-        prompt = prompts.get_universal_matrix_prompt(
-            context=combined_context,
-            history=langchain_history,
-            question=query_text
+        # Correctly call get_universal_matrix_prompt with required arguments
+        prompt_template = prompts.get_universal_matrix_prompt( # Renamed to avoid confusion
+            current_step=1,  # Default to step 1 for general queries
+            history=langchain_history, # History object itself
+            question=query_text,
+            step_context="", # No specific step context retrieved here
+            general_context=combined_context, # Pass combined results as general context
         )
-        response = chain.invoke(prompt)
+        if prompt_template is None: # Handle the case where the step might be invalid
+             return "Error generating prompt for the query."
+
+        # Prepare the input dictionary for the prompt template
+        # Keys must match the variables used in the prompt template
+        input_data = {
+            "history": langchain_history, # Pass history again for the template formatting
+            "question": query_text,
+            "step_context": "",
+            "general_context": combined_context,
+            "current_step": 1 # Include if used directly in template messages (like system prompt)
+            # Add "planner_state": planner_details if needed by the template
+        }
+
+        # Format the prompt template using the input data
+        # This creates the actual list of messages (PromptValue) for the model
+        formatted_prompt = prompt_template.invoke(input_data)
+
+        # Pass the formatted prompt (PromptValue or list of BaseMessages) to the model
+        response = chain.invoke(formatted_prompt)
+
         return response.content
     else:
         return "No relevant information found. Please try a different question."
@@ -554,7 +577,7 @@ model = ChatGoogleGenerativeAI(
     max_retries=2
 )
 
-# Create the LLM chain
-current_history = get_history_from_state()
-prompt = prompts.get_base_chat_prompt()
-chain = prompt | model
+# Define the LangChain chain
+chain = model
+
+collection_fw, collection_user = initialize_vector_db()
