@@ -177,3 +177,76 @@ sequenceDiagram
     ReflexFrontend->>User: Display LLM response
     ReflexFrontend->>ReflexFrontend: Append new Q/A to full_history in state
 ```
+
+This does give more control over context, and how a given LLM controls their own context tokens. Does every LLM control them with equal accuracy? Introducing RAG would improve the information consistency considerably.
+
+This raises the question of **CAG vs RAG**.
+
+### CAG vs. RAG
+
+| Feature                  | CAG (Context-Augmented Generation - via History Summarization)   | RAG (Retrieval-Augmented Generation)                                   |
+| :----------------------- | :--------------------------------------------------------------- | :--------------------------------------------------------------------- |
+| **Mechanism**            | Summarizes/abstracts chat history to fit context window.         | Retrieves relevant information chunks from an external knowledge base. |
+| **Context Source**       | Primarily the ongoing conversation history.                      | External documents/database (VectorDB in this case), plus history.     |
+| **Scalability (Length)** | Struggles with very long histories; summarization loses info.    | Scales well; retrieves only relevant parts, independent of total size. |
+| **Consistency/Accuracy** | Depends on summarization quality; can drift or lose facts.       | Higher potential for consistency; grounds responses in source data.    |
+| **Granularity/Detail**   | Loses detail and granularity as history grows and is summarized. | Can retrieve specific, granular details from the knowledge base.       |
+| **Flexibility/Update**   | History is inherently sequential; updating past "facts" is hard. | Easier to update/add/remove information in the external VectorDB.      |
+| **Complexity**           | Requires a robust summarization strategy.                        | Requires setting up and maintaining a VectorDB and retrieval logic.    |
+
+Putting them side by side only makes it harder to choose in this case, to for things like large documents it's more logical to use RAG. Though for short questions, high-level topics, CAG seems the way to go.
+
+Why not use both?
+
+### Leveraging both CAG and RAG
+
+It basically boils down to 2 applications.
+
+RAG is for **grounding & long-term memory**, for step-speficic information or vital long-term info.
+1. Detailed documentation, examples, guidelines, etc.
+2. Target audience, goal, persistent information
+
+CAG is for **conversational context**, by using summarization and abstraction to augment back and forth conversation.
+1. Retrieve relevant documents
+2. Retrieve corresponding summaries, chat history, document summary, etc.
+3. Combine RAG context, CAG history, user query and prompting logic
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant ReflexFrontend as Reflex Frontend (GUI + State)
+    participant FastAPIBackend as FastAPI Backend (APIendpoint.py)
+    participant HistoryManager as History Manager (CAG)
+    participant LLMLogic as Langchain/LLM Logic
+    participant VectorDB as ChromaDB (RAG Source)
+
+    User->>ReflexFrontend: Enters chat message (e.g., "How does feature Y fit the new audience?")
+    ReflexFrontend->>ReflexFrontend: Get current_step (e.g., 5)
+    ReflexFrontend->>FastAPIBackend: POST /chat (question="...", current_step=5, full_history=...)
+
+    %% CAG: Process Conversational Context %%
+    FastAPIBackend->>HistoryManager: ProcessHistory(full_history)
+    alt History is too long
+        HistoryManager->>HistoryManager: Summarize/Abstract history
+        HistoryManager-->>FastAPIBackend: Return abstracted_history
+    else History is short enough
+        HistoryManager-->>FastAPIBackend: Return full_history as abstracted_history
+    end
+
+    FastAPIBackend->>LLMLogic: query_and_respond(question="...", step=5, history=abstracted_history)
+
+    %% RAG: Retrieve Grounding & Long-Term Memory %%
+    LLMLogic->>LLMLogic: get_universal_matrix_prompt(step=5, ...)
+    LLMLogic->>VectorDB: Query context (question, step=5, vital_keys=['target_audience', 'goal'])
+    note right of VectorDB: Retrieve step-specific docs (feature Y info) <br/> AND vital info (target audience, goal).
+    VectorDB-->>LLMLogic: Return relevant retrieved_docs
+
+    %% Combine and Generate %%
+    LLMLogic->>LLMLogic: Call LLM with combined context: <br/> Universal Matrix prompt (step 5) <br/> + retrieved_docs (RAG) <br/> + abstracted_history (CAG) <br/> + user_query
+    note right of LLMLogic: LLM uses step goal, RAG docs, <br/> summarized history, and query to generate response.
+
+    LLMLogic-->>FastAPIBackend: Return LLM response
+    FastAPIBackend-->>ReflexFrontend: Return JSON {answer: "..."}
+    ReflexFrontend->>User: Display LLM response
+    ReflexFrontend->>ReflexFrontend: Append new Q/A to full_history in state
+```
