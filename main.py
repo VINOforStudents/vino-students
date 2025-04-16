@@ -7,7 +7,7 @@ and LLM-based question answering to be used by API endpoints.
 # Standard library imports
 import os
 import glob
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 
 # Third-party imports
 import chromadb
@@ -270,16 +270,8 @@ def load_user_document(file_path):
 # QUERY AND RESPONSE
 #------------------------------------------------------------------------------
 
-def convert_history_data(history_data: List[Dict[str, str]]) -> List[BaseMessage]:
-    """
-    Convert history data into LangChain message objects.
-    
-    Args:
-        history_data: List of dictionaries containing role and content
-        
-    Returns:
-        List[BaseMessage]: Converted LangChain message objects
-    """
+def convert_history_data(history_data: List[Dict[str, Any]]) -> List[BaseMessage]:
+    """Converts the history format from the API request to LangChain messages."""
     messages = []
     for item in history_data:
         if item.get("role") == "user":
@@ -308,79 +300,74 @@ def add_results_to_context(results, section_title, context=""):
         return context, True
     return context, False
 
-def query_and_respond(query_text, history_data, collection_fw=None, collection_user=None):
+def query_and_respond(query_text: str, history_data: List[Dict[str, Any]], current_step: int, collection_fw=None, collection_user=None):
     """
-    Query collections and generate a response.
-    
-    Args:
-        query_text: User's question
-        history_data: List of previous conversation entries
-        collection_fw: Frameworks collection
-        collection_user: User documents collection
-        
-    Returns:
-        str: Generated response
+    Queries vector databases, constructs a prompt using history and step,
+    and gets a response from the LLM.
     """
+    global chain # Assuming chain is a global variable initialized elsewhere
+
     # Use the passed collections instead of trying to access global variables
     if collection_fw is None or collection_user is None:
-        raise ValueError("Both collection_fw and collection_user must be provided")
-    
+         # Handle error: Collections not provided
+         print("Error: Vector database collections not provided to query_and_respond.")
+         return "Error: Internal server configuration issue."
+
     # Query frameworks collection
     fw_results = collection_fw.query(
         query_texts=[query_text],
-        n_results=3  # Get top 3 from frameworks
+        n_results=3
     )
-    
+
     # Query user collection
     user_results = collection_user.query(
         query_texts=[query_text],
-        n_results=3  # Get top 3 from user docs
+        n_results=3
     )
 
-    # Convert history data to LangChain message objects
+    # Convert history data from API format to LangChain message objects
     langchain_history = convert_history_data(history_data)
 
     # Combine all retrieved document chunks into a comprehensive context
     combined_context = ""
-    
+
     # Add both collections' results
     combined_context, has_fw_results = add_results_to_context(fw_results, "From Framework Documents", combined_context)
     combined_context, has_user_results = add_results_to_context(user_results, "From Your Documents", combined_context)
-    
-    # If we have context, generate a response
-    if has_fw_results or has_user_results:
-        # Correctly call get_universal_matrix_prompt with required arguments
-        prompt_template = prompts.get_universal_matrix_prompt( # Renamed to avoid confusion
-            current_step=1,  # Default to step 1 for general queries
-            history=langchain_history, # History object itself
-            question=query_text,
-            step_context="", # No specific step context retrieved here
-            general_context=combined_context, # Pass combined results as general context
-        )
-        if prompt_template is None: # Handle the case where the step might be invalid
-             return "Error generating prompt for the query."
 
-        # Prepare the input dictionary for the prompt template
-        # Keys must match the variables used in the prompt template
-        input_data = {
-            "history": langchain_history, # Pass history again for the template formatting
-            "question": query_text,
-            "step_context": "",
-            "general_context": combined_context,
-            "current_step": 1 # Include if used directly in template messages (like system prompt)
-            # Add "planner_state": planner_details if needed by the template
-        }
+    # Correctly call get_universal_matrix_prompt with required arguments
+    prompt_template = prompts.get_universal_matrix_prompt(
+        current_step=current_step,  # Use the passed current_step
+        history=langchain_history, # Pass the converted history object
+        question=query_text,
+        step_context="", # No specific step context retrieved here (can be enhanced later)
+        general_context=combined_context, # Pass combined results as general context
+    )
+    if prompt_template is None: # Handle the case where the step might be invalid
+            print(f"Error: Could not generate prompt for step {current_step}.")
+            return "Error generating prompt for the query."
 
+    # Prepare the input dictionary for the prompt template
+    input_data = {
+        "history": langchain_history, # Pass history again for the template formatting
+        "question": query_text,
+        "step_context": "",
+        "general_context": combined_context,
+        "current_step": current_step # Use passed step
+    }
+
+    try:
         # Format the prompt template using the input data
-        # This creates the actual list of messages (PromptValue) for the model
         formatted_prompt = prompt_template.invoke(input_data)
 
         # Pass the formatted prompt (PromptValue or list of BaseMessages) to the model
         response = chain.invoke(formatted_prompt)
 
         return response.content
-    else:
-        return "No relevant information found. Please try a different question."
+
+    except Exception as e:
+        print(f"Error during chain invocation: {e}")
+        return "Error: Failed to get response from language model."
 
 #------------------------------------------------------------------------------
 # FILE MANAGEMENT
@@ -549,13 +536,6 @@ def upload_file(file_path):
 #------------------------------------------------------------------------------
 # INITIALIZATION
 #------------------------------------------------------------------------------
-
-# // TODO Emphasis on first step, second step and then third to define the planner
-# // TODO Add a multi-step planner to the prompt template
-# // TODO Add 6 context windows for each step
-# // TODO Guide the useer through the first step
-# // TODO Transition to the next step
-# // TODO Add a planner to the prompt template
 
 # Initialize environment variables
 load_dotenv()

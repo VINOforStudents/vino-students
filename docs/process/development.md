@@ -1,15 +1,20 @@
 # Context Management
 
-currently there's an issue with the prompting, and it does not get past step 1 because of the lack of confirmation or command.
-in a sequence diagram i want you to describe the possible scenarios that happen for chat navigation and steps navigation (1-6)
-
-the user needs to be able to navigate to context of step 1, and if it's good enough, we do /next to go to the next step.
-
-to go to any step that exists, do /step <n>
-to go to previous step do /previous
+## Initial Context Problem
 
 
-wondering how this is going to interact with our stack in the context of a SQ
+Currently there's an issue with the prompting, and it does not get past step 1 because of the lack of confirmation or command.
+In a sequence diagram I want to describe the possible scenarios that happen for chat navigation and steps navigation (1-6)
+
+the user needs to be able to navigate to context of step 1, and if it's good enough;
+
+1. we do /next to go to the next step.
+2. to go to any step that exists, do /step x
+3. to go to previous step do /previous
+
+Thus, wondering how this is going to interact with our stack.
+
+It creates 3 scenarios:
 
 ```mermaid
 sequenceDiagram
@@ -76,5 +81,99 @@ sequenceDiagram
     LLMLogic-->>FastAPIBackend: Return LLM response for Step 4
     FastAPIBackend-->>ReflexFrontend: Return JSON {answer: "Okay, moving to Step 4..."}
     ReflexFrontend->>User: Display LLM response initiating Step 4
+````
 
-    
+### Context Length Problem
+
+The problem with this the length of the history, at some point the chat history will be way too long, and thus a need for context abstraction will be needed. It would look like:
+
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant ReflexFrontend as Reflex Frontend (GUI + State)
+    participant FastAPIBackend as FastAPI Backend (APIendpoint.py)
+    participant HistoryManager as History Manager/Summarizer
+    participant LLMLogic as Langchain/LLM Logic (main.py + Prompts)
+    participant VectorDB as ChromaDB
+
+    %% Scenario: Chat with History Abstraction %%
+    User->>ReflexFrontend: Enters chat message "Tell me more about X"
+    ReflexFrontend->>ReflexFrontend: Get current_step (e.g., 1)
+    ReflexFrontend->>FastAPIBackend: POST /chat (question="...", current_step=1, full_history=...)
+    FastAPIBackend->>HistoryManager: ProcessHistory(full_history)
+    HistoryManager->>HistoryManager: Check history length
+    alt History is too long
+        HistoryManager->>HistoryManager: Summarize/Abstract history
+        HistoryManager-->>FastAPIBackend: Return abstracted_history
+    else History is short enough
+        HistoryManager-->>FastAPIBackend: Return full_history as abstracted_history
+    end
+    FastAPIBackend->>LLMLogic: query_and_respond(question="...", step=1, history=abstracted_history)
+    LLMLogic->>LLMLogic: get_universal_matrix_prompt(step=1, ...)
+    LLMLogic->>VectorDB: Query context relevant to Step 1 + question
+    VectorDB-->>LLMLogic: Return relevant documents
+    LLMLogic->>LLMLogic: Call LLM with Step 1 prompt + context + abstracted_history
+    LLMLogic-->>FastAPIBackend: Return LLM response for Step 1
+    FastAPIBackend-->>ReflexFrontend: Return JSON {answer: "..."}
+    ReflexFrontend->>User: Display LLM response for Step 1
+    ReflexFrontend->>ReflexFrontend: Append new Q/A to full_history in state
+
+    %% Note: Navigation commands (/next, /previous, /step) would follow a similar pattern, %%
+    %% potentially triggering history abstraction before calling the LLM for the target step. %%
+```
+
+A general idea of the description would be useful instead of leading any type of LLM to hallucination. Though the disadvantage would be that an extensive description that is context-rich would be converted into an abstracted concept. A great variable here is the variability of how granular it can be.
+
+If the history is consistently too long, it **loses detail and granularity**.
+
+#### Potential solution:
+
+By giving up CAG and translating vital long-term integrated information, like the goal of a project, into vectors or embeddings, it encourages us to use a RAG system. We retrieve the abstracted history and delve deeper and modify it if needed. What if the goal of an application changes target audience?
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant ReflexFrontend as Reflex Frontend (GUI + State)
+    participant FastAPIBackend as FastAPI Backend (APIendpoint.py)
+    participant HistoryManager as History Manager/Summarizer
+    participant LLMLogic as Langchain/LLM Logic (main.py + Prompts)
+    participant VectorDB as ChromaDB
+
+    %% Phase 1: Storing/Updating Vital Long-Term Info (e.g., Target Audience Change) %%
+    User->>ReflexFrontend: "Let's change the target audience to 'enterprise users'"
+    ReflexFrontend->>FastAPIBackend: POST /update_vital_info (info_type="target_audience", value="enterprise users")
+    FastAPIBackend->>LLMLogic: ProcessVitalInfoUpdate(type="target_audience", value="enterprise users")
+    LLMLogic->>LLMLogic: Generate embedding for "enterprise users"
+    LLMLogic->>VectorDB: Upsert embedding/document for key 'target_audience' with new value/vector
+    VectorDB-->>LLMLogic: Confirmation
+    LLMLogic-->>FastAPIBackend: Success message ("Target audience updated.")
+    FastAPIBackend-->>ReflexFrontend: Return JSON {message: "Target audience updated."}
+    ReflexFrontend->>User: Display confirmation
+
+    %% Phase 2: Subsequent Chat using RAG with Updated Info %%
+    User->>ReflexFrontend: "How should we adjust pricing for them?" (within Step 5)
+    ReflexFrontend->>ReflexFrontend: Get current_step (e.g., 5)
+    ReflexFrontend->>FastAPIBackend: POST /chat (question="...", current_step=5, full_history=...)
+
+    %% Optional History Abstraction %%
+    FastAPIBackend->>HistoryManager: ProcessHistory(full_history)
+    HistoryManager-->>FastAPIBackend: Return abstracted_history (or full history)
+
+    FastAPIBackend->>LLMLogic: query_and_respond(question="...", step=5, history=abstracted_history)
+    LLMLogic->>LLMLogic: get_universal_matrix_prompt(step=5, ...)
+
+    %% RAG Retrieval including Vital Info %%
+    LLMLogic->>VectorDB: Query context (question, step=5, vital_keys=['target_audience'])
+    note right of VectorDB: Query retrieves step-specific context AND <br/>vital info like the 'target_audience' vector.
+    VectorDB-->>LLMLogic: Return relevant docs (Step 5 info, pricing info, 'target_audience=enterprise users' doc/vector)
+
+    %% LLM Call with Combined Context %%
+    LLMLogic->>LLMLogic: Call LLM with Step 5 prompt + retrieved_docs + abstracted_history
+    note right of LLMLogic: LLM context includes step goal, question, history, <br/>and the updated 'enterprise users' target audience.
+
+    LLMLogic-->>FastAPIBackend: Return LLM response considering enterprise users
+    FastAPIBackend-->>ReflexFrontend: Return JSON {answer: "..."}
+    ReflexFrontend->>User: Display LLM response
+    ReflexFrontend->>ReflexFrontend: Append new Q/A to full_history in state
+```
