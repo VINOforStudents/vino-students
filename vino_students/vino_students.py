@@ -20,11 +20,13 @@ def qa(question: str, answer: str) -> rx.Component:
     """Renders a single question-answer pair."""
     return rx.box(
         rx.box(
-            rx.text(question, style=style.question_style),
+            # Change rx.text to rx.markdown for the question
+            rx.markdown(question, style=style.question_style),
             text_align="right",
         ),
         rx.box(
-            rx.text(answer, style=style.answer_style),
+            # Change rx.text to rx.markdown for the answer
+            rx.markdown(answer, style=style.answer_style),
             text_align="left",
         ),
         margin_y="1em",
