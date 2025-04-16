@@ -1,4 +1,10 @@
 # Context Management
+- [Context Management](#context-management)
+  - [Initial Context Problem](#initial-context-problem)
+    - [Context Length Problem](#context-length-problem)
+      - [Potential solution:](#potential-solution)
+    - [CAG vs. RAG](#cag-vs-rag)
+    - [Leveraging both CAG and RAG](#leveraging-both-cag-and-rag)
 
 ## Initial Context Problem
 
@@ -250,3 +256,38 @@ sequenceDiagram
     ReflexFrontend->>User: Display LLM response
     ReflexFrontend->>ReflexFrontend: Append new Q/A to full_history in state
 ```
+
+With a simple UML Diagram:
+
+```mermaid
+graph TD
+    subgraph "User Interface"
+        RF[ReflexFrontend]
+    end
+
+    subgraph "Backend API"
+        FB[FastAPIBackend]
+    end
+
+    subgraph "Backend Logic"
+        HM[HistoryManager <br/> Handles CAG Summarization]
+        LLM[LLMLogic <br/> Handles RAG & LLM Calls]
+    end
+
+    subgraph "Data Stores"
+        VDB[VectorDB <br/> RAG Data Source]
+    end
+
+    subgraph "External Services"
+        ExtLLM[External LLM Service]
+    end
+
+    User --> RF
+    RF -- "HTTP POST /chat, /update_vital_info" --> FB
+    FB -- "ProcessHistory" --> HM
+    FB -- "query_and_respond, ProcessVitalInfoUpdate" --> LLM
+    LLM -- "Query context, Upsert embedding" --> VDB
+    LLM -- "Call LLM" --> ExtLLM
+    HM -- "Summarize History" --> ExtLLM
+```
+
