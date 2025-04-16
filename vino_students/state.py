@@ -49,12 +49,24 @@ class State(rx.State):
         self.question = ""  # Clear input field
         yield  # Update UI with placeholder
 
+        # --- Prepare history for backend ---
+        # Convert list of tuples to list of dicts for JSON serialization
+        # Use 'user' and 'assistant' roles, common convention
+        history_for_backend = []
+        # Iterate over all but the last entry (which is the placeholder)
+        for q, a in self.chat_history[:-1]:
+            history_for_backend.append({"role": "user", "content": q})
+            history_for_backend.append({"role": "assistant", "content": a})
+
         try:
             # Call backend API
             async with httpx.AsyncClient() as client:
                 response = await client.post(
                     f"{BACKEND_API_URL}/chat",
-                    json={"question": question_to_send},
+                    json={
+                        "question": question_to_send,
+                        "history": history_for_backend  # <-- Pass the formatted history
+                    },
                     timeout=30.0
                 )
                 response.raise_for_status()

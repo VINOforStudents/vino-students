@@ -17,6 +17,9 @@ from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
+
+import prompts
 
 #------------------------------------------------------------------------------
 # CONSTANTS AND CONFIGURATION
@@ -27,6 +30,16 @@ DOCUMENTS_DIR = os.path.join(os.getcwd(), "documents")
 USER_UPLOADS_DIR = os.path.join(os.getcwd(), "user_uploads")
 CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 200
+
+
+#------------------------------------------------------------------------------
+# APPLICATION STATE (In-Memory)
+#------------------------------------------------------------------------------
+
+conversation_history: List[BaseMessage] = []
+current_process_step: int = 1 # Start at step 1
+planner_details: Optional[str] = None # To store the plan generated in Step 3
+
 
 #------------------------------------------------------------------------------
 # DATA MODELS
@@ -500,24 +513,8 @@ def upload_file(file_path):
 # INITIALIZATION
 #------------------------------------------------------------------------------
 
-# Setup prompt template for the LLM
-prompt = ChatPromptTemplate.from_messages([
-    (
-        "system",
-        "You are a helpful assistant that answers questions based on document context." // TODO Augemnt Prompting
-    ),
-    (
-        "human",
-        """I have the following context:
-        {context}
-
-        Conversation history: 
-        {history}
-
-        Answer my question: {question}""" // TODO planner of 6 steps and UM
-    )
-])
-
+# // TODO Emphasis on first step, second step and then third to define the planner
+# // TODO Add a multi-step planner to the prompt template
 # // TODO Add 6 context windows for each step
 # // TODO Guide the useer through the first step
 # // TODO Transition to the next step
@@ -544,4 +541,6 @@ model = ChatGoogleGenerativeAI(
 )
 
 # Create the LLM chain
+current_history = get_history_from_state()
+prompt = prompts.get_base_chat_prompt()
 chain = prompt | model
