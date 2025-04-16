@@ -1,3 +1,4 @@
+.web
 *.db
 .states
 *.py[cod]
@@ -6,3 +7,4 @@ __pycache__/
 .venv/
 .env
 chromadb/
+.web/
