@@ -7,7 +7,7 @@ and LLM-based question answering to be used by API endpoints.
 # Standard library imports
 import os
 import glob
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 # Third-party imports
 import chromadb
@@ -270,6 +270,24 @@ def load_user_document(file_path):
 # QUERY AND RESPONSE
 #------------------------------------------------------------------------------
 
+def convert_history_data(history_data: List[Dict[str, str]]) -> List[BaseMessage]:
+    """
+    Convert history data into LangChain message objects.
+    
+    Args:
+        history_data: List of dictionaries containing role and content
+        
+    Returns:
+        List[BaseMessage]: Converted LangChain message objects
+    """
+    messages = []
+    for item in history_data:
+        if item.get("role") == "user":
+            messages.append(HumanMessage(content=item.get("content", "")))
+        elif item.get("role") == "assistant":
+            messages.append(AIMessage(content=item.get("content", "")))
+    return messages
+
 def add_results_to_context(results, section_title, context=""):
     """
     Add search results to the context string with proper formatting.
@@ -290,13 +308,13 @@ def add_results_to_context(results, section_title, context=""):
         return context, True
     return context, False
 
-def query_and_respond(query_text, conversation_history, collection_fw=None, collection_user=None):
+def query_and_respond(query_text, history_data, collection_fw=None, collection_user=None):
     """
     Query collections and generate a response.
     
     Args:
         query_text: User's question
-        conversation_history: List of previous conversation entries
+        history_data: List of previous conversation entries
         collection_fw: Frameworks collection
         collection_user: User documents collection
         
@@ -319,13 +337,8 @@ def query_and_respond(query_text, conversation_history, collection_fw=None, coll
         n_results=3  # Get top 3 from user docs
     )
 
-    # Build conversation context from history
-    conversation_context = ""
-    if conversation_history:
-        for entry in conversation_history:
-            role = entry["role"]
-            content = entry["content"]
-            conversation_context += f"{role.capitalize()}: {content}\n"
+    # Convert history data to LangChain message objects
+    langchain_history = convert_history_data(history_data)
 
     # Combine all retrieved document chunks into a comprehensive context
     combined_context = ""
@@ -336,11 +349,12 @@ def query_and_respond(query_text, conversation_history, collection_fw=None, coll
     
     # If we have context, generate a response
     if has_fw_results or has_user_results:
-        response = chain.invoke({
-            "context": combined_context,
-            "history": conversation_context,
-            "question": query_text
-        })
+        prompt = prompts.get_universal_matrix_prompt(
+            context=combined_context,
+            history=langchain_history,
+            question=query_text
+        )
+        response = chain.invoke(prompt)
         return response.content
     else:
         return "No relevant information found. Please try a different question."
