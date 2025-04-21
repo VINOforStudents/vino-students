@@ -7,13 +7,11 @@ and LLM-based question answering to be used by API endpoints.
 # Standard library imports
 import os
 import glob
-from typing import List, Optional
 
 # Third-party imports
 import chromadb
 import chromadb.utils.embedding_functions as embedding_functions
 import PyPDF2
-from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
