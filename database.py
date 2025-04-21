@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 # Local imports
 from config import CHROMA_DB_PATH, DOCUMENTS_DIR
-from load_documents import load_documents_from_directory
+from document_processor import load_documents_from_directory
 
 # Third-party imports
 import chromadb
