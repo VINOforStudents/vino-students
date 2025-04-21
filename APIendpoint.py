@@ -1,6 +1,7 @@
 import os
 import uvicorn
 from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import shutil
 from main import (
@@ -17,6 +18,21 @@ from main import (
 app = FastAPI(
     title="LLM Conversation API",
     description="A simple API endpoint to interact with an LLM."
+)
+
+# Configure CORS
+origins = [
+    "http://localhost:3000",  # Default Reflex frontend port
+    "http://127.0.0.1:3000", # Also allow this variant
+    # Add any other origins if needed (e.g., your deployed frontend URL)
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers
 )
 
 # Initialize database collections

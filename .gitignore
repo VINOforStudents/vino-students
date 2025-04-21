@@ -1,3 +1,4 @@
+.web
 *.db
 .states
 *.py[cod]

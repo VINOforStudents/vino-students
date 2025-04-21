@@ -62,19 +62,19 @@ GOOGLE_API_KEY=your_api_key_here
 
 ### Usage
 
-1. Run the GUI application:
+1. (Optional) Run the CLI application:
+
+```bash
+uvicorn APIendpoint:app --reload
+```
+
+2. Run the GUI application:
 
 ```bash
 reflex run
 ```
 
-2. Open the web-gui on localhost:3000 (stated in terminal)
-
-3. (Optional) Run the CLI application:
-
-```bash
-python main.py
-```
+3. Open the web-gui on localhost:3000 (stated in terminal)
 
 4.  Available commands:
 

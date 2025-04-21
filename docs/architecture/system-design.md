@@ -1,8 +1,37 @@
+
+# Table of Contents
+
+- [Table of Contents](#table-of-contents)
+- [System Architecture](#system-architecture)
+  - [Component Description](#component-description)
+  - [Data Flow](#data-flow)
+  - [Sequence Diagram](#sequence-diagram)
+
 # System Architecture
 
-Focused to establish a simplicstic RAG and CAG system.
+Based on a possible MVP architecture discussed and presented during meetings:
+
+![Discussed Architecture](image.png)
+
+Focused to establish a simplicstic RAG and CAG system, connecting it through an API and attaching the corresponding services to it.
+
+
+
+**Scoped out features for Sprint 2[ending on 17/04]:**
+ * Users
+ * API for whole application
+ * LLM Service
+ * Advanced Preprocessing
+
+After scoping down to a POC instead of including an API and LLM service as shown above, we put everything into one simplified codebase that implements the following:
 
 ```mermaid
+---
+config:
+    layout: default
+    look: handDrawn
+    theme: dark
+---
 graph TD
     subgraph "Frontend"
         GUI[Reflex Web GUI]
@@ -30,10 +59,6 @@ graph TD
     VDB <--> LLM
     GUI --> UD
 
-    classDef frontend fill:#d0e1f9,stroke:#333;
-    classDef backend fill:#e1f9d0,stroke:#333;
-    classDef storage fill:#f9e1d0,stroke:#333;
-
     class GUI,CLI frontend;
     class VDB,LLM,DOC backend;
     class FW,UD,VS storage;
@@ -59,3 +84,35 @@ graph TD
 5. User queries trigger similarity search
 6. Relevant context is sent to LLM
 7. LLM generates response
+
+## Sequence Diagram
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant GUI as Web GUI/CLI
+    participant DOC as Document Processor
+    participant VDB as ChromaDB
+    participant LLM as Gemini 1.5 Pro
+
+    %% Document Upload Flow
+    User->>GUI: Upload Document
+    GUI->>DOC: Process Document
+    DOC->>DOC: Chunk Text
+    DOC->>VDB: Store Vectors
+    VDB-->>GUI: Confirm Storage
+
+    %% Query Flow
+    User->>GUI: Ask Question
+    GUI->>VDB: Search Similar Vectors
+    VDB-->>GUI: Return Relevant Context
+    GUI->>LLM: Generate Response
+    LLM-->>GUI: Return Answer
+    GUI-->>User: Display Response
+```
+
+This sequence diagram illustrates two main flows:
+1. Document Upload Process
+2. Query and Response Generation
+
+The diagram shows how components interact in a time-ordered sequence, making it clear how data flows through the system during different operations.
