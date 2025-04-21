@@ -1,17 +1,19 @@
+# Standard library imports
 import os
+import shutil
+
+# Third-party imports
 import uvicorn
 from fastapi import FastAPI, File, UploadFile, HTTPException
-from pydantic import BaseModel
-import shutil
-from main import (
-    initialize_vector_db,
-    query_and_respond,
-    load_user_document,
-    list_uploaded_files,
-    prompt,
-    model,
-    USER_UPLOADS_DIR
-)
+
+# Local application imports (after refactoring)
+from config import USER_UPLOADS_DIR # Configuration constant
+from database import initialize_vector_db # Function to setup DB
+from document_processor import load_user_document # Function to process uploaded files
+from llm_interaction import query_and_respond, chain, prompt, model # Function to interact with LLM
+from file_utils import list_uploaded_files # Function to list files
+from models import ChatRequest, ChatResponse # Pydantic models for request/response
+
 
 # Initialize FastAPI App
 app = FastAPI(
@@ -27,11 +29,6 @@ except Exception as e:
     print(f"FATAL: Could not initialize database or model: {e}")
     # In production, you might want to exit here with sys.exit(1)
 
-class ChatRequest(BaseModel):
-    question: str
-
-class ChatResponse(BaseModel):
-    answer: str
 
 @app.post("/chat", response_model=ChatResponse)
 async def handle_chat(request: ChatRequest):

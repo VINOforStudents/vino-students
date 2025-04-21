@@ -23,3 +23,9 @@ class ProcessingResult(BaseModel):
     metadatas: List[DocumentMetadata] = Field(default_factory=list)
     ids: List[str] = Field(default_factory=list)
     chunk_count: int = 0
+
+class ChatRequest(BaseModel):
+    question: str
+
+class ChatResponse(BaseModel):
+    answer: str
