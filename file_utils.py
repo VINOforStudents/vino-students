@@ -9,7 +9,8 @@ import os
 
 # Local imports
 from config import USER_UPLOADS_DIR
-
+from document_processor import load_user_document
+from database import collection_user
 
 
 #------------------------------------------------------------------------------
