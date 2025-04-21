@@ -18,15 +18,9 @@ from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 
-#------------------------------------------------------------------------------
-# CONSTANTS AND CONFIGURATION
-#------------------------------------------------------------------------------
+# Module imports
+from config import CHROMA_DB_PATH, DOCUMENTS_DIR, USER_UPLOADS_DIR, CHUNK_SIZE, CHUNK_OVERLAP
 
-CHROMA_DB_PATH = os.path.join(os.getcwd(), "chromadb")
-DOCUMENTS_DIR = os.path.join(os.getcwd(), "documents")
-USER_UPLOADS_DIR = os.path.join(os.getcwd(), "user_uploads")
-CHUNK_SIZE = 1000
-CHUNK_OVERLAP = 200
 
 #------------------------------------------------------------------------------
 # DATA MODELS
