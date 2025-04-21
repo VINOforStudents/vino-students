@@ -22,28 +22,6 @@ from langchain_core.prompts import ChatPromptTemplate
 from config import CHROMA_DB_PATH, DOCUMENTS_DIR, USER_UPLOADS_DIR, CHUNK_SIZE, CHUNK_OVERLAP
 
 
-#------------------------------------------------------------------------------
-# DATA MODELS
-#------------------------------------------------------------------------------
-
-class DocumentMetadata(BaseModel):
-    """Metadata for a document chunk."""
-    source: str
-    filename: str
-    chunk: int
-
-class DocumentChunk(BaseModel):
-    """A chunk of text with its metadata and ID."""
-    text: str
-    metadata: DocumentMetadata
-    id: str
-
-class ProcessingResult(BaseModel):
-    """Results from processing a document."""
-    documents: List[str] = Field(default_factory=list)
-    metadatas: List[DocumentMetadata] = Field(default_factory=list)
-    ids: List[str] = Field(default_factory=list)
-    chunk_count: int = 0
 
 #------------------------------------------------------------------------------
 # DATABASE OPERATIONS
