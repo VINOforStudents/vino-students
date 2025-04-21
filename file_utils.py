@@ -10,7 +10,6 @@ import os
 # Local imports
 from config import USER_UPLOADS_DIR
 from document_processor import load_user_document
-from database import collection_user
 
 
 #------------------------------------------------------------------------------
@@ -44,7 +43,7 @@ def process_command(command):
     
     return None  # Not a command
 
-def list_uploaded_files():
+def list_uploaded_files(collection_user):
     """
     List all files that have been uploaded by the user.
     
@@ -78,7 +77,7 @@ def list_uploaded_files():
     
     return result
 
-def process_uploaded_files():
+def process_uploaded_files(collection_user):
     """
     Process all files in the user_uploads directory that haven't been processed yet.
     
@@ -129,7 +128,7 @@ def process_uploaded_files():
     summary = f"Processed {processed_count} files with {error_count} errors.\n"
     return summary + "\n".join(results)
 
-def upload_file(file_path):
+def upload_file(file_path, collection_user):
     """
     Upload a file to the user collection.
     

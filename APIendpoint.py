@@ -5,6 +5,7 @@ import shutil
 # Third-party imports
 import uvicorn
 from fastapi import FastAPI, File, UploadFile, HTTPException
+import python_multipart
 
 # Local application imports (after refactoring)
 from config import USER_UPLOADS_DIR # Configuration constant
@@ -78,7 +79,7 @@ async def handle_upload(file: UploadFile = File(...)):
 @app.get("/list_files")
 async def get_uploaded_files():
     try:
-        file_list_string = list_uploaded_files()
+        file_list_string = list_uploaded_files(collection_user)
         return {"files_info": file_list_string}
     except Exception as e:
         print(f"Error in /list_files endpoint: {e}")
