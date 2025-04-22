@@ -1,9 +1,12 @@
 # Standard library imports
 import os
+from typing import List, Dict, Any
 
 # Third-party imports
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
+import prompts
 
 # Local imports
 from config import USER_UPLOADS_DIR
@@ -12,6 +15,16 @@ from config import USER_UPLOADS_DIR
 #------------------------------------------------------------------------------
 # QUERY AND RESPONSE
 #------------------------------------------------------------------------------
+
+def convert_history_data(history_data: List[Dict[str, Any]]) -> List[BaseMessage]:
+    """Converts the history format from the API request to LangChain messages."""
+    messages = []
+    for item in history_data:
+        if item.get("role") == "user":
+            messages.append(HumanMessage(content=item.get("content", "")))
+        elif item.get("role") == "assistant":
+            messages.append(AIMessage(content=item.get("content", "")))
+    return messages
 
 def add_results_to_context(results, section_title, context=""):
     """
@@ -33,60 +46,75 @@ def add_results_to_context(results, section_title, context=""):
         return context, True
     return context, False
 
-def query_and_respond(query_text, conversation_history, collection_fw=None, collection_user=None):
+def query_and_respond(query_text: str, history_data: List[Dict[str, Any]], current_step: int, collection_fw=None, collection_user=None):
     """
-    Query collections and generate a response.
-    
-    Args:
-        query_text: User's question
-        conversation_history: List of previous conversation entries
-        collection_fw: Frameworks collection
-        collection_user: User documents collection
-        
-    Returns:
-        str: Generated response
+    Queries vector databases, constructs a prompt using history and step,
+    and gets a response from the LLM.
     """
+    global chain # Assuming chain is a global variable initialized elsewhere
+
     # Use the passed collections instead of trying to access global variables
     if collection_fw is None or collection_user is None:
-        raise ValueError("Both collection_fw and collection_user must be provided")
-    
+         # Handle error: Collections not provided
+         print("Error: Vector database collections not provided to query_and_respond.")
+         return "Error: Internal server configuration issue."
+
     # Query frameworks collection
     fw_results = collection_fw.query(
         query_texts=[query_text],
-        n_results=3  # Get top 3 from frameworks
+        n_results=3
     )
-    
+
     # Query user collection
     user_results = collection_user.query(
         query_texts=[query_text],
-        n_results=3  # Get top 3 from user docs
+        n_results=3
     )
 
-    # Build conversation context from history
-    conversation_context = ""
-    if conversation_history:
-        for entry in conversation_history:
-            role = entry["role"]
-            content = entry["content"]
-            conversation_context += f"{role.capitalize()}: {content}\n"
+    # Convert history data from API format to LangChain message objects
+    langchain_history = convert_history_data(history_data)
 
     # Combine all retrieved document chunks into a comprehensive context
     combined_context = ""
-    
+
     # Add both collections' results
     combined_context, has_fw_results = add_results_to_context(fw_results, "From Framework Documents", combined_context)
     combined_context, has_user_results = add_results_to_context(user_results, "From Your Documents", combined_context)
-    
-    # If we have context, generate a response
-    if has_fw_results or has_user_results:
+
+    # Correctly call get_universal_matrix_prompt with required arguments
+    prompt_template = prompts.get_universal_matrix_prompt(
+        current_step=current_step,  # Use the passed current_step
+        history=langchain_history, # Pass the converted history object
+        question=query_text,
+        step_context="", # No specific step context retrieved here (can be enhanced later)
+        general_context=combined_context, # Pass combined results as general context
+    )
+    if prompt_template is None: # Handle the case where the step might be invalid
+            print(f"Error: Could not generate prompt for step {current_step}.")
+            return "Error generating prompt for the query."
+
+    # Prepare the input dictionary for the prompt template
+    input_data = {
+        "history": langchain_history, # Pass history again for the template formatting
+        "question": query_text,
+        "step_context": "",
+        "general_context": combined_context,
+        "current_step": current_step # Use passed step
+    }
+
+    try:
+        # Instead of using the formatted prompt, pass the input dictionary directly to the chain
         response = chain.invoke({
             "context": combined_context,
-            "history": conversation_context,
+            "history": langchain_history,
             "question": query_text
         })
+
         return response.content
-    else:
-        return "No relevant information found. Please try a different question."
+
+    except Exception as e:
+        print(f"Error during chain invocation: {e}")
+        return "Error: Failed to get response from language model."
     
 #------------------------------------------------------------------------------
 # INITIALIZATION

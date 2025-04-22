@@ -6,6 +6,7 @@ import shutil
 import uvicorn
 from fastapi import FastAPI, UploadFile, File, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
+import prompts
 
 
 # Local application imports (after refactoring)
