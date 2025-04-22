@@ -4,8 +4,9 @@ import shutil
 
 # Third-party imports
 import uvicorn
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
+
 
 # Local application imports (after refactoring)
 from config import USER_UPLOADS_DIR # Configuration constant
@@ -40,19 +41,19 @@ app.add_middleware(
 # Initialize database collections
 try:
     collection_fw, collection_user = initialize_vector_db()
-    chain = prompt | model
 except Exception as e:
     print(f"FATAL: Could not initialize database or model: {e}")
     # In production, you might want to exit here with sys.exit(1)
 
 
+
 @app.post("/chat", response_model=ChatResponse)
 async def handle_chat(request: ChatRequest):
-    conversation_history = []
     try:
         answer = query_and_respond(
-            request.question, 
-            conversation_history,
+            query_text=request.question,
+            history_data=request.history,
+            current_step=request.current_step,
             collection_fw=collection_fw,
             collection_user=collection_user
         )
@@ -61,7 +62,7 @@ async def handle_chat(request: ChatRequest):
         return ChatResponse(answer=answer)
     except Exception as e:
         print(f"Error in /chat endpoint: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error during chat processing.")
+        raise HTTPException(status_code=500, detail=f"Internal server error during chat processing: {str(e)}")
 
 @app.post("/upload")
 async def handle_upload(file: UploadFile = File(...)):
