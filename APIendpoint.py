@@ -13,7 +13,7 @@ import prompts
 from config import USER_UPLOADS_DIR # Configuration constant
 from database import initialize_vector_db # Function to setup DB
 from document_processor import load_user_document # Function to process uploaded files
-from llm_interaction import query_and_respond, chain, prompt, model # Function to interact with LLM
+from llm_interaction import query_and_respond# Function to interact with LLM
 from file_utils import list_uploaded_files # Function to list files
 from models import ChatRequest, ChatResponse # Pydantic models for request/response
 

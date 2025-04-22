@@ -103,41 +103,22 @@ def query_and_respond(query_text: str, history_data: List[Dict[str, Any]], curre
     }
 
     try:
-        # Instead of using the formatted prompt, pass the input dictionary directly to the chain
-        response = chain.invoke({
-            "context": combined_context,
-            "history": langchain_history,
-            "question": query_text
-        })
+        # Format the prompt template using the input data
+        formatted_prompt = prompt_template.invoke(input_data)
+
+        # Pass the formatted prompt (PromptValue or list of BaseMessages) to the model
+        response = model.invoke(formatted_prompt)
 
         return response.content
 
     except Exception as e:
         print(f"Error during chain invocation: {e}")
         return "Error: Failed to get response from language model."
+
     
 #------------------------------------------------------------------------------
 # INITIALIZATION
 #------------------------------------------------------------------------------
-
-# Setup prompt template for the LLM
-prompt = ChatPromptTemplate.from_messages([
-    (
-        "system",
-        "You are a helpful assistant that answers questions based on document context."
-    ),
-    (
-        "human",
-        """I have the following context:
-        {context}
-
-        Conversation history:
-        {history}
-
-        Answer my question: {question}"""
-    )
-])
-
  
 # Ensure upload directory exists
 os.makedirs(USER_UPLOADS_DIR, exist_ok=True)
@@ -150,6 +131,3 @@ model = ChatGoogleGenerativeAI(
     timeout=None,
     max_retries=2
 )
-
-# Create the LLM chain
-chain = prompt | model
