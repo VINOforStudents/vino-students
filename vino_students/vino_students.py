@@ -40,6 +40,7 @@ def action_bar() -> rx.Component:
         rx.input(
             value=State.question,
             placeholder="Ask a question",
+            color=rx.color("sand", 3),
             on_change=State.set_question,
             style=style.input_style,
         ),
@@ -55,16 +56,19 @@ def file_upload_area() -> rx.Component:
     """Renders the file upload component."""
     return rx.upload(
         rx.vstack(
-            rx.button("Select File(s)"),
+            rx.button("Select File(s)",
+                       style=style.button_style,),
             rx.text("Drag and drop files here or click to select files."),
         ),
         id="my_upload",
-        border="1px dotted rgb(107,114,128)",
+        border="2px dotted #222221",
+        background_color=rx.color("sand", 12),
         padding="2em",
         width="40em",
         margin_top="1em",
-        margin_bottom="1em",
+        margin_bottom="3em",
         on_drop=State.handle_upload(rx.upload_files()),
+        size="2",
     )
 
 
@@ -88,14 +92,62 @@ def clear_history_button() -> rx.Component:
         "Clear History",
         on_click=State.clear_chat_history,
         color_scheme="red",
+        color=rx.color("ruby", 3),
+        border="3px solid ruby",
         size="2",
         variant="outline",
         position="fixed",
         top="10em",
         right="1em",
-        z_index="999",  # Ensures button stays on top of other content
+        z_index="999", 
     )
 
+def navbar_link(url: str, image_src: str = None, text: str = None, image_size: str = "1.5em") -> rx.Component:
+    if image_src:
+        return rx.link(
+            rx.image(
+                src=image_src,
+                width=image_size,
+                height="auto",
+                alt=text or "Navigation icon"
+            ),
+            href=url
+        )
+    else:
+        return rx.link(
+            rx.text(text, size="4", weight="medium"), 
+            href=url
+        )
+
+
+def navbar() -> rx.Component:
+    return rx.box(
+        rx.desktop_only(
+            rx.hstack(
+                rx.hstack(
+                    navbar_link(url="/#", image_src="/step1.png", text="Step 1"),
+                    navbar_link(url="/#", image_src="/step1.png", text="Step 1"),
+                    navbar_link(url="/#", image_src="/step1.png", text="Step 1"),
+                    navbar_link(url="/#", image_src="/step1.png", text="Step 1"),
+                    navbar_link(url="/#", image_src="/step1.png", text="Step 1"),
+                    navbar_link(url="/#", image_src="/step1.png", text="Step 1"),
+                    justify="center",
+                    spacing="9",
+                    width="100%",
+                ),
+                width="100%",
+                align_items="center",
+            ),
+        ),
+        bg=rx.color("sand", 12),
+        padding="1em",
+        position="fixed",
+        top="2em",
+        z_index="5",
+        width="100%",
+        border_top="1px solid #222221",
+        border_bottom="1px solid #222221",
+    )
 
 def index() -> rx.Component:
     """The main page component."""
@@ -128,40 +180,10 @@ def index() -> rx.Component:
             ),
         ),
         width="100%",
-    )
-
-def navbar_link(text: str, url: str) -> rx.Component:
-    return rx.link(
-        rx.text(text, size="4", weight="medium"), href=url
+        background_color=rx.color("sand", 12),
     )
 
 
-def navbar() -> rx.Component:
-    return rx.box(
-        rx.desktop_only(
-            rx.hstack(
-                rx.hstack(
-                    navbar_link("1", "/#"),
-                    navbar_link("2", "/#"),
-                    navbar_link("3", "/#"),
-                    navbar_link("4", "/#"),
-                    navbar_link("5", "/#"),
-                    navbar_link("6", "/#"),
-                    justify="center",
-                    spacing="",
-                    width="100%",
-                ),
-                width="100%",
-                align_items="center",
-            ),
-        ),
-        bg=rx.color("accent", 3),
-        padding="1em",
-        position="fixed",
-        top="20px",
-        z_index="5",  # Uncommented to ensure navbar appears above content
-        width="100%",
-    )
 
 # Initialize app
 app = rx.App()
