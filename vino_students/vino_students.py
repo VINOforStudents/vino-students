@@ -126,11 +126,11 @@ def navbar() -> rx.Component:
             rx.hstack(
                 rx.hstack(
                     navbar_link(url="/#", image_src="/step1.png", text="Step 1"),
-                    navbar_link(url="/#", image_src="/step1.png", text="Step 1"),
-                    navbar_link(url="/#", image_src="/step1.png", text="Step 1"),
-                    navbar_link(url="/#", image_src="/step1.png", text="Step 1"),
-                    navbar_link(url="/#", image_src="/step1.png", text="Step 1"),
-                    navbar_link(url="/#", image_src="/step1.png", text="Step 1"),
+                    navbar_link(url="/#", image_src="/step2.png", text="Step 2"),
+                    navbar_link(url="/#", image_src="/step3.png", text="Step 3"),
+                    navbar_link(url="/#", image_src="/step4.png", text="Step 4"),
+                    navbar_link(url="/#", image_src="/step5.png", text="Step 5"),
+                    navbar_link(url="/#", image_src="/step6.png", text="Step 6"),
                     justify="center",
                     spacing="9",
                     width="100%",
