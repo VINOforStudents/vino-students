@@ -160,3 +160,17 @@ def navbar_link(url: str, image_src: str = None, text: str = None, image_size: s
 I used a random screenshot of the first step, but we should design proper cards ourselves. But it works as a test, just to show that it's possible. It should also be much wider.
 
 ![Test navbar](pics/test-navbar.png)
+
+Okay, now I am now farther in the process but I didn't document it. I will give you a quick recap, based on this screenshot:
+
+![progress navabar](pics/progress_navbar.png) 
+
+As you can see, there are some changes. I changed the theme and the color icons. 
+
+Will will need to:
+- Make uniform cards for each card (similar to the paper prototype)
+- Make the symbols spread wider
+- Obv we will work on the looks and ux
+Additionally:
+- Clear history button will stay for now for testing reasons
+- "Select files" will need to be changed, but for now it stays like this
