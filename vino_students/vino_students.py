@@ -91,7 +91,7 @@ def clear_history_button() -> rx.Component:
         size="2",
         variant="outline",
         position="fixed",
-        top="1em",
+        top="10em",
         right="1em",
         z_index="999",  # Ensures button stays on top of other content
     )
@@ -118,6 +118,8 @@ def index() -> rx.Component:
                 
                 # Status indicators
                 status_indicators(),
+
+                navbar(),
                 
                 # Layout properties
                 align="center",
@@ -128,6 +130,38 @@ def index() -> rx.Component:
         width="100%",
     )
 
+def navbar_link(text: str, url: str) -> rx.Component:
+    return rx.link(
+        rx.text(text, size="4", weight="medium"), href=url
+    )
+
+
+def navbar() -> rx.Component:
+    return rx.box(
+        rx.desktop_only(
+            rx.hstack(
+                rx.hstack(
+                    navbar_link("1", "/#"),
+                    navbar_link("2", "/#"),
+                    navbar_link("3", "/#"),
+                    navbar_link("4", "/#"),
+                    navbar_link("5", "/#"),
+                    navbar_link("6", "/#"),
+                    justify="center",
+                    spacing="",
+                    width="100%",
+                ),
+                width="100%",
+                align_items="center",
+            ),
+        ),
+        bg=rx.color("accent", 3),
+        padding="1em",
+        position="fixed",
+        top="20px",
+        z_index="5",  # Uncommented to ensure navbar appears above content
+        width="100%",
+    )
 
 # Initialize app
 app = rx.App()
