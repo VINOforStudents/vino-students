@@ -1,12 +1,19 @@
 # Table of Contents
 
 1. [Introduction](#introduction)
+2. [Simple navbar](#simple-navbar)
+3. [Implementing Cards](#implementing-cards)
+4. [Change UI](#change-ui)
+5. [Implementing Cards #2](#implementing-cards-2)
+6. [Expanded card for active step](#expanded-card-for-active-step)
 
 # Introduction
 
 With the Proof of Concept we demonstrated the core functionality of VINO AI. We didn't focus on the User Experience aspect at all, so coaches had a lot of questions about it.
 
 As a first step, we want to implement a navigation bar, that will display 6 cards (as 6 steps) and highlight the current step.
+
+# Simple navbar
 
 Reference: https://reflex.dev/docs/recipes/layout/navbar/?q=navbar
 
@@ -121,6 +128,7 @@ def navbar() -> rx.Component:
 
 And I had to reference it in the index() like so: ```navbar()``` 
 
+# Implementing cards
 
 The important question is whether we can put pictures instead of text, because that's the most important part. Turns out, it is relatively easy to do. Just need to specify the properties, and one of them should be the path to the picture (must be in assets folder or absolute path).
 
@@ -161,6 +169,8 @@ I used a random screenshot of the first step, but we should design proper cards 
 
 ![Test navbar](pics/test-navbar.png)
 
+# Change UI
+
 Okay, now I am now farther in the process but I didn't document it. I will give you a quick recap, based on this screenshot:
 
 ![progress navabar](pics/progress_navbar.png) 
@@ -168,9 +178,28 @@ Okay, now I am now farther in the process but I didn't document it. I will give 
 As you can see, there are some changes. I changed the theme and the color icons. 
 
 Will will need to:
-- Make uniform cards for each card (similar to the paper prototype)
+- Make uniform cards for each step (similar to the paper prototype)
 - Make the symbols spread wider
 - Obv we will work on the looks and ux
 Additionally:
 - Clear history button will stay for now for testing reasons
 - "Select files" will need to be changed, but for now it stays like this
+
+# Implementing cards #2
+
+I designed this set of cards for quick testing:
+
+![Quick Cards](pics/quick_cards.png)
+
+And a collapsed version for when a step is not selected:
+
+![Quick Cards Collapsed]](pics/quick_cards_collapsed.png)
+
+I uploaded the new collapsed cards so they are displayed like this. I mainly had to adjust the high of the objects and paddings. Pictures will need to be remade, I made them quickly for demostration and testing purposes. Should remove borders and utilize relfex's borders. Should keep borders on not-collapsed cards, but make sure styles fit.
+
+![New collapsed menu](pics/new_collapsed_menu.png)
+
+# Expanded card for active step
+
+Next step is to replace collapsed card with an extended one for the *active* card. I know it's not hard to do in css, but need to find how to do it in Reflex.
+

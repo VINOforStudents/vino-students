@@ -97,8 +97,8 @@ def clear_history_button() -> rx.Component:
         size="2",
         variant="outline",
         position="fixed",
-        top="10em",
-        right="1em",
+        top="8em",
+        right="16em",
         z_index="999", 
     )
 
@@ -107,11 +107,15 @@ def navbar_link(url: str, image_src: str = None, text: str = None, image_size: s
         return rx.link(
             rx.image(
                 src=image_src,
-                width=image_size,
-                height="auto",
-                alt=text or "Navigation icon"
+                width="7em",
+                height="3em",
+                alt=text or "Navigation icon",
+                fit="contain",
             ),
-            href=url
+            href=url,
+            height="3em",
+            display="flex",
+            align_items="center"
         )
     else:
         return rx.link(
@@ -132,21 +136,23 @@ def navbar() -> rx.Component:
                     navbar_link(url="/#", image_src="/step5.png", text="Step 5"),
                     navbar_link(url="/#", image_src="/step6.png", text="Step 6"),
                     justify="center",
-                    spacing="9",
+                    spacing="0",
                     width="100%",
                 ),
                 width="100%",
                 align_items="center",
+                height="3em",
             ),
         ),
         bg=rx.color("sand", 12),
-        padding="1em",
+        padding="0",
         position="fixed",
         top="2em",
         z_index="5",
         width="100%",
         border_top="1px solid #222221",
         border_bottom="1px solid #222221",
+        height="3em",
     )
 
 def index() -> rx.Component:
