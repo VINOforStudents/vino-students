@@ -102,11 +102,41 @@ def clear_history_button() -> rx.Component:
         z_index="999", 
     )
 
-def navbar_link(url: str, image_src: str = None, text: str = None, image_size: str = "1.5em") -> rx.Component:
-    if image_src:
+def navbar_link(url: str, default_image_src: str, active_image_src: str = None, 
+                step_number: int = None, text: str = None, image_size: str = "1.5em") -> rx.Component:
+    if active_image_src and step_number is not None:
+        # Swap images based on active state
+        return rx.link(
+            rx.cond(
+                State.active_step == step_number,
+                # Show active image when this step is active
+                rx.image(
+                        src=active_image_src,
+                        width="9em",
+                        height="5em",
+                        alt=text or f"Step {step_number}",
+                        fit="contain",
+                    ),
+                # Show default image otherwise
+                rx.image(
+                    src=default_image_src,
+                    width="7em",
+                    height="3em",
+                    alt=text or f"Step {step_number}",
+                    fit="contain",
+                ),
+            ),
+            href=url,
+            height="3em",
+            display="flex",
+            align_items="center",
+            on_click=State.set_active_step(step_number),
+        )
+    elif default_image_src:
+        # Original image-only link handling
         return rx.link(
             rx.image(
-                src=image_src,
+                src=default_image_src,
                 width="7em",
                 height="3em",
                 alt=text or "Navigation icon",
@@ -118,6 +148,7 @@ def navbar_link(url: str, image_src: str = None, text: str = None, image_size: s
             align_items="center"
         )
     else:
+        # Text-only link handling
         return rx.link(
             rx.text(text, size="4", weight="medium"), 
             href=url
@@ -129,12 +160,12 @@ def navbar() -> rx.Component:
         rx.desktop_only(
             rx.hstack(
                 rx.hstack(
-                    navbar_link(url="/#", image_src="/step1.png", text="Step 1"),
-                    navbar_link(url="/#", image_src="/step2.png", text="Step 2"),
-                    navbar_link(url="/#", image_src="/step3.png", text="Step 3"),
-                    navbar_link(url="/#", image_src="/step4.png", text="Step 4"),
-                    navbar_link(url="/#", image_src="/step5.png", text="Step 5"),
-                    navbar_link(url="/#", image_src="/step6.png", text="Step 6"),
+                    navbar_link(url="/#", default_image_src="/step1.png", active_image_src="/step1_active.png", step_number=1, text="Step 1"),
+                    navbar_link(url="/#", default_image_src="/step2.png", active_image_src="/step2_active.png", step_number=2, text="Step 2"),
+                    navbar_link(url="/#", default_image_src="/step3.png", active_image_src="/step3_active.png", step_number=3, text="Step 3"),
+                    navbar_link(url="/#", default_image_src="/step4.png", active_image_src="/step4_active.png", step_number=4, text="Step 4"),
+                    navbar_link(url="/#", default_image_src="/step5.png", active_image_src="/step5_active.png", step_number=5, text="Step 5"),
+                    navbar_link(url="/#", default_image_src="/step6.png", active_image_src="/step6_active.png", step_number=6, text="Step 6"),
                     justify="center",
                     spacing="0",
                     width="100%",

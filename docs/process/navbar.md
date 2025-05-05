@@ -203,3 +203,102 @@ I uploaded the new collapsed cards so they are displayed like this. I mainly had
 
 Next step is to replace collapsed card with an extended one for the *active* card. I know it's not hard to do in css, but need to find how to do it in Reflex.
 
+I added a state variable for tracking current step:
+
+```py
+    active_step: int = 1 # By default, the first step is active
+
+    def set_active_step(self, step_number: int):
+        """Set the active step/menu item."""
+        self.active_step = step_number
+        print(f"Active step set to {step_number}")
+```
+
+Then, I had to modify how the image is displayed. Original function:
+
+```py
+def navbar_link(url: str, image_src: str = None, text: str = None, image_size: str = "1.5em") -> rx.Component:
+    if image_src:
+        return rx.link(
+            rx.image(
+                src=image_src,
+                width="7em",
+                height="3em",
+                alt=text or "Navigation icon",
+                fit="contain",
+            ),
+            href=url,
+            height="3em",
+            display="flex",
+            align_items="center"
+        )
+    else:
+        return rx.link(
+            rx.text(text, size="4", weight="medium"), 
+            href=url
+        )
+```
+
+This functionality can stay for inactive steps (collapsed) (or for text only), but I need to add a second condition for when the step is selected.
+
+```py 
+def navbar_link(url: str, default_image_src: str, active_image_src: str = None, 
+                step_number: int = None, text: str = None, image_size: str = "1.5em") -> rx.Component:
+    if active_image_src and step_number is not None:
+        # Swap images based on active state
+        return rx.link(
+            rx.cond(
+                State.active_step == step_number,
+                # Show active image when this step is active
+                rx.image(
+                        src=active_image_src,
+                        width="9em",
+                        height="5em",
+                        alt=text or f"Step {step_number}",
+                        fit="contain",
+                    ),
+                # Show default image otherwise
+                rx.image(
+                    src=default_image_src,
+                    width="7em",
+                    height="3em",
+                    alt=text or f"Step {step_number}",
+                    fit="contain",
+                ),
+            ),
+            href=url,
+            height="3em",
+            display="flex",
+            align_items="center",
+            on_click=State.set_active_step(step_number),
+        )
+    elif default_image_src:
+        # Original image-only link handling
+        return rx.link(
+            rx.image(
+                src=default_image_src,
+                width="7em",
+                height="3em",
+                alt=text or "Navigation icon",
+                fit="contain",
+            ),
+            href=url,
+            height="3em",
+            display="flex",
+            align_items="center"
+        )
+    else:
+        # Text-only link handling
+        return rx.link(
+            rx.text(text, size="4", weight="medium"), 
+            href=url
+        )
+```
+
+I also had to adjust the links in navbar. This is what the menu looks like right now:
+
+![Menu With Active Links](pics/menu_w_act_links.png)
+
+It is pretty much exactly what I was aiming for, only that I will need to remake the cards (remove drawn borders, add them in reflex instead, add white background to the cards) and make the whole menu wider, because now it only takes the space of the input, but I don't like how it looks. It's okay but I think it will be better then. Screenshot:
+
+![Demo Menu](pics/demo_menu.png)
