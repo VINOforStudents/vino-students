@@ -302,3 +302,7 @@ I also had to adjust the links in navbar. This is what the menu looks like right
 It is pretty much exactly what I was aiming for, only that I will need to remake the cards (remove drawn borders, add them in reflex instead, add white background to the cards) and make the whole menu wider, because now it only takes the space of the input, but I don't like how it looks. It's okay but I think it will be better then. Screenshot:
 
 ![Demo Menu](pics/demo_menu.png)
+
+Jira Agenda:
+
+![Jira Agenda navbar](pics/jira_agenda_navbar.png)
