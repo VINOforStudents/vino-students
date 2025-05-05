@@ -23,6 +23,13 @@ class State(rx.State):
     is_loading: bool = False
     error_message: str = ""
 
+    active_step: int = 1 # By default, the first step is active
+
+    def set_active_step(self, step_number: int):
+        """Set the active step/menu item."""
+        self.active_step = step_number
+        print(f"Active step set to {step_number}")
+
     def set_question(self, question: str):
         """Set the current question text."""
         self.question = question
