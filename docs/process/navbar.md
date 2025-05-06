@@ -6,6 +6,7 @@
 4. [Change UI](#change-ui)
 5. [Implementing Cards #2](#implementing-cards-2)
 6. [Expanded card for active step](#expanded-card-for-active-step)
+7. [Replacing borders](#replacing-borders)
 
 # Introduction
 
@@ -306,3 +307,7 @@ It is pretty much exactly what I was aiming for, only that I will need to remake
 Jira Agenda:
 
 ![Jira Agenda navbar](pics/jira_agenda_navbar.png)
+
+# Replacing borders
+
+I will replace the collapsed cards with just the symbol icon. I assume I will need to resize the image as well.

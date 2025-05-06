@@ -1,5 +1,3 @@
-"""Welcome to Reflex! This file outlines the steps to create a basic app."""
-
 import reflex as rx
 from rxconfig import config
 from vino_students.state import State
@@ -102,53 +100,78 @@ def clear_history_button() -> rx.Component:
         z_index="999", 
     )
 
-def navbar_link(url: str, default_image_src: str, active_image_src: str = None, 
-                step_number: int = None, text: str = None, image_size: str = "1.5em") -> rx.Component:
+def navbar_link(
+    url: str, 
+    default_image_src: str, 
+    active_image_src: str = None, 
+    step_number: int = None, 
+    text: str = None
+) -> rx.Component:
+    """Creates a navbar link with active/inactive states for navigation steps."""
+    active_height = "2em" if step_number == 1 else "4em"
+    
     if active_image_src and step_number is not None:
-        # Swap images based on active state
+        # Link with active/inactive states
         return rx.link(
             rx.cond(
                 State.active_step == step_number,
-                # Show active image when this step is active
+                # Active state
                 rx.image(
-                        src=active_image_src,
-                        width="9em",
-                        height="5em",
-                        alt=text or f"Step {step_number}",
-                        fit="contain",
-                    ),
-                # Show default image otherwise
-                rx.image(
-                    src=default_image_src,
-                    width="7em",
-                    height="3em",
+                    src=active_image_src,
+                    width="100%",
+                    height="7em",
                     alt=text or f"Step {step_number}",
                     fit="contain",
+                    background_color="white",
+                ),
+                # Inactive state
+                rx.image(
+                    src=default_image_src,
+                    width="100%",
+                    max_width="10em",
+                    height=active_height,
+                    alt=text or f"Step {step_number}",
+                    fit="contain",
+                    padding_x="3em",
                 ),
             ),
             href=url,
-            height="3em",
+            height="3.8em",
+            width="25em",
             display="flex",
             align_items="center",
             on_click=State.set_active_step(step_number),
+            justify_content="center",
+            padding_x="0",
+            border_left="1px solid #222221", 
+            border_right="1px solid #222221",
+            background_color="white",
         )
     elif default_image_src:
-        # Original image-only link handling
+        # Image-only link
         return rx.link(
             rx.image(
                 src=default_image_src,
-                width="7em",
-                height="3em",
+                width="100%",
+                max_width="20em",
+                height=active_height,
                 alt=text or "Navigation icon",
                 fit="contain",
+                border_left="1px solid #222221", 
+                border_right="1px solid #222221",
+                box_sizing="border-box",
+                padding_x="3em",
+                background_color="white",
             ),
             href=url,
-            height="3em",
+            height="3.8em",
+            width="25em",
             display="flex",
-            align_items="center"
+            align_items="center",
+            justify_content="center",
         )
     else:
-        # Text-only link handling
+        # Text-only link
         return rx.link(
             rx.text(text, size="4", weight="medium"), 
             href=url
@@ -156,23 +179,26 @@ def navbar_link(url: str, default_image_src: str, active_image_src: str = None,
 
 
 def navbar() -> rx.Component:
+    """Renders the navigation bar with step indicators."""
     return rx.box(
         rx.desktop_only(
             rx.hstack(
                 rx.hstack(
-                    navbar_link(url="/#", default_image_src="/step1.png", active_image_src="/step1_active.png", step_number=1, text="Step 1"),
-                    navbar_link(url="/#", default_image_src="/step2.png", active_image_src="/step2_active.png", step_number=2, text="Step 2"),
-                    navbar_link(url="/#", default_image_src="/step3.png", active_image_src="/step3_active.png", step_number=3, text="Step 3"),
-                    navbar_link(url="/#", default_image_src="/step4.png", active_image_src="/step4_active.png", step_number=4, text="Step 4"),
-                    navbar_link(url="/#", default_image_src="/step5.png", active_image_src="/step5_active.png", step_number=5, text="Step 5"),
-                    navbar_link(url="/#", default_image_src="/step6.png", active_image_src="/step6_active.png", step_number=6, text="Step 6"),
-                    justify="center",
+                    navbar_link(url="/#", default_image_src="/step1.svg", active_image_src="/step1_active.png", step_number=1, text="Step 1"),
+                    navbar_link(url="/#", default_image_src="/step2.svg", active_image_src="/step2_active.png", step_number=2, text="Step 2"),
+                    navbar_link(url="/#", default_image_src="/step3.svg", active_image_src="/step3_active.png", step_number=3, text="Step 3"),
+                    navbar_link(url="/#", default_image_src="/step4.svg", active_image_src="/step4_active.png", step_number=4, text="Step 4"),
+                    navbar_link(url="/#", default_image_src="/step5.svg", active_image_src="/step5_active.png", step_number=5, text="Step 5"),
+                    navbar_link(url="/#", default_image_src="/step6.svg", active_image_src="/step6_active.png", step_number=6, text="Step 6"),
+                    justify="between",
                     spacing="0",
-                    width="100%",
+                    width="70%",
                 ),
                 width="100%",
                 align_items="center",
-                height="3em",
+                height="4em",
+                padding="-0.2em",
+                justify_content="center",
             ),
         ),
         bg=rx.color("sand", 12),
@@ -183,7 +209,7 @@ def navbar() -> rx.Component:
         width="100%",
         border_top="1px solid #222221",
         border_bottom="1px solid #222221",
-        height="3em",
+        height="4em",
     )
 
 def index() -> rx.Component:
