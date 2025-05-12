@@ -27,7 +27,7 @@ input_style = dict(
     border_width="1px",
     padding="0.5em",
     box_shadow=shadow,
-    width="45em",
+    width="47em",
     border="1px solid #222221",
     background_color=rx.color("mauve", 12),
 )

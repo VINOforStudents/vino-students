@@ -28,13 +28,14 @@ def chat() -> rx.Component:
             is_hydrate_event=True,
         ),
         id="chat-container", 
-        margin_top="9em",
+        margin_top="7em",
         width="45em",
-        height="40em",
+        height="39em",
         overflow="auto",
-        border="1px solid",
+        border="1px solid black",
         border_radius="md",
         padding="1em",
+        margin_bottom="1em",
     )
 
 
@@ -73,7 +74,7 @@ def action_bar() -> rx.Component:
             on_click=State.answer,
             style=style.button_style,
         ),
-        width="45em",   
+        width="45em",
     )
 
 
@@ -260,7 +261,7 @@ def index() -> rx.Component:
             rx.vstack(
                 # Chat section
                 chat(),
-                rx.spacer(),
+                #rx.spacer(),
                 
                 # Input section
                 action_bar(),
@@ -275,12 +276,15 @@ def index() -> rx.Component:
                 
                 # Layout properties
                 align="center",
-                height="100vh",
+                #height="100vh",
                 spacing="4",
+                overflow_y="hidden",
+                height="95vh",
             ),
         ),
         width="100%",
         background_color=rx.color("sand", 12),
+        overflow="hidden",
     )
 
 
