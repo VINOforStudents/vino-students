@@ -7,8 +7,9 @@ import PyPDF2
 
 # Local imports
 from config import CHUNK_SIZE, CHUNK_OVERLAP
-from models import DocumentChunk, DocumentMetadata, ProcessingResult
+from models import KBMetadata, ProcessingResult
 
+from typing import Mapping
 #------------------------------------------------------------------------------
 # DOCUMENT PROCESSING
 #------------------------------------------------------------------------------
@@ -34,9 +35,28 @@ def extract_text_from_pdf(pdf_path: str) -> str:
         print(f"Error extracting text from PDF {pdf_path}: {e}")
     return text
 
+def char_word_count(text:str) -> int:
+    """
+    Count the number of characters and words in a string.
+    
+    Args:
+        word: The input string
+        
+    Returns:
+        tuple: (number of characters, number of words)
+    """
+    # Count characters and words
+    charCount = 0
+    wordCount = 0
+    for i in text:
+        charCount += 1
+        if i == ' ':
+            wordCount += 2
+    return charCount, wordCount
+
+
 def process_document_content(file_path: str, content: str, 
-                            chunk_size: int = CHUNK_SIZE, 
-                            chunk_overlap: int = CHUNK_OVERLAP) -> ProcessingResult:
+                            ) -> ProcessingResult:
     """
     Process document content into chunks with metadata and IDs.
     
@@ -52,7 +72,6 @@ def process_document_content(file_path: str, content: str,
     result = ProcessingResult()
     
     file_name = os.path.basename(file_path)
-    doc_id_base = os.path.splitext(file_name)[0]
     
     # Skip if no content was extracted
     if not content.strip():
@@ -60,9 +79,9 @@ def process_document_content(file_path: str, content: str,
         return result
     
     # Implement fixed-size chunking
-    start_index = 0
-    chunk_number = 1
-    while start_index < len(content):
+    #start_index = 0
+    #chunk_number = 1
+    #while start_index < len(content):
         end_index = min(start_index + chunk_size, len(content))
         chunk = content[start_index:end_index]
 
@@ -81,7 +100,20 @@ def process_document_content(file_path: str, content: str,
         start_index += chunk_size - chunk_overlap
         chunk_number += 1
     
-    result.chunk_count = chunk_number - 1
+    char_count, word_count = char_word_count(content)
+    #.chunk_count = chunk_number - 1
+    file_size = os.path.getsize(file_path)
+    metadata = KBMetadata(file_name=file_name,
+                        file_size=file_size,
+                        file_type=file_name.split('.')[-1],
+                        page_count=0,  # Placeholder for page count
+                        word_count=word_count,
+                        char_count=char_count,
+                        keywords=[],  # Placeholder for keywords
+                        source="system_upload",
+                        abstract="", # Placeholder for abstract
+                        ).model_dump() 
+    result.metadatas.append(metadata)
     return result
 
 def load_documents_from_directory(directory_path):
@@ -94,9 +126,8 @@ def load_documents_from_directory(directory_path):
     Returns:
         tuple: (documents, metadatas, ids)
     """
-    all_documents = []
+
     all_metadatas = []
-    all_ids = []
 
     # Get all .txt and .pdf files in the directory
     txt_files = glob.glob(os.path.join(directory_path, "*.txt"))
@@ -115,17 +146,15 @@ def load_documents_from_directory(directory_path):
             # Process the document content
             result = process_document_content(file_path, content)
             
-            all_documents.extend(result.documents)
             all_metadatas.extend(result.metadatas)
-            all_ids.extend(result.ids)
             
             file_name = os.path.basename(file_path)
-            print(f"Loaded {result.chunk_count} chunks from document: {file_name}")
+            #print(f"Loaded {result.chunk_count} chunks from document: {file_name}")
 
         except Exception as e:
             print(f"Error loading {file_path}: {e}")
 
-    return all_documents, all_metadatas, all_ids
+    return all_metadatas
 
 def load_user_document(file_path):
     """

@@ -33,8 +33,7 @@ class ProcessingResult(BaseModel):
     """Results from processing a document."""
     documents: List[str] = Field(default_factory=list)
     metadatas: List[DocumentMetadata] = Field(default_factory=list)
-    ids: List[str] = Field(default_factory=list)
-    chunk_count: int = 0
+    #chunk_count: int = 0
 
 class ChatRequest(BaseModel):
     question: str
@@ -43,3 +42,20 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     answer: str
+
+class KBMetadata(BaseModel):
+    """Metadata for a knowledge base document."""
+    file_name: str
+    file_size: int
+    file_type: str
+    page_count: int
+    word_count: int
+    char_count: int
+    keywords: List[str]
+    source: str
+    abstract: str
+
+class LargeObject(BaseModel):
+    """A large object with metadata."""
+    plain_text: str
+    metadata: KBMetadata
