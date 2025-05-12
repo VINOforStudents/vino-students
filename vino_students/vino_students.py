@@ -5,12 +5,36 @@ from vino_students import style
 
 
 def chat() -> rx.Component:
-    """Renders the chat history as a list of question-answer pairs."""
+    """Renders the chat history as a list of question-answer pairs with auto-scrolling."""
     return rx.box(
         rx.foreach(
             State.chat_history,
             lambda messages: qa(messages[0], messages[1]),
-        )
+        ),
+        rx.script(
+            """
+            // Auto-scroll to bottom of chat container
+            function scrollToBottom() {
+                const chatContainer = document.getElementById('chat-container');
+                if (chatContainer) {
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                }
+            }
+            
+            // Run on load and whenever content changes
+            scrollToBottom();
+            setTimeout(scrollToBottom, 100); // Run again after a short delay for content to render
+            """,
+            is_hydrate_event=True,
+        ),
+        id="chat-container", 
+        margin_top="9em",
+        width="45em",
+        height="40em",
+        overflow="auto",
+        border="1px solid",
+        border_radius="md",
+        padding="1em",
     )
 
 
@@ -19,16 +43,18 @@ def qa(question: str, answer: str) -> rx.Component:
     return rx.box(
         rx.box(
             # Change rx.text to rx.markdown for the question
-            rx.markdown(question, style=style.question_style),
+            rx.markdown(question, style=style.question_style, max_width="15em"),
             text_align="right",
+            
         ),
         rx.box(
             # Change rx.text to rx.markdown for the answer
-            rx.markdown(answer, style=style.answer_style),
+            rx.markdown(answer, style=style.answer_style, max_width="15em",),
             text_align="left",
         ),
         margin_y="1em",
         width="100%",
+    
     )
 
 
@@ -47,26 +73,37 @@ def action_bar() -> rx.Component:
             on_click=State.answer,
             style=style.button_style,
         ),
+        width="45em",   
     )
 
 
 def file_upload_area() -> rx.Component:
     """Renders the file upload component."""
     return rx.upload(
-        rx.vstack(
+        rx.hstack(
             rx.button("Select File(s)",
-                       style=style.button_style,),
-            rx.text("Drag and drop files here or click to select files."),
+                       style=style.button_style),
+            rx.text("Drag and drop files here or click to select files.", color="gray"),
+            width="100%",
+            height="100%",
+            #display="block",
+            justify="start",
+            align_items="center",
+            spacing="3",
+            padding="1em",
         ),
         id="my_upload",
-        border="2px dotted #222221",
         background_color=rx.color("sand", 12),
-        padding="2em",
-        width="40em",
+        width="45em",
+        height="5em",
         margin_top="1em",
-        margin_bottom="3em",
+        #margin_bottom="1em",
         on_drop=State.handle_upload(rx.upload_files()),
         size="2",
+        #justify_content="center",
+        #align_items="center",
+        padding="1em",
+        border="2px dotted #222221",
     )
 
 
@@ -96,7 +133,7 @@ def clear_history_button() -> rx.Component:
         variant="outline",
         position="fixed",
         top="8em",
-        right="16em",
+        right="20em",
         z_index="999", 
     )
 
