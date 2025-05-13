@@ -6,7 +6,7 @@
 4. [Change UI](#change-ui)
 5. [Implementing Cards #2](#implementing-cards-2)
 6. [Expanded card for active step](#expanded-card-for-active-step)
-7. [Replacing borders](#replacing-borders)
+7. [Tidying up](#tidying-up)
 
 # Introduction
 
@@ -308,6 +308,20 @@ Jira Agenda:
 
 ![Jira Agenda navbar](pics/jira_agenda_navbar.png)
 
-# Replacing borders
+# Tidying up
 
-I will replace the collapsed cards with just the symbol icon. I assume I will need to resize the image as well.
+Yesterday I decided to tidy up and make sure everything looks neat before our Demo on Thursday. The thing is, I was just in the flow and forgot to document anything. But basically after I implemented the navbar, the rest of the page got a little messed up, I had to adjust pretty much everything, especially the area with the chat itself.
+
+I was mainly tweaking the heights and widths of containers and the way they were aligned. 
+
+![git-log-1](pics/git_log-1.png)
+![git-log-2](pics/git_log-2.png)
+
+I don't know how I completely forgot to document it. I will attach a screenshot of the final look. It's not perfect, but at least not embarrassing to show.
+
+![what happened](pics/what_happened.png)
+
+Ok, yesterday it didn't look like this. I think it has something to do with restarting my computer. Yesterday I got a weird error out of nowhere and spent a long time fixing it. I think i just had to restart my laptop, but now the disign is messed up. It looks quite different with different resolution.
+
+![res-1](pics/res_1.png)
+![res-2](pics/res_2.png)

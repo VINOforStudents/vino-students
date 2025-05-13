@@ -30,7 +30,7 @@ def chat() -> rx.Component:
         id="chat-container", 
         margin_top="7em",
         width="45em",
-        height="39em",
+        height="70vh",
         overflow="auto",
         border="1px solid black",
         border_radius="md",
@@ -146,7 +146,7 @@ def navbar_link(
     text: str = None
 ) -> rx.Component:
     """Creates a navbar link with active/inactive states for navigation steps."""
-    active_height = "2em" if step_number == 1 else "4em"
+    active_height = "1em" if step_number == 1 else "4em"
     
     if active_image_src and step_number is not None:
         # Link with active/inactive states
@@ -261,30 +261,29 @@ def index() -> rx.Component:
             rx.vstack(
                 # Chat section
                 chat(),
-                #rx.spacer(),
-                
-                # Input section
-                action_bar(),
-                
-                # File upload section
-                file_upload_area(),
                 
                 # Status indicators
                 status_indicators(),
+                
+                # Spacer to push input elements to bottom
+                rx.spacer(),
+                
+                # Input section and File upload moved to bottom
+                action_bar(),
+                file_upload_area(),
 
                 navbar(),
                 
                 # Layout properties
                 align="center",
-                #height="100vh",
                 spacing="4",
                 overflow_y="hidden",
                 height="95vh",
+                position="relative",
             ),
         ),
         width="100%",
         background_color=rx.color("sand", 12),
-        overflow="hidden",
     )
 
 
