@@ -69,13 +69,13 @@ def move_files_to_processed():
         except Exception as e:
             print(f"Error moving {file_name}: {e}")
 
-def upload_documents_to_db(metadata, content):
+def upload_documents_to_db(metadata_list, content_list):
     """
-    Upload document metadata and content to the PostgreSQL database.
+    Upload multiple document metadata and content to the PostgreSQL database.
     
     Args:
-        metadata: Metadata of the document.
-        content: Content of the document.
+        metadata_list: List of metadata dictionaries for documents.
+        content_list: List of document contents.
         
     Returns:
         None
@@ -84,34 +84,35 @@ def upload_documents_to_db(metadata, content):
     cur = create_cursor(conn)
 
     try:
-        # Insert metadata into the database - single document case
-        meta = metadata[0]  # Get the single metadata object
-        cur.execute("""
-            INSERT INTO filemetadata (file_name, file_size, file_type, page_count, word_count, char_count, keywords, source, abstract)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, (meta['file_name'], meta['file_size'], meta['file_type'],
-              meta['page_count'], meta['word_count'],
-              meta['char_count'], meta['keywords'],
-              meta['source'], meta['abstract']))
-        
-        # Add this before the INSERT statement
-        print(f"Content type: {type(content)}")
-        print(f"Content length: {len(content) if hasattr(content, '__len__') else 'N/A'}")
-        if isinstance(content, list):
-            print(f"Content is a list with {len(content)} items")
-            doc = content[0]  # Extract first item if it's a list
-        else:
-            doc = content
-        #print(doc)
-        # Insert content into the database - single document case
-        cur.execute("""
-            INSERT INTO largeobject (plain_text)
-            VALUES (%s)
-        """, (doc,))
+        # Process all documents
+        for i, meta in enumerate(metadata_list):
+            # Insert metadata into the database
+            cur.execute("""
+                INSERT INTO filemetadata (file_name, file_size, file_type, page_count, word_count, char_count, keywords, source, abstract)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (meta['file_name'], meta['file_size'], meta['file_type'],
+                  meta['page_count'], meta['word_count'],
+                  meta['char_count'], meta['keywords'],
+                  meta['source'], meta['abstract']))
+            
+            # Get the corresponding content
+            if isinstance(content_list, list) and i < len(content_list):
+                doc = content_list[i]
+            else:
+                print(f"Warning: Content missing for document {meta['file_name']}")
+                continue
+                
+            # Insert content into the database
+            cur.execute("""
+                INSERT INTO largeobject (plain_text)
+                VALUES (%s)
+            """, (doc,))
+            
+            print(f"Uploaded document: {meta['file_name']}")
         
         conn.commit()
     except Exception as e:
-        print(f"Error uploading document to the database: {e}")
+        print(f"Error uploading documents to the database: {e}")
         conn.rollback()
     finally:
         cur.close()

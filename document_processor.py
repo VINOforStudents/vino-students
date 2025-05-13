@@ -70,7 +70,6 @@ def process_document_content(file_path: str, content: str,
         ProcessingResult containing document chunks, metadata, ids and chunk count
     """
     result = ProcessingResult()
-    
     file_name = os.path.basename(file_path)
     
     # Skip if no content was extracted
@@ -105,8 +104,8 @@ def load_documents_from_directory(directory_path):
         tuple: (documents, metadatas, ids)
     """
 
-    #all_metadatas = []
-
+    all_metadatas = []
+    all_contents = []
     # Get all .txt and .pdf files in the directory
     txt_files = glob.glob(os.path.join(directory_path, "*.txt"))
     pdf_files = glob.glob(os.path.join(directory_path, "*.pdf"))
@@ -123,7 +122,8 @@ def load_documents_from_directory(directory_path):
 
             # Process the document content
             result = process_document_content(file_path, content)
-            
+            all_metadatas.extend(result.metadatas)
+            all_contents.append(content)
 
             #file_name = os.path.basename(file_path)
             #print(f"Loaded {result.chunk_count} chunks from document: {file_name}")
@@ -131,7 +131,7 @@ def load_documents_from_directory(directory_path):
         except Exception as e:
             print(f"Error loading {file_path}: {e}")
 
-    return result.metadatas, content
+    return all_metadatas, all_contents
 
 def load_user_document(file_path):
     """

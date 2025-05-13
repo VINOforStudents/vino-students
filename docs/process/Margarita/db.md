@@ -169,7 +169,57 @@ It worked, so as a result I got a file moved from "kb_new" to "kb" folder. Next,
 
 # Batch upload
 
+I already had the functionality for it before, so I will implement it in the new program. Actually, it's still there, I just need to make sure it still works.
 
+```py
+def load_documents_from_directory(directory_path)
+    ...
+    for file_path in file_paths:
+        ...
+```
+Okay, moving files works, but the problem is in inserting data to the database. While I was working on it, I was focused on getting the connection to work, so I did it with one record only. 
+
+First, I had to put the insert logic in a loop like this:
+```py
+ for i, meta in enumerate(metadata_list):
+            # Insert metadata into the database
+            cur.execute("""
+                INSERT INTO filemetadata (file_name, file_size, file_type, page_count, word_count, char_count, keywords, source, abstract)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (meta['file_name'], meta['file_size'], meta['file_type'],
+                  meta['page_count'], meta['word_count'],
+                  meta['char_count'], meta['keywords'],
+                  meta['source'], meta['abstract']))
+            
+            # Get the corresponding content
+            if isinstance(content_list, list) and i < len(content_list):
+                doc = content_list[i]
+            else:
+                print(f"Warning: Content missing for document {meta['file_name']}")
+                continue
+                
+            # Insert content into the database
+            cur.execute("""
+                INSERT INTO largeobject (plain_text)
+                VALUES (%s)
+            """, (doc,))
+            
+            print(f"Uploaded document: {meta['file_name']}")
+```
+
+Then I found out that in document_processor.py I am only passing one value so I had to create a list:
+
+```py
+...
+    all_contents = []
+...
+    all_metadatas.extend(result.metadatas)
+    all_contents.append(content)
+...
+return all_metadatas, all_contents
+```
+
+![added-batch](pics/added_batch.png)
 
 # Complete metadata
 
