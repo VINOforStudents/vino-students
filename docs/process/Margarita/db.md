@@ -4,6 +4,23 @@
 
 # Introduction
 
+Last week I've conducted preliminary research on what technology to use to store system (RAG) documents and also user documents. The most optimal option would be to store the files (pdf's) in a file storage cloud and user information and file metadata in SQL. However, it could take some time and development effort, so I proposed to create the first version of the system entirely in PostgreSQL (potentially with ChromaDB). It has all the necessary extentions we might need (such as extention for sematic search), so it would be sufficient for now. The reason we wouldn't want to stick with this solution long term is limited performance if we store all the files in a single database. It would increase latency, but for the initial stages it shouldn't have much impact.
+
+I've also researched if it would be  easy to migrate to a file storage sysyem later, and the answer was positive. It would indeed require some extra time and intention, but it would be more than doable. 
+
+# Prerequisites
+
+Technology:
+- PostgreSQL  - SQL database
+- Python - programming language, connection to the rest of the application
+- Libraries: psycopg2, SQLAlchemy (t.b.d.)
+
+I was struggling with how to approach the task, so I decided to, first, draw some diagrams to visualize the process and have a starting point.
+
+![preliminary-design](pics/preliminary_design_db.png)
+
+# Set-up
+
 I began by testing the connection to the database:
 
 ```py
@@ -114,6 +131,14 @@ My editor auto-completed a good portion of this function, but I still had to do 
 
 The "bug" was that the long text is not displayed fully but is condensed like this:
 
-![bug-page](/pics/bug_page.png)
+![bug-page](pics/bug_page.png)
 
 That's 30 minutes out of my life gone, but I learned something. :)
+
+
+# Batch upload
+
+
+
+# Complete metadata
+
