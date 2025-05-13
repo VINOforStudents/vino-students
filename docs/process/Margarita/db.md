@@ -257,3 +257,5 @@ As a result, the amount of pages was passed to the database (they all have 2 pag
 # Keywords and Abstract
 
 I assume for these 2 I will need to use LLM to extract key words and abstract. I am still considering whether abstract should be an extract (a piece of the actual text) or a summary. Since we are already getting keywords via LLM (planning to), doing a summary will not be much effort.
+
+I asked Claude and it suggested python-based solutions. Maybe I will adopt them for the initial implementation, just so I can move on. And it can be then supplemented with AI summary/extraction later.  I think it might be a good idea.

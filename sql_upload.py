@@ -121,6 +121,6 @@ def upload_documents_to_db(metadata_list, content_list):
 
 try:
     upload_documents_to_db(metadata, content)
-    move_files_to_processed()
+    #move_files_to_processed()
 except Exception as e:
     print(f"Error in the main process: {e}")

@@ -1,6 +1,8 @@
 # Standard library imports
 import os
 import glob
+import re
+from collections import Counter
 
 # Third-party imports
 import PyPDF2
@@ -56,6 +58,57 @@ def char_word_count(text:str) -> int:
             wordCount += 2
     return charCount, wordCount
 
+def extract_keywords(text, max_keywords=5):
+    """
+    Extract keywords from text using simple frequency analysis.
+    
+    Args:
+        text: Document content
+        max_keywords: Maximum number of keywords to return
+        
+    Returns:
+        list: Top keywords
+    """
+    # Convert to lowercase and split into words
+    words = re.findall(r'\b[a-zA-Z]{3,}\b', text.lower())
+    
+    # Common English stopwords to filter out
+    stopwords = {'and', 'the', 'is', 'in', 'to', 'of', 'for', 'with', 'on', 'at', 'from', 
+                'by', 'about', 'as', 'it', 'this', 'that', 'be', 'are', 'was', 'were'}
+    
+    # Filter out stopwords
+    filtered_words = [word for word in words if word not in stopwords]
+    
+    # Count word frequencies
+    word_counts = Counter(filtered_words)
+    
+    # Get the most common words
+    return [word for word, _ in word_counts.most_common(max_keywords)]
+
+def generate_abstract(text, max_length=300):
+    """
+    Generate a simple abstract by taking the first part of the document.
+    
+    Args:
+        text: Document content
+        max_length: Maximum length of abstract
+        
+    Returns:
+        str: Document abstract
+    """
+    # Clean up whitespace
+    text = re.sub(r'\s+', ' ', text.strip())
+    
+    # Take the first part of the document
+    abstract = text[:max_length]
+    
+    # Try to end at a sentence boundary
+    if len(text) > max_length:
+        last_period = abstract.rfind('.')
+        if last_period > max_length // 2:  # Only trim if we have a decent amount of text
+            abstract = abstract[:last_period + 1]
+    
+    return abstract
 
 def process_document_content(file_path: str, content: str, page_count: int = 0
                             ) -> ProcessingResult:
@@ -80,15 +133,17 @@ def process_document_content(file_path: str, content: str, page_count: int = 0
 
     char_count, word_count = char_word_count(content)
     file_size = os.path.getsize(file_path)
+    keywords = extract_keywords(content)
+    abstract = generate_abstract(content)
     metadata = KBMetadata(file_name=file_name,
                         file_size=file_size,
                         file_type=file_name.split('.')[-1],
                         page_count=page_count,
                         word_count=word_count,
                         char_count=char_count,
-                        keywords=[],  # Placeholder for keywords
+                        keywords=keywords,
                         source="system_upload",
-                        abstract="", # Placeholder for abstract
+                        abstract=abstract,
                         ).model_dump() 
     result.metadatas.append(metadata)
     return result
