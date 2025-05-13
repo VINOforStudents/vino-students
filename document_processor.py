@@ -14,7 +14,7 @@ from typing import Mapping
 # DOCUMENT PROCESSING
 #------------------------------------------------------------------------------
 
-def extract_text_from_pdf(pdf_path: str) -> str:
+def extract_text_from_pdf(pdf_path: str) -> tuple[str, int]:
     """
     Extract text content from a PDF file.
     
@@ -22,18 +22,20 @@ def extract_text_from_pdf(pdf_path: str) -> str:
         pdf_path: Path to the PDF file
         
     Returns:
-        str: Extracted text as a string
+        tuple: (extracted text as string, page count)
     """
     text = ""
+    page_count = 0
     try:
         with open(pdf_path, 'rb') as file:
             pdf_reader = PyPDF2.PdfReader(file)
-            for page_num in range(len(pdf_reader.pages)):
+            page_count = len(pdf_reader.pages)
+            for page_num in range(page_count):
                 page = pdf_reader.pages[page_num]
                 text += page.extract_text() + "\n"
     except Exception as e:
         print(f"Error extracting text from PDF {pdf_path}: {e}")
-    return text
+    return text, page_count
 
 def char_word_count(text:str) -> int:
     """
@@ -55,7 +57,7 @@ def char_word_count(text:str) -> int:
     return charCount, wordCount
 
 
-def process_document_content(file_path: str, content: str, 
+def process_document_content(file_path: str, content: str, page_count: int = 0
                             ) -> ProcessingResult:
     """
     Process document content into chunks with metadata and IDs.
@@ -63,8 +65,7 @@ def process_document_content(file_path: str, content: str,
     Args:
         file_path: Path to the source document
         content: Text content to be chunked
-        chunk_size: Size of each chunk in characters
-        chunk_overlap: Number of characters to overlap between chunks
+        page_count: Number of pages in the document (for PDFs)
         
     Returns:
         ProcessingResult containing document chunks, metadata, ids and chunk count
@@ -78,12 +79,11 @@ def process_document_content(file_path: str, content: str,
         return result
 
     char_count, word_count = char_word_count(content)
-    #.chunk_count = chunk_number - 1
     file_size = os.path.getsize(file_path)
     metadata = KBMetadata(file_name=file_name,
                         file_size=file_size,
                         file_type=file_name.split('.')[-1],
-                        page_count=0,  # Placeholder for page count
+                        page_count=page_count,
                         word_count=word_count,
                         char_count=char_count,
                         keywords=[],  # Placeholder for keywords
@@ -113,15 +113,16 @@ def load_documents_from_directory(directory_path):
 
     for file_path in file_paths:
         try:
+            page_count = 0
             # Handle different file types
             if file_path.lower().endswith('.pdf'):
-                content = extract_text_from_pdf(file_path)
+                content, page_count = extract_text_from_pdf(file_path)
             else:  # Assume it's a text file
                 with open(file_path, 'r', encoding='utf-8') as file:
                     content = file.read()
 
             # Process the document content
-            result = process_document_content(file_path, content)
+            result = process_document_content(file_path, content, page_count)
             all_metadatas.extend(result.metadatas)
             all_contents.append(content)
 
@@ -146,16 +147,15 @@ def load_user_document(file_path):
     try:
         # Handle different file types
         if file_path.lower().endswith('.pdf'):
-            content = extract_text_from_pdf(file_path)
+            content, page_count = extract_text_from_pdf(file_path)
+            result = process_document_content(file_path, content, page_count)
         elif file_path.lower().endswith(('.txt', '.md', '.py', '.js', '.html', '.css', '.json')):
             with open(file_path, 'r', encoding='utf-8') as file:
                 content = file.read()
+            result = process_document_content(file_path, content)
         else:
             return None, None, None, f"Unsupported file type: {file_path}. Supported types are PDF and text files."
 
-        # Process the document content
-        result = process_document_content(file_path, content)
-        
         if not result.documents:
             return None, None, None, f"No content extracted from {os.path.basename(file_path)}"
             

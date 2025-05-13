@@ -223,3 +223,37 @@ return all_metadatas, all_contents
 
 # Complete metadata
 
+First, I modified the extract_text_from_pdf() to also pass the page_count:
+
+```py
+page_count = 0
+    try:
+        with open(pdf_path, 'rb') as file:
+            pdf_reader = PyPDF2.PdfReader(file)
+            page_count = len(pdf_reader.pages)
+            for page_num in range(page_count):
+                page = pdf_reader.pages[page_num]
+                text += page.extract_text() + "\n"
+    except Exception as e:
+        print(f"Error extracting text from PDF {pdf_path}: {e}")
+    return text, page_count
+```
+
+Then I passed it as one of the metadata parameters:
+
+```py
+metadata = KBMetadata(file_name=file_name,
+                        file_size=file_size,
+                        file_type=file_name.split('.')[-1],
+                        page_count=page_count,  # Now using the page count parameter
+                        word_count=word_count,
+                        char_count=char_count,
+                        ...
+```
+As a result, the amount of pages was passed to the database (they all have 2 pages):
+
+![added-page-count](pics/added_page_count.png)
+
+# Keywords and Abstract
+
+I assume for these 2 I will need to use LLM to extract key words and abstract. I am still considering whether abstract should be an extract (a piece of the actual text) or a summary. Since we are already getting keywords via LLM (planning to), doing a summary will not be much effort.
