@@ -259,3 +259,99 @@ As a result, the amount of pages was passed to the database (they all have 2 pag
 I assume for these 2 I will need to use LLM to extract key words and abstract. I am still considering whether abstract should be an extract (a piece of the actual text) or a summary. Since we are already getting keywords via LLM (planning to), doing a summary will not be much effort.
 
 I asked Claude and it suggested python-based solutions. Maybe I will adopt them for the initial implementation, just so I can move on. And it can be then supplemented with AI summary/extraction later.  I think it might be a good idea.
+
+I tried it out and found the result satisfactory (at least for now). I will just continue with development and potentially change the strategy later if needed.
+
+```py 
+def extract_keywords(text, max_keywords=5):
+    """
+    Extract keywords from text using simple frequency analysis.
+    
+    Args:
+        text: Document content
+        max_keywords: Maximum number of keywords to return
+        
+    Returns:
+        list: Top keywords
+    """
+    # Convert to lowercase and split into words
+    words = re.findall(r'\b[a-zA-Z]{3,}\b', text.lower())
+    
+    # Common English stopwords to filter out
+    stopwords = {'and', 'the', 'is', 'in', 'to', 'of', 'for', 'with', 'on', 'at', 'from', 
+                'by', 'about', 'as', 'it', 'this', 'that', 'be', 'are', 'was', 'were'}
+    
+    # Filter out stopwords
+    filtered_words = [word for word in words if word not in stopwords]
+    
+    # Count word frequencies
+    word_counts = Counter(filtered_words)
+    
+    # Get the most common words
+    return [word for word, _ in word_counts.most_common(max_keywords)]
+
+def generate_abstract(text, max_length=300):
+    """
+    Generate a simple abstract by taking the first part of the document.
+    
+    Args:
+        text: Document content
+        max_length: Maximum length of abstract
+        
+    Returns:
+        str: Document abstract
+    """
+    # Clean up whitespace
+    text = re.sub(r'\s+', ' ', text.strip())
+    
+    # Take the first part of the document
+    abstract = text[:max_length]
+    
+    # Try to end at a sentence boundary
+    if len(text) > max_length:
+        last_period = abstract.rfind('.')
+        if last_period > max_length // 2:  # Only trim if we have a decent amount of text
+            abstract = abstract[:last_period + 1]
+    
+    return abstract
+
+def process_document_content(file_path: str, content: str, page_count: int = 0
+                            ) -> ProcessingResult:
+    """
+    Process document content into chunks with metadata and IDs.
+    
+    Args:
+        file_path: Path to the source document
+        content: Text content to be chunked
+        page_count: Number of pages in the document (for PDFs)
+        
+    Returns:
+        ProcessingResult containing document chunks, metadata, ids and chunk count
+    """
+    result = ProcessingResult()
+    file_name = os.path.basename(file_path)
+    
+    # Skip if no content was extracted
+    if not content.strip():
+        print(f"Warning: No content extracted from {file_name}")
+        return result
+
+    char_count, word_count = char_word_count(content)
+    file_size = os.path.getsize(file_path)
+    keywords = extract_keywords(content)
+    abstract = generate_abstract(content)
+    metadata = KBMetadata(file_name=file_name,
+                        file_size=file_size,
+                        file_type=file_name.split('.')[-1],
+                        page_count=page_count,
+                        word_count=word_count,
+                        char_count=char_count,
+                        keywords=keywords,
+                        source="system_upload",
+                        abstract=abstract,
+                        ).model_dump() 
+    result.metadatas.append(metadata)
+    return result
+```
+
+![keywords-abstractions](pics/keywords_abstractions.png)
