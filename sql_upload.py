@@ -6,7 +6,7 @@ import psycopg2
 
 # Local imports
 from document_processor import load_documents_from_directory, extract_text_from_pdf, process_document_content
-from config import NEW_DOCUMENTS_DIR, DOCUMENTS_DIR
+from config import NEW_DOCUMENTS_DIR, KB_DOCUMENTS_DIR
 
 
 
@@ -52,6 +52,23 @@ def create_cursor(conn):
         raise
 
 metadata, content = load_documents_from_directory(NEW_DOCUMENTS_DIR)
+
+def move_files_to_processed():
+    """
+    Move processed files from the new documents directory to the processed documents directory.
+    
+    Returns:
+        None
+    """
+    for file_name in os.listdir(NEW_DOCUMENTS_DIR):
+        source_path = os.path.join(NEW_DOCUMENTS_DIR, file_name)
+        dest_path = os.path.join(KB_DOCUMENTS_DIR, file_name)
+        try:
+            os.rename(source_path, dest_path)
+            print(f"Moved {file_name} to processed documents.")
+        except Exception as e:
+            print(f"Error moving {file_name}: {e}")
+
 def upload_documents_to_db(metadata, content):
     """
     Upload document metadata and content to the PostgreSQL database.
@@ -100,4 +117,9 @@ def upload_documents_to_db(metadata, content):
         cur.close()
         conn.close()
 
-upload_documents_to_db(metadata, content)
+
+try:
+    upload_documents_to_db(metadata, content)
+    move_files_to_processed()
+except Exception as e:
+    print(f"Error in the main process: {e}")

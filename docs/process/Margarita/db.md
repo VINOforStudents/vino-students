@@ -135,6 +135,37 @@ The "bug" was that the long text is not displayed fully but is condensed like th
 
 That's 30 minutes out of my life gone, but I learned something. :)
 
+# Move files to proocessed
+
+I added a function to move processed file to a dedicated folder:
+
+```py
+def move_files_to_processed():
+    """
+    Move processed files from the new documents directory to the processed documents directory.
+    
+    Returns:
+        None
+    """
+    for file_name in os.listdir(NEW_DOCUMENTS_DIR):
+        source_path = os.path.join(NEW_DOCUMENTS_DIR, file_name)
+        dest_path = os.path.join(KB_DOCUMENTS_DIR, file_name)
+        try:
+            os.rename(source_path, dest_path)
+            print(f"Moved {file_name} to processed documents.")
+        except Exception as e:
+            print(f"Error moving {file_name}: {e}")
+
+...
+
+try:
+    upload_documents_to_db(metadata, content)
+    move_files_to_processed()
+except Exception as e:
+    print(f"Error in the main process: {e}")
+```
+
+It worked, so as a result I got a file moved from "kb_new" to "kb" folder. Next, I will work on the batch upload (rather than just one document).
 
 # Batch upload
 
