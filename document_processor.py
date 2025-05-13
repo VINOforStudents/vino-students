@@ -77,29 +77,7 @@ def process_document_content(file_path: str, content: str,
     if not content.strip():
         print(f"Warning: No content extracted from {file_name}")
         return result
-    
-    # Implement fixed-size chunking
-    #start_index = 0
-    #chunk_number = 1
-    #while start_index < len(content):
-        end_index = min(start_index + chunk_size, len(content))
-        chunk = content[start_index:end_index]
 
-        # Create DocumentMetadata object then convert to dict
-        metadata = DocumentMetadata(
-            source=file_path, 
-            filename=file_name, 
-            chunk=chunk_number
-        ).model_dump()  # For newer Pydantic (v2)
-        # Use .dict() instead if using Pydantic v1
-
-        result.documents.append(chunk)
-        result.metadatas.append(metadata)  # Store dict instead of Pydantic model
-        result.ids.append(f"{doc_id_base}_chunk_{chunk_number}")
-
-        start_index += chunk_size - chunk_overlap
-        chunk_number += 1
-    
     char_count, word_count = char_word_count(content)
     #.chunk_count = chunk_number - 1
     file_size = os.path.getsize(file_path)
@@ -127,7 +105,7 @@ def load_documents_from_directory(directory_path):
         tuple: (documents, metadatas, ids)
     """
 
-    all_metadatas = []
+    #all_metadatas = []
 
     # Get all .txt and .pdf files in the directory
     txt_files = glob.glob(os.path.join(directory_path, "*.txt"))
@@ -146,15 +124,14 @@ def load_documents_from_directory(directory_path):
             # Process the document content
             result = process_document_content(file_path, content)
             
-            all_metadatas.extend(result.metadatas)
-            
-            file_name = os.path.basename(file_path)
+
+            #file_name = os.path.basename(file_path)
             #print(f"Loaded {result.chunk_count} chunks from document: {file_name}")
 
         except Exception as e:
             print(f"Error loading {file_path}: {e}")
 
-    return all_metadatas
+    return result.metadatas, content
 
 def load_user_document(file_path):
     """
