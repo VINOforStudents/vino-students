@@ -10,7 +10,7 @@ message_style = dict(
     border_radius="5px",
     margin_y="0.5em",
     box_shadow=shadow,
-    max_width="40em",
+    max_width="50em",
     display="inline-block",
 )
 

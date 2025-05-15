@@ -32,8 +32,8 @@ def chat() -> rx.Component:
         width="45em",
         height="70vh",
         overflow="auto",
-        border="1px solid black",
-        border_radius="md",
+        #border="1px solid black",
+        #border_radius="md",
         padding="1em",
         margin_bottom="1em",
     )
@@ -44,13 +44,13 @@ def qa(question: str, answer: str) -> rx.Component:
     return rx.box(
         rx.box(
             # Change rx.text to rx.markdown for the question
-            rx.markdown(question, style=style.question_style, max_width="15em"),
+            rx.markdown(question, style=style.question_style, max_width="20em"),
             text_align="right",
             
         ),
         rx.box(
             # Change rx.text to rx.markdown for the answer
-            rx.markdown(answer, style=style.answer_style, max_width="15em",),
+            rx.markdown(answer, style=style.answer_style, max_width="20em",),
             text_align="left",
         ),
         margin_y="1em",
