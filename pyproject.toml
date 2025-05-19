@@ -19,4 +19,5 @@ dependencies = [
     "pypdf2>=3.0.1",
     "python-dotenv>=1.1.0",
     "reflex>=0.7.6",
+    "supabase>=2.15.1",
 ]
