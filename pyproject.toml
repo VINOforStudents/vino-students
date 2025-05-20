@@ -13,9 +13,11 @@ dependencies = [
     "langchain-core>=0.3.51",
     "langchain-google-genai>=2.0.10",
     "langchain-text-splitters>=0.3.8",
+    "psycopg2>=2.9.10",
     "pydantic>=2.11.3",
     "pypdf>=5.4.0",
     "pypdf2>=3.0.1",
     "python-dotenv>=1.1.0",
     "reflex>=0.7.6",
+    "supabase>=2.15.1",
 ]
