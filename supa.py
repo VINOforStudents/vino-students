@@ -3,7 +3,6 @@ from dotenv import load_dotenv
 from supabase import create_client, Client
 
 from config import NEW_DOCUMENTS_DIR, KB_DOCUMENTS_DIR
-from document_processor import load_documents_from_directory
 
 load_dotenv()
 
@@ -11,7 +10,7 @@ url: str = os.environ.get("SUPABASE_URL") or ""
 key: str = os.environ.get("SUPABASE_KEY") or ""
 supabase: Client = create_client(url, key) 
 
-metadata, content = load_documents_from_directory(NEW_DOCUMENTS_DIR)
+
 
 def upload_move_to_processed():
     """
@@ -26,7 +25,7 @@ def upload_move_to_processed():
             response = supabase.storage.from_('knowledge-base').upload(file, source)
             print(f"Successfully uploaded: {file}")
             destination = os.path.join(KB_DOCUMENTS_DIR, file)
-            #os.rename(source, destination)
+            os.rename(source, destination)
         except Exception as e:
             print(f"Error uploading {file}: {e}")
             continue
@@ -90,10 +89,3 @@ def upload_documents_to_sql(metadata_list, content_list):
         error_message = f"Error uploading documents to Supabase: {str(e)}"
         print(error_message)
         return error_message
-
-try:
-    upload_documents_to_sql(metadata, content)
-    upload_move_to_processed()
-except Exception as e:
-    error_message = f"Error uploading documents to Supabase: {str(e)}"
-    print(error_message)

@@ -165,3 +165,28 @@ def upload_move_to_processed():
 Trello ticket:
 
 ![Trello_supa](pics/Trello_supa.png)
+
+I merged the changes into main and surprisingly I didn't encounter any merge conflicts, even though I was working on this branch for 2 weeks. I think it's because I separated separate functionality into different files.
+
+Although all the new functionality is kind of on it's own, and not integrated with the rest of the app. I will create a separate program to run that will upload the files to supabase.
+
+I had to refactor it a little bit, but now we have a small program([upload_supa.py](../../../upload_supa.py)) that can handle file upload to supabase. If there are any other operations with the db, they can be also added to [supa.py](../../../supa.py).
+
+```py
+#upload_supa.py
+""" Program to upload a files to Supabase storage."""
+
+from supa import upload_move_to_processed, upload_documents_to_sql
+from document_processor import load_documents_from_directory
+
+from config import NEW_DOCUMENTS_DIR
+
+if __name__ == "__main__":
+    metadata, content = load_documents_from_directory(NEW_DOCUMENTS_DIR)
+    try:
+        upload_documents_to_sql(metadata, content)
+        upload_move_to_processed()
+    except Exception as e:
+        error_message = f"Error uploading documents to Supabase: {str(e)}"
+        print(error_message)
+```
