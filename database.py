@@ -116,20 +116,3 @@ def list_documents_in_collection(collection_name=None):
 api_key = os.getenv("GOOGLE_API_KEY")
 if not api_key:
     raise ValueError("API key not found. Please set the GOOGLE_API_KEY environment variable.")
-
-if __name__ == "__main__":
-    # Initialize the vector database first
-    initialize_vector_db()
-    
-    # List all documents
-    all_documents = list_documents_in_collection()
-    
-    # Print the results in a readable format
-    for collection_name, collection_data in all_documents.items():
-        print(f"\n=== Collection: {collection_name} ({collection_data['count']} documents) ===")
-        
-        for doc in collection_data["documents"]:
-            print(f"\nID: {doc['id']}")
-            print(f"Metadata: {doc['metadata']}")
-            print(f"Preview: {doc['text_preview']}")
-            print("-" * 40)
