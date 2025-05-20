@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from supabase import create_client, Client
 
 from config import NEW_DOCUMENTS_DIR, KB_DOCUMENTS_DIR
-from document_processor import load_documents_from_directory, extract_text_from_pdf, process_document_content
+from document_processor import load_documents_from_directory
 
 load_dotenv()
 

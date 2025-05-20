@@ -161,3 +161,7 @@ def upload_move_to_processed():
 ```
 
 ![supa_uploaded_files](pics/supa_uploaded_files.png)
+
+Trello ticket:
+
+![Trello_supa](pics/Trello_supa.png)
