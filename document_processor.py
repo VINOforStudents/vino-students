@@ -39,7 +39,7 @@ def extract_text_from_pdf(pdf_path: str) -> tuple[str, int]:
         print(f"Error extracting text from PDF {pdf_path}: {e}")
     return text, page_count
 
-def char_word_count(text:str) -> int:
+def char_word_count(text:str) -> tuple[int, int]:
     """
     Count the number of characters and words in a string.
     
