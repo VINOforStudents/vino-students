@@ -28,6 +28,8 @@ https://supabase.com/
 
 And I was impressed by the amount of features and how well it applies to our case. We might consider it for deployment, but for now it definitely sufficient.
 
+# Foundation
+
 I've built a foundation, using supabase guides and my code for psycopg2 module:
 
 ```py
@@ -127,3 +129,35 @@ except Exception as e:
 ```
 
 This program loads the documents from a dedicated directory, extracts its metadata and text, uploads it to supabase (postgreSQL) and moves processed files to another folder.
+
+# File Storage Upload
+
+Supabase also offers file storage functionality, which I assume  acts as object storage. I was able to download the PDF's I uploaded earlier. I don't know to what extend I can access the files, what I can do with them. I belive there is also a semantic search, but I don't know if it's only for the database or the files. Probably there will need to be a vector store instance. 
+
+For now, I want to focus on my python program uploading the processed files to the file storage. I found this page, which should help me with that:
+https://supabase.com/docs/guides/storage/uploads/standard-uploads?queryGroups=language&language=python
+
+I had to make changes in this function (former move_to_processed() ):
+
+```py
+def upload_move_to_processed():
+    """
+    Upload to file storage and move processed files from the new documents directory to the processed documents directory.
+    
+    Returns:
+        str: Success message
+    """
+    for file in os.listdir(NEW_DOCUMENTS_DIR):
+        source = os.path.join(NEW_DOCUMENTS_DIR, file)
+        try:
+            response = supabase.storage.from_('knowledge-base').upload(file, source)
+            print(f"Successfully uploaded: {file}")
+            destination = os.path.join(KB_DOCUMENTS_DIR, file)
+            os.rename(source, destination)
+        except Exception as e:
+            print(f"Error uploading {file}: {e}")
+            continue
+    return 'Files uploaded and moved successfully'
+```
+
+![supa_uploaded_files](pics/supa_uploaded_files.png)

@@ -13,20 +13,26 @@ supabase: Client = create_client(url, key)
 
 metadata, content = load_documents_from_directory(NEW_DOCUMENTS_DIR)
 
-def move_files_to_processed():
+def upload_move_to_processed():
     """
-    Move processed files from the new documents directory to the processed documents directory.
+    Upload to file storage and move processed files from the new documents directory to the processed documents directory.
     
     Returns:
-        None
+        str: Success message
     """
     for file in os.listdir(NEW_DOCUMENTS_DIR):
         source = os.path.join(NEW_DOCUMENTS_DIR, file)
-        destination = os.path.join(KB_DOCUMENTS_DIR, file)
-        os.rename(source, destination)
-    return 'Files moved successfully'
+        try:
+            response = supabase.storage.from_('knowledge-base').upload(file, source)
+            print(f"Successfully uploaded: {file}")
+            destination = os.path.join(KB_DOCUMENTS_DIR, file)
+            #os.rename(source, destination)
+        except Exception as e:
+            print(f"Error uploading {file}: {e}")
+            continue
+    return 'Files uploaded and moved successfully'
 
-def upload_documents_to_supabase(metadata_list, content_list):
+def upload_documents_to_sql(metadata_list, content_list):
     """
     Upload multiple document metadata and content to Supabase.
     
@@ -86,8 +92,8 @@ def upload_documents_to_supabase(metadata_list, content_list):
         return error_message
 
 try:
-    upload_documents_to_supabase(metadata, content)
-    move_files_to_processed()
+    upload_documents_to_sql(metadata, content)
+    upload_move_to_processed()
 except Exception as e:
     error_message = f"Error uploading documents to Supabase: {str(e)}"
     print(error_message)
