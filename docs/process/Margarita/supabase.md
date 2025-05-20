@@ -1,3 +1,36 @@
+# Table of Contents
+1. [Introduction](#introduction)
+
+
+# Introduction
+
+The question of how and where to store our data is still pending. Last week I proposed to use primarily SQL for everything (for now), and a lot of decisions were made since then. I will give you a quick update on it.
+
+Zeb suggested to look into Redis, so I did. Initially I got very excited about it, but as I was learning more about it's limitations, I realized it may not be the right solution for us at this moment. I considered Redis-only and Redis+PostgreSQL solutions. The only reason we would implement it is to (considerably) increase the performance of VINO, but right now we have other priorities.
+
+In addition, I made a decision to use cloud-based database hosting. The reason is that currectly I am running our database locally, which means that the server is only running when my laptop is on. If our team wants to collaborate, we need to find a different solution.
+
+There are two options:
+
+1. Cloud-hosted database service.
+2. Hosting the server on Artur's computer (he suggested it).
+
+I think the option 2 doesn't make so much sense for now, though it might for deployment.
+
+For option 1 I did quick research with Gemini and Google.
+
+https://g.co/gemini/share/4630f3540361
+
+https://g.co/gemini/share/856da75ed0e1
+
+After comparing the list of features of different databases, I read a little more about the one I liked the most:
+https://supabase.com/
+
+And I was impressed by the amount of features and how well it applies to our case. We might consider it for deployment, but for now it definitely sufficient.
+
+I've built a foundation, using supabase guides and my code for psycopg2 module:
+
+```py
 import os
 from dotenv import load_dotenv
 from supabase import create_client, Client
@@ -91,3 +124,6 @@ try:
 except Exception as e:
     error_message = f"Error uploading documents to Supabase: {str(e)}"
     print(error_message)
+```
+
+This program loads the documents from a dedicated directory, extracts its metadata and text, uploads it to supabase (postgreSQL) and moves processed files to another folder.
