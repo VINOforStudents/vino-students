@@ -110,7 +110,7 @@ def generate_abstract(text, max_length=300):
     
     return abstract
 
-def process_document_content(file_path: str, content: str, page_count: int = 0
+def process_document_content(file_path: str, content: str, page_count: int = 0,  source: str = "system_upload"
                             ) -> ProcessingResult:
     """
     Process document content into chunks with metadata and IDs.
@@ -142,7 +142,7 @@ def process_document_content(file_path: str, content: str, page_count: int = 0
                         word_count=word_count,
                         char_count=char_count,
                         keywords=keywords,
-                        source="system_upload",
+                        source=source,
                         abstract=abstract,
                         ).model_dump() 
     result.metadatas.append(metadata)
@@ -211,7 +211,7 @@ def load_user_document(file_path):
                 content = file.read()
         else:
             return None, None, f"Unsupported file type: {file_path}. Supported types are PDF and text files."
-        result = process_document_content(file_path, content, page_count)
+        result = process_document_content(file_path, content, page_count, source="user_upload")
         metadata = result.metadatas
 
         #if not result.documents:
