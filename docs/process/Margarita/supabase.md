@@ -190,3 +190,17 @@ if __name__ == "__main__":
         error_message = f"Error uploading documents to Supabase: {str(e)}"
         print(error_message)
 ```
+
+# Fixing user uploads
+
+While working on a different file upload strategy, I didn't pay attention to user uploads, and today I decided to fix it. I got the user uploads to work again, but there are a few bugs. The following files were updated:
+[database.py](../../../database.py)
+[document_processor.py](../../../document_processor.py)
+[APIendpoint.py](../../../APIendpoint.py)
+
+I was mainly adjusting the parameters I was passing through metadata. 
+Bugs that need to be fixed:
+1. When I view the contents of the vector store, the source of the files are displayed correctly. But if I do it via CLI it shows "system_upload" for user documents. I don't know why that is.
+2. VINO AI isn't displaying all the uploaded documents correctly. I don't remember if it every did (in the web-version).
+
+! It's not a bug, but user uploads need to be connected to Supabase.
