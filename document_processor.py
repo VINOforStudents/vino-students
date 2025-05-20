@@ -199,22 +199,25 @@ def load_user_document(file_path):
     Returns:
         tuple: (documents, metadatas, ids, message)
     """
+    all_metadatas = []
+    all_contents = []
+    page_count = 1 # Default to 1 for non-PDF files
     try:
         # Handle different file types
         if file_path.lower().endswith('.pdf'):
             content, page_count = extract_text_from_pdf(file_path)
-            result = process_document_content(file_path, content, page_count)
         elif file_path.lower().endswith(('.txt', '.md', '.py', '.js', '.html', '.css', '.json')):
             with open(file_path, 'r', encoding='utf-8') as file:
                 content = file.read()
-            result = process_document_content(file_path, content)
         else:
-            return None, None, None, f"Unsupported file type: {file_path}. Supported types are PDF and text files."
+            return None, None, f"Unsupported file type: {file_path}. Supported types are PDF and text files."
+        result = process_document_content(file_path, content, page_count)
+        metadata = result.metadatas
 
-        if not result.documents:
-            return None, None, None, f"No content extracted from {os.path.basename(file_path)}"
+        #if not result.documents:
+        #    return None, None, f"No content extracted from {os.path.basename(file_path)}"
             
-        return result.documents, result.metadatas, result.ids, f"Successfully processed {os.path.basename(file_path)} into {result.chunk_count} chunks"
-    
+        return metadata, content, f"Successfully processed {os.path.basename(file_path)}"
+        
     except Exception as e:
-        return None, None, None, f"Error loading {file_path}: {str(e)}"
+        return None, None,  f"Error loading {file_path}: {str(e)}"

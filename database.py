@@ -35,7 +35,7 @@ def initialize_vector_db():
             name="user_documents",
             embedding_function=google_ef
         )
-        
+
         # Process documents only if needed
         if collection_fw.count() == 0:
             print("Frameworks collection is empty. Loading documents...")
@@ -64,9 +64,72 @@ def initialize_vector_db():
 
 # Initialize environment variables
 load_dotenv()
+
+def list_documents_in_collection(collection_name=None):
+    """
+    List all documents in a specific collection or in all collections.
     
+    Args:
+        collection_name (str, optional): The name of the collection to query. 
+                                         If None, lists documents from all collections.
+    
+    Returns:
+        dict: Information about the queried collection(s)
+    """
+    client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
+    
+    if collection_name:
+        collections = [client.get_collection(name=collection_name)]
+    else:
+        collections = [
+            client.get_collection(name="frameworks"),
+            client.get_collection(name="user_documents")
+        ]
+    
+    results = {}
+    
+    for collection in collections:
+        # Get all documents from the collection
+        documents = collection.get()
+        
+        # Format the results
+        collection_data = {
+            "count": collection.count(),
+            "documents": []
+        }
+        
+        # Add document details
+        for i in range(len(documents["ids"])):
+            doc_info = {
+                "id": documents["ids"][i],
+                "metadata": documents["metadatas"][i] if documents["metadatas"] else None,
+                "text_preview": documents["documents"][i][:100] + "..." if documents["documents"][i] else None
+            }
+            collection_data["documents"].append(doc_info)
+        
+        results[collection.name] = collection_data
+        print(f"Collection '{collection.name}' has {collection.count()} documents.")
+    return results
+
 
 # Get API key from environment
 api_key = os.getenv("GOOGLE_API_KEY")
 if not api_key:
     raise ValueError("API key not found. Please set the GOOGLE_API_KEY environment variable.")
+
+if __name__ == "__main__":
+    # Initialize the vector database first
+    initialize_vector_db()
+    
+    # List all documents
+    all_documents = list_documents_in_collection()
+    
+    # Print the results in a readable format
+    for collection_name, collection_data in all_documents.items():
+        print(f"\n=== Collection: {collection_name} ({collection_data['count']} documents) ===")
+        
+        for doc in collection_data["documents"]:
+            print(f"\nID: {doc['id']}")
+            print(f"Metadata: {doc['metadata']}")
+            print(f"Preview: {doc['text_preview']}")
+            print("-" * 40)

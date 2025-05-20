@@ -73,16 +73,21 @@ async def handle_upload(file: UploadFile = File(...)):
         # Save the uploaded file
         with open(file_location, "wb+") as file_object:
             shutil.copyfileobj(file.file, file_object)
-
+        print(f"File {file.filename} uploaded to {file_location}")
         # Process the document
-        docs, metas, ids, message = load_user_document(file_location)
-
-        if docs is None:
+        metadata, content, message = load_user_document(file_location)
+        print(f"Processed {file.filename} with message: {message}")
+        if content is None:
             os.remove(file_location)
             raise HTTPException(status_code=400, detail=message)
-
+        # Convert any list values in metadata to strings
+        for doc_metadata in metadata:
+            for key, value in doc_metadata.items():
+                if isinstance(value, list):
+                    doc_metadata[key] = ", ".join(str(item) for item in value)
+                    
         # Add to user collection
-        collection_user.add(documents=docs, metadatas=metas, ids=ids)
+        collection_user.add(documents=content, metadatas=metadata, ids=[file.filename])
         return {"detail": f"Successfully uploaded and processed {file.filename}. {message}"}
 
     except Exception as e:
