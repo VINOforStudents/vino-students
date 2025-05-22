@@ -10,7 +10,7 @@ import prompts
 
 
 # Local application imports (after refactoring)
-from config import USER_UPLOADS_DIR # Configuration constant
+from config import USER_UPLOADS_DIR, NEW_USER_UPLOADS_DIR # Configuration constant
 from database import initialize_vector_db # Function to setup DB
 from document_processor import load_user_document # Function to process uploaded files
 from llm_interaction import query_and_respond# Function to interact with LLM
@@ -67,8 +67,8 @@ async def handle_chat(request: ChatRequest):
 
 @app.post("/upload")
 async def handle_upload(file: UploadFile = File(...)):
-    os.makedirs(USER_UPLOADS_DIR, exist_ok=True)
-    file_location = os.path.join(USER_UPLOADS_DIR, file.filename)
+    os.makedirs(NEW_USER_UPLOADS_DIR, exist_ok=True)
+    file_location = os.path.join(NEW_USER_UPLOADS_DIR, file.filename)
     try:
         # Save the uploaded file
         with open(file_location, "wb+") as file_object:
