@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 
 # Local imports
-from config import CHROMA_DB_PATH, DOCUMENTS_DIR
+from config import CHROMA_DB_PATH, KB_DOCUMENTS_DIR
 from document_processor import load_documents_from_directory
 
 # Third-party imports
@@ -39,7 +39,7 @@ def initialize_vector_db():
         # Process documents only if needed
         if collection_fw.count() == 0:
             print("Frameworks collection is empty. Loading documents...")
-            docs, metas, ids = load_documents_from_directory(DOCUMENTS_DIR)
+            docs, metas, ids = load_documents_from_directory(KB_DOCUMENTS_DIR)
             
             # Add documents to collection if any were loaded
             if docs:

@@ -5,6 +5,7 @@ from supa import upload_move_to_processed, upload_documents_to_sql
 from document_processor import load_documents_from_directory
 
 from config import NEW_DOCUMENTS_DIR, NEW_USER_UPLOADS_DIR, KB_DOCUMENTS_DIR, USER_UPLOADS_DIR
+
 def check_not_empty(directory):
     """
     Check if the directory is not empty.
