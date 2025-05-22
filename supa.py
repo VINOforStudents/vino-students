@@ -12,19 +12,19 @@ supabase: Client = create_client(url, key)
 
 
 
-def upload_move_to_processed():
+def upload_move_to_processed(from_dir, to_dir):
     """
     Upload to file storage and move processed files from the new documents directory to the processed documents directory.
     
     Returns:
         str: Success message
     """
-    for file in os.listdir(NEW_DOCUMENTS_DIR):
-        source = os.path.join(NEW_DOCUMENTS_DIR, file)
+    for file in os.listdir(from_dir):
+        source = os.path.join(from_dir, file)
         try:
             response = supabase.storage.from_('knowledge-base').upload(file, source)
             print(f"Successfully uploaded: {file}")
-            destination = os.path.join(KB_DOCUMENTS_DIR, file)
+            destination = os.path.join(to_dir, file)
             os.rename(source, destination)
         except Exception as e:
             print(f"Error uploading {file}: {e}")
