@@ -204,3 +204,7 @@ Bugs that need to be fixed:
 2. VINO AI isn't displaying all the uploaded documents correctly. I don't remember if it every did (in the web-version).
 
 ! It's not a bug, but user uploads need to be connected to Supabase.
+
+# Fixing bugs and Automatic user uploads
+
+Earlier I described 2 bugs and 1 task that I need to do the next day. This is the next day, and I am very happy that I managed to fix those bugs and one extra!

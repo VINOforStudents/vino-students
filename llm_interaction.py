@@ -41,7 +41,7 @@ def add_results_to_context(results, section_title, context=""):
     if results['documents'] and results['documents'][0]:
         context += f"\n--- {section_title} ---\n"
         for i, doc in enumerate(results['documents'][0]):
-            source = results['metadatas'][0][i]['filename'] if 'metadatas' in results and results['metadatas'][0] else "Unknown source"
+            source = results['metadatas'][0][i]['file_name'] if 'metadatas' in results and results['metadatas'][0] else "Unknown source"
             context += f"\n--- From {source} ---\n{doc}\n"
         return context, True
     return context, False

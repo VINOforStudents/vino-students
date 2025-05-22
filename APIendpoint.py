@@ -1,6 +1,7 @@
 # Standard library imports
 import os
 import shutil
+import sys
 
 # Third-party imports
 import uvicorn
@@ -39,14 +40,17 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
-# Initialize database collections
+collection_fw = None
+collection_user = None
+
+
 try:
     collection_fw, collection_user = initialize_vector_db()
+    if not collection_fw or not collection_user:
+        raise Exception("Database collections were not properly initialized")
 except Exception as e:
     print(f"FATAL: Could not initialize database or model: {e}")
-    # In production, you might want to exit here with sys.exit(1)
-
-
+    sys.exit(1)
 
 @app.post("/chat", response_model=ChatResponse)
 async def handle_chat(request: ChatRequest):
@@ -67,6 +71,12 @@ async def handle_chat(request: ChatRequest):
 
 @app.post("/upload")
 async def handle_upload(file: UploadFile = File(...)):
+    if collection_user is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Database not available. The server failed to initialize properly."
+        )
+    
     os.makedirs(NEW_USER_UPLOADS_DIR, exist_ok=True)
     file_location = os.path.join(NEW_USER_UPLOADS_DIR, file.filename)
     try:

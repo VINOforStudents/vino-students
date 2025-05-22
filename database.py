@@ -39,16 +39,17 @@ def initialize_vector_db():
         # Process documents only if needed
         if collection_fw.count() == 0:
             print("Frameworks collection is empty. Loading documents...")
-            docs, metas, ids = load_documents_from_directory(KB_DOCUMENTS_DIR)
+            metadata, content = load_documents_from_directory(KB_DOCUMENTS_DIR)
             
             # Add documents to collection if any were loaded
-            if docs:
+            if content:
+                ids = [f"doc_{i}" for i in range(len(content))]
                 collection_fw.add(
-                    documents=docs,
-                    metadatas=metas,
+                    documents=content,
+                    metadatas=metadata,
                     ids=ids
                 )
-                print(f"Added {len(docs)} document chunks to the frameworks collection.")
+                print(f"Added {len(content)} document chunks to the frameworks collection.")
             else:
                 print("No documents were loaded. Please check the directory path.")
         else:
@@ -105,6 +106,7 @@ def list_documents_in_collection(collection_name=None):
                 "metadata": documents["metadatas"][i] if documents["metadatas"] else None,
                 "text_preview": documents["documents"][i][:100] + "..." if documents["documents"][i] else None
             }
+            print(doc_info["metadata"])
             collection_data["documents"].append(doc_info)
         
         results[collection.name] = collection_data
@@ -161,3 +163,5 @@ def delete_all_documents(collection_name=None):
             print(f"No documents to delete in collection '{collection.name}'.")
     
     return results
+
+list_documents_in_collection()
