@@ -116,3 +116,48 @@ def list_documents_in_collection(collection_name=None):
 api_key = os.getenv("GOOGLE_API_KEY")
 if not api_key:
     raise ValueError("API key not found. Please set the GOOGLE_API_KEY environment variable.")
+
+def delete_all_documents(collection_name=None):
+    """
+    Delete all documents from a specific collection or from all collections.
+    
+    Args:
+        collection_name (str, optional): The name of the collection to clear.
+                                         If None, clears all collections.
+    
+    Returns:
+        dict: Information about the deletion operation
+    """
+    client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
+    
+    if collection_name:
+        collections = [client.get_collection(name=collection_name)]
+    else:
+        collections = [
+            client.get_collection(name="frameworks"),
+            client.get_collection(name="user_documents")
+        ]
+    
+    results = {}
+    
+    for collection in collections:
+        # Get all document IDs
+        documents = collection.get()
+        doc_ids = documents["ids"]
+        
+        # Delete all documents
+        if doc_ids:
+            collection.delete(ids=doc_ids)
+            results[collection.name] = {
+                "deleted_count": len(doc_ids),
+                "status": "success"
+            }
+            print(f"Deleted {len(doc_ids)} documents from collection '{collection.name}'.")
+        else:
+            results[collection.name] = {
+                "deleted_count": 0,
+                "status": "no documents found"
+            }
+            print(f"No documents to delete in collection '{collection.name}'.")
+    
+    return results
