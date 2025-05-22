@@ -212,9 +212,13 @@ I wasn't documenting the process, but my git commits speak for themselves:
 
 ![git_commit_supa](pics/git_commit_supa.png)
 
+What I've done today: 
+
 Fixed:
 - Incorrect listing of uploaded files
 - Incorrect "source" field
 - Failing database connection
 
 + Automated user uploads to vector store and supabase
+
+And I plan to clean up the code a little bit, because it's became a bit of a mess during the process.
