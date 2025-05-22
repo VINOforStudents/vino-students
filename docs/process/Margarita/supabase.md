@@ -207,4 +207,14 @@ Bugs that need to be fixed:
 
 # Fixing bugs and Automatic user uploads
 
-Earlier I described 2 bugs and 1 task that I need to do the next day. This is the next day, and I am very happy that I managed to fix those bugs and one extra!
+Earlier I described 2 bugs and 1 task that I need to do the next day. This is the next day, and I am very happy that I managed to fix those bugs and one extra! An extra bug was that after automating user uploads, the database connection was failing.
+I wasn't documenting the process, but my git commits speak for themselves:
+
+![git_commit_supa](pics/git_commit_supa.png)
+
+Fixed:
+- Incorrect listing of uploaded files
+- Incorrect "source" field
+- Failing database connection
+
++ Automated user uploads to vector store and supabase
