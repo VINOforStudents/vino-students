@@ -19,7 +19,7 @@ def upload_move_to_processed(from_dir, to_dir):
     Returns:
         str: Success message
     """
-    for file in os.listdir(from_dir, to_dir):
+    for file in os.listdir(from_dir):
         source = os.path.join(from_dir, file)
         try:
             if from_dir == NEW_DOCUMENTS_DIR:

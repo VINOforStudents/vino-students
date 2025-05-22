@@ -34,7 +34,9 @@ def extract_text_from_pdf(pdf_path: str) -> tuple[str, int]:
             page_count = len(pdf_reader.pages)
             for page_num in range(page_count):
                 page = pdf_reader.pages[page_num]
-                text += page.extract_text() + "\n"
+                page_text = page.extract_text() or ""
+                page_text = page_text.replace('\u0000', '')
+                text += page_text + "\n"
     except Exception as e:
         print(f"Error extracting text from PDF {pdf_path}: {e}")
     return text, page_count
@@ -207,8 +209,14 @@ def load_user_document(file_path):
         if file_path.lower().endswith('.pdf'):
             content, page_count = extract_text_from_pdf(file_path)
         elif file_path.lower().endswith(('.txt', '.md', '.py', '.js', '.html', '.css', '.json')):
-            with open(file_path, 'r', encoding='utf-8') as file:
-                content = file.read()
+            try:
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    content = file.read()
+                content = content.replace('\u0000', '')
+            except UnicodeDecodeError:
+                with open(file_path, 'rb') as file:
+                    content = file.read().decode('utf-8', errors='replace')
+                    content = content.replace('\u0000', '')
         else:
             return None, None, f"Unsupported file type: {file_path}. Supported types are PDF and text files."
         result = process_document_content(file_path, content, page_count, source="user_upload")
