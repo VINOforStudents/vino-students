@@ -221,4 +221,20 @@ Fixed:
 
 + Automated user uploads to vector store and supabase
 
+Supabase user-uploaded PDFs:
+
+![user_pdfs](pics/user_pdfs.png)
+
+Knowledge base items (manual upload by running [upload_supa.py](../../../upload_supa.py)):
+
+![kb_pdfs](pics/kb_pdfs.png)
+
+Added to SQL files (must change it so duplicates are not allowed) (I just noticed the  source is wrong again, even though it's correct in the vector store):
+
+![uploaded_sql](pics/uploaded_sql.png)
+
+Full text from the added files:
+
+![uploaded_full_text](pics/uploaded_full_text.png)
+
 And I plan to clean up the code a little bit, because it's became a bit of a mess during the process.

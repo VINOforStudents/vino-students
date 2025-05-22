@@ -54,6 +54,15 @@ except Exception as e:
 
 @app.post("/chat", response_model=ChatResponse)
 async def handle_chat(request: ChatRequest):
+    """
+    Handle chat requests by querying the LLM with the provided question and context.
+    
+    Args:
+        request: ChatRequest containing question, history, and current step
+        
+    Returns:
+        ChatResponse with the answer from the LLM
+    """
     try:
         answer = query_and_respond(
             query_text=request.question,
@@ -64,52 +73,86 @@ async def handle_chat(request: ChatRequest):
         )
         if not answer:
             raise HTTPException(status_code=404, detail="Could not generate an answer.")
+        # Convert answer to string if it's not already
+        if not isinstance(answer, str):
+            answer = str(answer)
         return ChatResponse(answer=answer)
     except Exception as e:
-        print(f"Error in /chat endpoint: {e}")
+        logger.error(f"Error in /chat endpoint: {e}")
         raise HTTPException(status_code=500, detail=f"Internal server error during chat processing: {str(e)}")
+
+def process_metadata(metadata):
+    """Convert any list values in metadata to comma-separated strings."""
+    for doc_metadata in metadata:
+        for key, value in doc_metadata.items():
+            if isinstance(value, list):
+                doc_metadata[key] = ", ".join(str(item) for item in value)
+    return metadata
+
+
+def save_uploaded_file(file, file_location):
+    """Save the uploaded file to the specified location."""
+    with open(file_location, "wb+") as file_object:
+        shutil.copyfileobj(file.file, file_object)
+    print(f"File {file.filename} uploaded to {file_location}")
+
+
+def upload_to_supabase(new_dir, user_dir):
+    """Process the directory and upload to Supabase."""
+    try:
+        success = process_directory(new_dir, user_dir)
+        if success:
+            print("Successfully uploaded to Supabase")
+        else:
+            print("Failed to upload to Supabase")
+        return success
+    except Exception as e:
+        print(f"Supabase upload error: {e}")
+        return False
+
 
 @app.post("/upload")
 async def handle_upload(file: UploadFile = File(...)):
+    """
+    Handle file uploads, process documents, and add them to the vector database.
+    
+    Args:
+        file: The uploaded file
+        
+    Returns:
+        Dict with detail message about the upload status
+    """
+    # Validate database is available
     if collection_user is None:
         raise HTTPException(
             status_code=503,
             detail="Database not available. The server failed to initialize properly."
         )
     
+    # Create upload directory and set file path
     os.makedirs(NEW_USER_UPLOADS_DIR, exist_ok=True)
     file_location = os.path.join(NEW_USER_UPLOADS_DIR, file.filename)
+    
     try:
         # Save the uploaded file
-        with open(file_location, "wb+") as file_object:
-            shutil.copyfileobj(file.file, file_object)
-        print(f"File {file.filename} uploaded to {file_location}")
+        save_uploaded_file(file, file_location)
+        
         # Process the document
         metadata, content, message = load_user_document(file_location)
         print(f"Processed {file.filename} with message: {message}")
+        
+        # Handle processing failures
         if content is None:
             os.remove(file_location)
             raise HTTPException(status_code=400, detail=message)
-        # Convert any list values in metadata to strings
-        for doc_metadata in metadata:
-            for key, value in doc_metadata.items():
-                if isinstance(value, list):
-                    doc_metadata[key] = ", ".join(str(item) for item in value)
-                    
-        # Add to user collection
+        
+        # Prepare metadata and add to vector database
+        metadata = process_metadata(metadata)
         collection_user.add(documents=content, metadatas=metadata, ids=[file.filename])
-        print(f"About to process directory {NEW_USER_UPLOADS_DIR} -> {USER_UPLOADS_DIR}")
-
-        # After successful processing, only process the directory with the new file
-        try:
-            success = process_directory(NEW_USER_UPLOADS_DIR, USER_UPLOADS_DIR)
-            print(f"Result of process_directory: {success}")
-            if success:
-                print("Successfully uploaded to Supabase")
-            else:
-                print("Failed to upload to Supabase")
-        except Exception as e:
-            print(f"Supabase upload error: {e}")
+        
+        # Upload to Supabase
+        print(f"Processing directory {NEW_USER_UPLOADS_DIR} -> {USER_UPLOADS_DIR}")
+        upload_to_supabase(NEW_USER_UPLOADS_DIR, USER_UPLOADS_DIR)
         
         return {"detail": f"Successfully uploaded and processed {file.filename}. {message}"}
         
@@ -123,6 +166,12 @@ async def handle_upload(file: UploadFile = File(...)):
 
 @app.get("/list_files")
 async def get_uploaded_files():
+    """
+    List all uploaded files in the user collection.
+    
+    Returns:
+        Dict with information about uploaded files
+    """
     try:
         file_list_string = list_uploaded_files(collection_user)
         return {"files_info": file_list_string}
