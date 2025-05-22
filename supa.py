@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
-from config import NEW_DOCUMENTS_DIR, KB_DOCUMENTS_DIR
+from config import NEW_DOCUMENTS_DIR, KB_DOCUMENTS_DIR, NEW_USER_UPLOADS_DIR, USER_UPLOADS_DIR
 
 load_dotenv()
 
@@ -19,10 +19,14 @@ def upload_move_to_processed(from_dir, to_dir):
     Returns:
         str: Success message
     """
-    for file in os.listdir(from_dir):
+    for file in os.listdir(from_dir, to_dir):
         source = os.path.join(from_dir, file)
         try:
-            response = supabase.storage.from_('knowledge-base').upload(file, source)
+            if from_dir == NEW_DOCUMENTS_DIR:
+                # Upload to Supabase storage
+                response = supabase.storage.from_('knowledge-base').upload(file, source)
+            if from_dir == NEW_USER_UPLOADS_DIR:
+                response = supabase.storage.from_('user-uploads').upload(file, source)
             print(f"Successfully uploaded: {file}")
             destination = os.path.join(to_dir, file)
             os.rename(source, destination)

@@ -16,7 +16,7 @@ from document_processor import load_user_document # Function to process uploaded
 from llm_interaction import query_and_respond# Function to interact with LLM
 from file_utils import list_uploaded_files # Function to list files
 from models import ChatRequest, ChatResponse # Pydantic models for request/response
-
+from upload_supa import process_directory # Function to process directories
 
 # Initialize FastAPI App
 app = FastAPI(
@@ -88,8 +88,21 @@ async def handle_upload(file: UploadFile = File(...)):
                     
         # Add to user collection
         collection_user.add(documents=content, metadatas=metadata, ids=[file.filename])
-        return {"detail": f"Successfully uploaded and processed {file.filename}. {message}"}
+        print(f"About to process directory {NEW_USER_UPLOADS_DIR} -> {USER_UPLOADS_DIR}")
 
+        # After successful processing, only process the directory with the new file
+        try:
+            success = process_directory(NEW_USER_UPLOADS_DIR, USER_UPLOADS_DIR)
+            print(f"Result of process_directory: {success}")
+            if success:
+                print("Successfully uploaded to Supabase")
+            else:
+                print("Failed to upload to Supabase")
+        except Exception as e:
+            print(f"Supabase upload error: {e}")
+        
+        return {"detail": f"Successfully uploaded and processed {file.filename}. {message}"}
+        
     except Exception as e:
         print(f"Error in /upload endpoint: {e}")
         if os.path.exists(file_location):
