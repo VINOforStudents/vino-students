@@ -106,7 +106,7 @@ def list_documents_in_collection(collection_name=None):
                 "metadata": documents["metadatas"][i] if documents["metadatas"] else None,
                 "text_preview": documents["documents"][i][:100] + "..." if documents["documents"][i] else None
             }
-            print(doc_info["metadata"])
+            #print(doc_info["metadata"])
             collection_data["documents"].append(doc_info)
         
         results[collection.name] = collection_data
@@ -163,3 +163,6 @@ def delete_all_documents(collection_name=None):
             print(f"No documents to delete in collection '{collection.name}'.")
     
     return results
+
+#delete_all_documents("user_documents")
+list_documents_in_collection()
