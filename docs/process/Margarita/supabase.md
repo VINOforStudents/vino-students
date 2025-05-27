@@ -8,6 +8,8 @@
 - [File Storage Upload](#file-storage-upload)
 - [Fixing user uploads](#fixing-user-uploads)
 - [Fixing bugs and Automatic user uploads](#fixing-bugs-and-automatic-user-uploads)
+- [Fixing bug with a source again](#fixing-bug-with-a-source-again)
+- [Conclusion](#conclusion)
 
 <!-- /TOC -->
 
