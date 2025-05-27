@@ -1,6 +1,12 @@
 # Knowledge Bank Item Structure || VINO AI for Students
 
+<!-- TOC -->
 
+- [Knowledge Bank Item Structure || VINO AI for Students](#knowledge-bank-item-structure--vino-ai-for-students)
+- [Introduction](#introduction)
+- [Prerequisites](#prerequisites)
+
+<!-- /TOC -->
 
 # Introduction
 
@@ -16,4 +22,4 @@
 - Considerations (?)
 - Resource link(s)
 
-**Chunking Strategy**: Recursive-based chunking
+**Chunking Strategy**: Semantic combined with Recursive-based chunking.
