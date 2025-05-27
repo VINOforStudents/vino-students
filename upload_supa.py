@@ -18,18 +18,20 @@ def check_not_empty(directory):
     """
     return  any(os.scandir(directory))
 
-def process_directory(from_dir, to_dir):
+def process_directory(from_dir, to_dir, source="system_upload"):
     """
     Process documents from a specific directory and upload to Supabase.
     
     Args:
-        directory: Path to the directory to process.
+        from_dir: Path to the directory to process.
+        to_dir: Path to move processed files.
+        source: Source identifier for the documents.
         
     Returns:
         bool: True if documents were processed, False otherwise.
     """
     if check_not_empty(from_dir):
-        metadata, content = load_documents_from_directory(from_dir)
+        metadata, content = load_documents_from_directory(from_dir, source)
         try:
             upload_documents_to_sql(metadata, content)
             upload_move_to_processed(from_dir, to_dir)
@@ -55,8 +57,8 @@ def upload_documents():
     if process_directory(NEW_DOCUMENTS_DIR, KB_DOCUMENTS_DIR):
         processed_docs = True
         
-    # Process NEW_USER_UPLOADS_DIR
-    if process_directory(NEW_USER_UPLOADS_DIR, USER_UPLOADS_DIR):
+    # Process NEW_USER_UPLOADS_DIR with source "user_uploads"
+    if process_directory(NEW_USER_UPLOADS_DIR, USER_UPLOADS_DIR, source="user_uploads"):
         processed_docs = True
         
     if not processed_docs:

@@ -102,7 +102,7 @@ async def handle_upload(file: UploadFile = File(...)):
 
         # After successful processing, only process the directory with the new file
         try:
-            success = process_directory(NEW_USER_UPLOADS_DIR, USER_UPLOADS_DIR)
+            success = process_directory(NEW_USER_UPLOADS_DIR, USER_UPLOADS_DIR, source="user_upload")
             print(f"Result of process_directory: {success}")
             if success:
                 print("Successfully uploaded to Supabase")

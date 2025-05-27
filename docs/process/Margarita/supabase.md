@@ -1,5 +1,15 @@
-# Table of Contents
-1. [Introduction](#introduction)
+# VINO AI for students || Supabase || devlog
+
+<!-- TOC -->
+
+- [VINO AI for students || Supabase || devlog](#vino-ai-for-students--supabase--devlog)
+- [Introduction](#introduction)
+- [Foundation](#foundation)
+- [File Storage Upload](#file-storage-upload)
+- [Fixing user uploads](#fixing-user-uploads)
+- [Fixing bugs and Automatic user uploads](#fixing-bugs-and-automatic-user-uploads)
+
+<!-- /TOC -->
 
 
 # Introduction
@@ -31,6 +41,9 @@ And I was impressed by the amount of features and how well it applies to our cas
 # Foundation
 
 I've built a foundation, using supabase guides and my code for psycopg2 module:
+
+<details>
+<summary> Supabase Foundation: Code Snippet </summary>
 
 ```py
 import os
@@ -127,6 +140,7 @@ except Exception as e:
     error_message = f"Error uploading documents to Supabase: {str(e)}"
     print(error_message)
 ```
+</details>
 
 This program loads the documents from a dedicated directory, extracts its metadata and text, uploads it to supabase (postgreSQL) and moves processed files to another folder.
 
@@ -140,6 +154,7 @@ https://supabase.com/docs/guides/storage/uploads/standard-uploads?queryGroups=la
 I had to make changes in this function (former move_to_processed() ):
 
 ```py
+#supa.py
 def upload_move_to_processed():
     """
     Upload to file storage and move processed files from the new documents directory to the processed documents directory.
@@ -194,8 +209,11 @@ if __name__ == "__main__":
 # Fixing user uploads
 
 While working on a different file upload strategy, I didn't pay attention to user uploads, and today I decided to fix it. I got the user uploads to work again, but there are a few bugs. The following files were updated:
+
 [database.py](../../../database.py)
+
 [document_processor.py](../../../document_processor.py)
+
 [APIendpoint.py](../../../APIendpoint.py)
 
 I was mainly adjusting the parameters I was passing through metadata. 
@@ -238,3 +256,31 @@ Full text from the added files:
 ![uploaded_full_text](pics/uploaded_full_text.png)
 
 And I plan to clean up the code a little bit, because it's became a bit of a mess during the process.
+
+# Fixing bug with a source (again)
+
+Previously, I fixed a bug with the source (it would always be system_upload). At least, I thought that I fixed it, because I only checked the CLI output. In reality, the documents were uploaded to the SQL database with the wrong source. 
+
+It took me a few shots, but in the end of the day this is the line that needed to be fixed:
+
+```py 
+# APIendpoint.py
+## handle_upload.py()
+...
+try:
+    success = process_directory(NEW_USER_UPLOADS_DIR, USER_UPLOADS_DIR, source="user_upload")
+    print(f"Result of process_directory: {success}")
+...
+```
+
+This is the result:
+
+![correct_source_n2](pics/correct_source_n2.png)
+
+# Conclusion
+
+To summarize, I was able to transfer and integrate PostgreSQL within VINO AI for students, using cloud db-hosting Supabase. It was not too challenging, I was able to progress from one step to another quite quickly.
+
+The main difficulty was to make sure all the parameters are correctly passed across multiple functions and also files. Most of the errors and bugs were related to the passing of metadata.
+
+I am satisfied with the result I got at this moment. There will need to be more work done to ensure our application can use the files in the databases.

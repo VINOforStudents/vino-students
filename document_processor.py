@@ -127,12 +127,10 @@ def process_document_content(file_path: str, content: str, page_count: int = 0, 
     """
     result = ProcessingResult()
     file_name = os.path.basename(file_path)
-    
     # Skip if no content was extracted
     if not content.strip():
         print(f"Warning: No content extracted from {file_name}")
         return result
-
     char_count, word_count = char_word_count(content)
     file_size = os.path.getsize(file_path)
     keywords = extract_keywords(content)
@@ -150,12 +148,13 @@ def process_document_content(file_path: str, content: str, page_count: int = 0, 
     result.metadatas.append(metadata)
     return result
 
-def load_documents_from_directory(directory_path):
+def load_documents_from_directory(directory_path, source="system_upload"):
     """
     Read and process all supported documents from a directory.
     
     Args:
         directory_path: Path to the directory containing documents
+        source: Source identifier for the documents
         
     Returns:
         tuple: (documents, metadatas, ids)
@@ -178,8 +177,8 @@ def load_documents_from_directory(directory_path):
                 with open(file_path, 'r', encoding='utf-8') as file:
                     content = file.read()
 
-            # Process the document content
-            result = process_document_content(file_path, content, page_count)
+            # Process the document content with source parameter
+            result = process_document_content(file_path, content, page_count, source)
             all_metadatas.extend(result.metadatas)
             all_contents.append(content)
 

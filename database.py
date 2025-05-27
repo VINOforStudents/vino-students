@@ -163,5 +163,3 @@ def delete_all_documents(collection_name=None):
             print(f"No documents to delete in collection '{collection.name}'.")
     
     return results
-
-list_documents_in_collection()
