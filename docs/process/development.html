@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>development.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="context-management">Context Management</h1>
+<ul>
+<li><a href="#context-management">Context Management</a>
+<ul>
+<li><a href="#initial-context-problem">Initial Context Problem</a>
+<ul>
+<li><a href="#context-length-problem">Context Length Problem</a>
+<ul>
+<li><a href="#potential-solution">Potential solution:</a></li>
+</ul>
+</li>
+<li><a href="#cag-vs-rag">CAG vs. RAG</a></li>
+<li><a href="#leveraging-both-cag-and-rag">Leveraging both CAG and RAG</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="initial-context-problem">Initial Context Problem</h2>
+<p>Currently there's an issue with the prompting, and it does not get past step 1 because of the lack of confirmation or command.
+In a sequence diagram I want to describe the possible scenarios that happen for chat navigation and steps navigation (1-6)</p>
+<p>the user needs to be able to navigate to context of step 1, and if it's good enough;</p>
+<ol>
+<li>we do /next to go to the next step.</li>
+<li>to go to any step that exists, do /step x</li>
+<li>to go to previous step do /previous</li>
+</ol>
+<p>Thus, wondering how this is going to interact with our stack.</p>
+<p>It creates 3 scenarios:</p>
+<pre><code class="language-mermaid"><div class="mermaid">sequenceDiagram
+    actor User
+    participant ReflexFrontend as Reflex Frontend (GUI & State)
+    participant FastAPIBackend as FastAPI Backend (APIendpoint.py)
+    participant LLMLogic as Langchain/LLM Logic (main.py &  Prompts)
+    participant VectorDB as ChromaDB
+
+    User->>ReflexFrontend: Enters chat message "Tell me more about X"
+    ReflexFrontend->>ReflexFrontend: Get current_step (e.g., 1)
+    ReflexFrontend->>FastAPIBackend: POST /chat (question="...", current_step=1)
+    FastAPIBackend->>LLMLogic: query_and_respond(question="...", step=1, history=...)
+    LLMLogic->>LLMLogic: get_universal_matrix_prompt(step=1, ...)
+    LLMLogic->>VectorDB: Query context relevant to Step 1 + question
+    VectorDB-->>LLMLogic: Return relevant documents
+    LLMLogic->>LLMLogic: Call LLM with Step 1 prompt + context + history
+    LLMLogic-->>FastAPIBackend: Return LLM response for Step 1
+    FastAPIBackend-->>ReflexFrontend: Return JSON {answer: "..."}
+    ReflexFrontend->>User: Display LLM response for Step 1
+
+    User->>ReflexFrontend: Enters command "/next"
+    ReflexFrontend->>ReflexFrontend: Parse command, identify "/next"
+    ReflexFrontend->>ReflexFrontend: Get current_step (e.g., 1)
+    ReflexFrontend->>ReflexFrontend: Increment current_step (to 2)
+    ReflexFrontend->>FastAPIBackend: POST /chat (question="Proceed to next step.", current_step=2)
+    FastAPIBackend->>LLMLogic: query_and_respond(question="Proceed to next step.", step=2, history=...)
+    LLMLogic->>LLMLogic: get_universal_matrix_prompt(step=2, ...)
+    LLMLogic->>VectorDB: Query context relevant to Step 2
+    VectorDB-->>LLMLogic: Return relevant documents
+    LLMLogic->>LLMLogic: Call LLM with Step 2 prompt + context + history (maybe prompt asks "Okay, let's start Step 2...")
+    LLMLogic-->>FastAPIBackend: Return LLM response for Step 2
+    FastAPIBackend-->>ReflexFrontend: Return JSON {answer: "Okay, let's start Step 2..."}
+    ReflexFrontend->>User: Display LLM response initiating Step 2
+
+    User->>ReflexFrontend: Enters command "/previous"
+    ReflexFrontend->>ReflexFrontend: Parse command, identify "/previous"
+    ReflexFrontend->>ReflexFrontend: Get current_step (e.g., 3)
+    ReflexFrontend->>ReflexFrontend: Decrement current_step (to 2, ensure >= 1)
+    ReflexFrontend->>FastAPIBackend: POST /chat (question="Go back to previous step.", current_step=2)
+    FastAPIBackend->>LLMLogic: query_and_respond(question="Go back to previous step.", step=2, history=...)
+    LLMLogic->>LLMLogic: get_universal_matrix_prompt(step=2, ...)
+    LLMLogic->>VectorDB: Query context relevant to Step 2
+    VectorDB-->>LLMLogic: Return relevant documents
+    LLMLogic->>LLMLogic: Call LLM with Step 2 prompt + context + history (maybe prompt asks "Okay, we are back at Step 2...")
+    LLMLogic-->>FastAPIBackend: Return LLM response for Step 2
+    FastAPIBackend-->>ReflexFrontend: Return JSON {answer: "Okay, we are back at Step 2..."}
+    ReflexFrontend->>User: Display LLM response confirming return to Step 2
+
+    User->>ReflexFrontend: Enters command "/step 4"
+    ReflexFrontend->>ReflexFrontend: Parse command, identify "/step", extract n=4
+    ReflexFrontend->>ReflexFrontend: Validate n (1 <= n <= 6)
+    ReflexFrontend->>ReflexFrontend: Set current_step = 4
+    ReflexFrontend->>FastAPIBackend: POST /chat (question="Jump to step 4.", current_step=4)
+    FastAPIBackend->>LLMLogic: query_and_respond(question="Jump to step 4.", step=4, history=...)
+    LLMLogic->>LLMLogic: get_universal_matrix_prompt(step=4, ...)
+    LLMLogic->>VectorDB: Query context relevant to Step 4
+    VectorDB-->>LLMLogic: Return relevant documents
+    LLMLogic->>LLMLogic: Call LLM with Step 4 prompt + context + history (maybe prompt asks "Okay, moving to Step 4...")
+    LLMLogic-->>FastAPIBackend: Return LLM response for Step 4
+    FastAPIBackend-->>ReflexFrontend: Return JSON {answer: "Okay, moving to Step 4..."}
+    ReflexFrontend->>User: Display LLM response initiating Step 4
+</div></code></pre>
+<h3 id="context-length-problem">Context Length Problem</h3>
+<p>The problem with this the length of the history, at some point the chat history will be way too long, and thus a need for context abstraction will be needed. It would look like:</p>
+<pre><code class="language-mermaid"><div class="mermaid">sequenceDiagram
+    actor User
+    participant ReflexFrontend as Reflex Frontend (GUI + State)
+    participant FastAPIBackend as FastAPI Backend (APIendpoint.py)
+    participant HistoryManager as History Manager/Summarizer
+    participant LLMLogic as Langchain/LLM Logic (main.py + Prompts)
+    participant VectorDB as ChromaDB
+
+    %% Scenario: Chat with History Abstraction %%
+    User->>ReflexFrontend: Enters chat message "Tell me more about X"
+    ReflexFrontend->>ReflexFrontend: Get current_step (e.g., 1)
+    ReflexFrontend->>FastAPIBackend: POST /chat (question="...", current_step=1, full_history=...)
+    FastAPIBackend->>HistoryManager: ProcessHistory(full_history)
+    HistoryManager->>HistoryManager: Check history length
+    alt History is too long
+        HistoryManager->>HistoryManager: Summarize/Abstract history
+        HistoryManager-->>FastAPIBackend: Return abstracted_history
+    else History is short enough
+        HistoryManager-->>FastAPIBackend: Return full_history as abstracted_history
+    end
+    FastAPIBackend->>LLMLogic: query_and_respond(question="...", step=1, history=abstracted_history)
+    LLMLogic->>LLMLogic: get_universal_matrix_prompt(step=1, ...)
+    LLMLogic->>VectorDB: Query context relevant to Step 1 + question
+    VectorDB-->>LLMLogic: Return relevant documents
+    LLMLogic->>LLMLogic: Call LLM with Step 1 prompt + context + abstracted_history
+    LLMLogic-->>FastAPIBackend: Return LLM response for Step 1
+    FastAPIBackend-->>ReflexFrontend: Return JSON {answer: "..."}
+    ReflexFrontend->>User: Display LLM response for Step 1
+    ReflexFrontend->>ReflexFrontend: Append new Q/A to full_history in state
+
+    %% Note: Navigation commands (/next, /previous, /step) would follow a similar pattern, %%
+    %% potentially triggering history abstraction before calling the LLM for the target step. %%
+</div></code></pre>
+<p>A general idea of the description would be useful instead of leading any type of LLM to hallucination. Though the disadvantage would be that an extensive description that is context-rich would be converted into an abstracted concept. A great variable here is the variability of how granular it can be.</p>
+<p>If the history is consistently too long, it <strong>loses detail and granularity</strong>.</p>
+<h4 id="potential-solution">Potential solution:</h4>
+<p>By giving up CAG and translating vital long-term integrated information, like the goal of a project, into vectors or embeddings, it encourages us to use a RAG system. We retrieve the abstracted history and delve deeper and modify it if needed. What if the goal of an application changes target audience?</p>
+<pre><code class="language-mermaid"><div class="mermaid">sequenceDiagram
+    actor User
+    participant ReflexFrontend as Reflex Frontend (GUI + State)
+    participant FastAPIBackend as FastAPI Backend (APIendpoint.py)
+    participant HistoryManager as History Manager/Summarizer
+    participant LLMLogic as Langchain/LLM Logic (main.py + Prompts)
+    participant VectorDB as ChromaDB
+
+    %% Phase 1: Storing/Updating Vital Long-Term Info (e.g., Target Audience Change) %%
+    User->>ReflexFrontend: "Let's change the target audience to 'enterprise users'"
+    ReflexFrontend->>FastAPIBackend: POST /update_vital_info (info_type="target_audience", value="enterprise users")
+    FastAPIBackend->>LLMLogic: ProcessVitalInfoUpdate(type="target_audience", value="enterprise users")
+    LLMLogic->>LLMLogic: Generate embedding for "enterprise users"
+    LLMLogic->>VectorDB: Upsert embedding/document for key 'target_audience' with new value/vector
+    VectorDB-->>LLMLogic: Confirmation
+    LLMLogic-->>FastAPIBackend: Success message ("Target audience updated.")
+    FastAPIBackend-->>ReflexFrontend: Return JSON {message: "Target audience updated."}
+    ReflexFrontend->>User: Display confirmation
+
+    %% Phase 2: Subsequent Chat using RAG with Updated Info %%
+    User->>ReflexFrontend: "How should we adjust pricing for them?" (within Step 5)
+    ReflexFrontend->>ReflexFrontend: Get current_step (e.g., 5)
+    ReflexFrontend->>FastAPIBackend: POST /chat (question="...", current_step=5, full_history=...)
+
+    %% Optional History Abstraction %%
+    FastAPIBackend->>HistoryManager: ProcessHistory(full_history)
+    HistoryManager-->>FastAPIBackend: Return abstracted_history (or full history)
+
+    FastAPIBackend->>LLMLogic: query_and_respond(question="...", step=5, history=abstracted_history)
+    LLMLogic->>LLMLogic: get_universal_matrix_prompt(step=5, ...)
+
+    %% RAG Retrieval including Vital Info %%
+    LLMLogic->>VectorDB: Query context (question, step=5, vital_keys=['target_audience'])
+    note right of VectorDB: Query retrieves step-specific context AND <br/>vital info like the 'target_audience' vector.
+    VectorDB-->>LLMLogic: Return relevant docs (Step 5 info, pricing info, 'target_audience=enterprise users' doc/vector)
+
+    %% LLM Call with Combined Context %%
+    LLMLogic->>LLMLogic: Call LLM with Step 5 prompt + retrieved_docs + abstracted_history
+    note right of LLMLogic: LLM context includes step goal, question, history, <br/>and the updated 'enterprise users' target audience.
+
+    LLMLogic-->>FastAPIBackend: Return LLM response considering enterprise users
+    FastAPIBackend-->>ReflexFrontend: Return JSON {answer: "..."}
+    ReflexFrontend->>User: Display LLM response
+    ReflexFrontend->>ReflexFrontend: Append new Q/A to full_history in state
+</div></code></pre>
+<p>This does give more control over context, and how a given LLM controls their own context tokens. Does every LLM control them with equal accuracy? Introducing RAG would improve the information consistency considerably.</p>
+<p>This raises the question of <strong>CAG vs RAG</strong>.</p>
+<h3 id="cag-vs-rag">CAG vs. RAG</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Feature</th>
+<th style="text-align:left">CAG (Context-Augmented Generation - via History Summarization)</th>
+<th style="text-align:left">RAG (Retrieval-Augmented Generation)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>Mechanism</strong></td>
+<td style="text-align:left">Summarizes/abstracts chat history to fit context window.</td>
+<td style="text-align:left">Retrieves relevant information chunks from an external knowledge base.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Context Source</strong></td>
+<td style="text-align:left">Primarily the ongoing conversation history.</td>
+<td style="text-align:left">External documents/database (VectorDB in this case), plus history.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Scalability (Length)</strong></td>
+<td style="text-align:left">Struggles with very long histories; summarization loses info.</td>
+<td style="text-align:left">Scales well; retrieves only relevant parts, independent of total size.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Consistency/Accuracy</strong></td>
+<td style="text-align:left">Depends on summarization quality; can drift or lose facts.</td>
+<td style="text-align:left">Higher potential for consistency; grounds responses in source data.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Granularity/Detail</strong></td>
+<td style="text-align:left">Loses detail and granularity as history grows and is summarized.</td>
+<td style="text-align:left">Can retrieve specific, granular details from the knowledge base.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Flexibility/Update</strong></td>
+<td style="text-align:left">History is inherently sequential; updating past &quot;facts&quot; is hard.</td>
+<td style="text-align:left">Easier to update/add/remove information in the external VectorDB.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Complexity</strong></td>
+<td style="text-align:left">Requires a robust summarization strategy.</td>
+<td style="text-align:left">Requires setting up and maintaining a VectorDB and retrieval logic.</td>
+</tr>
+</tbody>
+</table>
+<p>Putting them side by side only makes it harder to choose in this case, to for things like large documents it's more logical to use RAG. Though for short questions, high-level topics, CAG seems the way to go.</p>
+<p>Why not use both?</p>
+<h3 id="leveraging-both-cag-and-rag">Leveraging both CAG and RAG</h3>
+<p>It basically boils down to 2 applications.</p>
+<p>RAG is for <strong>grounding &amp; long-term memory</strong>, for step-speficic information or vital long-term info.</p>
+<ol>
+<li>Detailed documentation, examples, guidelines, etc.</li>
+<li>Target audience, goal, persistent information</li>
+</ol>
+<p>CAG is for <strong>conversational context</strong>, by using summarization and abstraction to augment back and forth conversation.</p>
+<ol>
+<li>Retrieve relevant documents</li>
+<li>Retrieve corresponding summaries, chat history, document summary, etc.</li>
+<li>Combine RAG context, CAG history, user query and prompting logic</li>
+</ol>
+<pre><code class="language-mermaid"><div class="mermaid">sequenceDiagram
+    actor User
+    participant ReflexFrontend as Reflex Frontend (GUI + State)
+    participant FastAPIBackend as FastAPI Backend (APIendpoint.py)
+    participant HistoryManager as History Manager (CAG)
+    participant LLMLogic as Langchain/LLM Logic
+    participant VectorDB as ChromaDB (RAG Source)
+
+    User->>ReflexFrontend: Enters chat message (e.g., "How does feature Y fit the new audience?")
+    ReflexFrontend->>ReflexFrontend: Get current_step (e.g., 5)
+    ReflexFrontend->>FastAPIBackend: POST /chat (question="...", current_step=5, full_history=...)
+
+    %% CAG: Process Conversational Context %%
+    FastAPIBackend->>HistoryManager: ProcessHistory(full_history)
+    alt History is too long
+        HistoryManager->>HistoryManager: Summarize/Abstract history
+        HistoryManager-->>FastAPIBackend: Return abstracted_history
+    else History is short enough
+        HistoryManager-->>FastAPIBackend: Return full_history as abstracted_history
+    end
+
+    FastAPIBackend->>LLMLogic: query_and_respond(question="...", step=5, history=abstracted_history)
+
+    %% RAG: Retrieve Grounding & Long-Term Memory %%
+    LLMLogic->>LLMLogic: get_universal_matrix_prompt(step=5, ...)
+    LLMLogic->>VectorDB: Query context (question, step=5, vital_keys=['target_audience', 'goal'])
+    note right of VectorDB: Retrieve step-specific docs (feature Y info) <br/> AND vital info (target audience, goal).
+    VectorDB-->>LLMLogic: Return relevant retrieved_docs
+
+    %% Combine and Generate %%
+    LLMLogic->>LLMLogic: Call LLM with combined context: <br/> Universal Matrix prompt (step 5) <br/> + retrieved_docs (RAG) <br/> + abstracted_history (CAG) <br/> + user_query
+    note right of LLMLogic: LLM uses step goal, RAG docs, <br/> summarized history, and query to generate response.
+
+    LLMLogic-->>FastAPIBackend: Return LLM response
+    FastAPIBackend-->>ReflexFrontend: Return JSON {answer: "..."}
+    ReflexFrontend->>User: Display LLM response
+    ReflexFrontend->>ReflexFrontend: Append new Q/A to full_history in state
+</div></code></pre>
+<p>With a simple UML Diagram:</p>
+<pre><code class="language-mermaid"><div class="mermaid">graph TD
+    subgraph "User Interface"
+        RF[ReflexFrontend]
+    end
+
+    subgraph "Backend API"
+        FB[FastAPIBackend]
+    end
+
+    subgraph "Backend Logic"
+        HM[HistoryManager <br/> Handles CAG Summarization]
+        LLM[LLMLogic <br/> Handles RAG & LLM Calls]
+    end
+
+    subgraph "Data Stores"
+        VDB[VectorDB <br/> RAG Data Source]
+    end
+
+    subgraph "External Services"
+        ExtLLM[External LLM Service]
+    end
+
+    User --> RF
+    RF -- "HTTP POST /chat, /update_vital_info" --> FB
+    FB -- "ProcessHistory" --> HM
+    FB -- "query_and_respond, ProcessVitalInfoUpdate" --> LLM
+    LLM -- "Query context, Upsert embedding" --> VDB
+    LLM -- "Call LLM" --> ExtLLM
+    HM -- "Summarize History" --> ExtLLM
+</div></code></pre>
+
+</body>
+</html>
