@@ -1,215 +1,102 @@
-from langchain_experimental.text_splitter import SemanticChunker
-import chromadb.utils.embedding_functions as embedding_functions
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+"""
+Document Chunking Module
 
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-api_key = os.getenv("GOOGLE_API_KEY")
-if not api_key:
-    raise ValueError("API key not found. Please set the GOOGLE_API_KEY environment variable.")
-
-# google_ef = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=api_key) # Add this line
-# text_splitter = SemanticChunker(google_ef,
-#                                 breakpoint_threshold_type="percentile",
-#                                 breakpoint_threshold_amount = 80,
-#                                 min_chunk_size=200)
-text = """SCRUM Methodology
-===================
-
-# Summary
-
-Scrum is an agile framework for developing, delivering, and sustaining complex products, with an initial emphasis on software development, although it has been used in other fields. It is designed for teams of ten or fewer members, who break their work into goals that can be completed within time-boxed iterations, called sprints, typically two weeks to one month long. The Scrum Team tracks progress in 15-minute daily stand-up meetings, called Daily Scrums. At the end of the sprint, a Sprint Review is held to demonstrate the work done, and a Sprint Retrospective is conducted to continuously improve processes. Scrum is based on empiricism, meaning knowledge comes from experience and making decisions based on what is observed.
-
-# Full Description
-
-Scrum is a lightweight yet powerful framework that helps teams and organizations generate value through adaptive solutions for complex problems. It is not a definitive methodology but rather a framework within which various processes and techniques can be employed. Scrum emphasizes teamwork, accountability, and iterative progress toward a well-defined goal.
-
-## Core principles
-
-The framework is built upon three core pillars:
-
-- **Transparency**: Significant aspects of the process must be visible to those responsible for the outcome. Transparency requires those aspects to be defined by a common standard so observers share a common understanding of what is being seen. For example, a common language referring to the process must be shared by all participants, and those performing the work and those inspecting the resulting increment must share a common definition of "Done."
-  
-- **Inspection**: Scrum artifacts and progress toward agreed goals must be inspected frequently and diligently to detect potentially undesirable variances or problems. To help with inspection, Scrum provides cadence in the form of its five events.
-  
-- **Adaptation**: If an inspector determines that one or more aspects of a process deviate outside acceptable limits, and that the resulting product will be unacceptable, the process or the material being processed must be adjusted. The adjustment must be made as soon as possible to minimize further deviation. Adaptation becomes more difficult when the people involved are not empowered or self-managing.
-
-Scrum defines three **roles**, five **events**, and three **artifacts**.
-
-## Roles
-
-**Scrum roles**:
-
-- **Product Owner (PO)**: Responsible for maximizing the value of the product resulting from the work of the Scrum Team. The PO manages the Product Backlog, which includes clearly expressing Product Backlog items, ordering them to best achieve goals and missions, and ensuring the Product Backlog is visible, transparent, and clear to all.
-  
-- **Scrum Master (SM)**: Responsible for promoting and supporting Scrum as defined in the Scrum Guide. Scrum Masters do this by helping everyone understand Scrum theory, practices, rules, and values. The SM is a servant-leader for the Scrum Team, helping to remove impediments to the team's progress.
-  
-- **Development Team (Developers)**: Professionals who do the work of delivering a potentially releasable Increment of "Done" product at the end of each Sprint. Developers are structured and empowered by the organization to organize and manage their own work.
-
-## Events
-
-**Scrum Events (all are time-boxed)**:
-
-- **The Sprint**: The heart of Scrum, a time-box of one month or less during which a "Done," usable, and potentially releasable product Increment is created. Sprints have consistent durations throughout a development effort. A new Sprint starts immediately after the conclusion of the previous Sprint.
-  
-- **Sprint Planning**: Work to be performed in the Sprint is planned. This plan is created by the collaborative work of the entire Scrum Team. It answers: What can be delivered in the Increment resulting from the upcoming Sprint? How will the work needed to deliver the Increment be achieved?
-  
-- **Daily Scrum**: A 15-minute meeting for the Developers of the Scrum Team to synchronize activities and create a plan for the next 24 hours. This is done by inspecting the work since the last Daily Scrum and forecasting upcoming Sprint work.
-  
-- **Sprint Review**: Held at the end of the Sprint to inspect the Increment and adapt the Product Backlog if needed. The Scrum Team presents the results of their work to key stakeholders and progress toward the Product Goal is discussed.
-  
-- **Sprint Retrospective**: An opportunity for the Scrum Team to inspect itself and create a plan for improvements to be enacted during the next Sprint. It occurs after the Sprint Review and prior to the next Sprint Planning.
-  
-## Artifacts
-
-Scrum Artifacts:
-
-- **Product Backlog**: An emergent, ordered list of what is needed to improve the product. It is the single source of work undertaken by the Scrum Team. The Product Owner is responsible for its content, availability, and ordering.
-  
-- **Sprint Backlog**: The set of Product Backlog items selected for the Sprint, plus a plan for delivering the product Increment and realizing the Sprint Goal. The Sprint Backlog is a forecast by the Developers about what functionality will be in the next Increment and the work needed to deliver that functionality into a "Done" Increment.
-  
-- **Increment**: The sum of all the Product Backlog items completed during a Sprint and the value of the increments of all previous Sprints. At the end of a Sprint, the new Increment must be "Done," which means it is in a usable condition and meets the Scrum Team’s definition of "Done."
-
-# Application Area
-
-While Scrum was initially developed for software development projects, its principles and structure are adaptable to a wide variety of complex work. It is particularly effective in situations where:
-
-- Requirements are complex and likely to change: Scrum's iterative nature allows for flexibility and adaptation as the project progresses and understanding deepens.
-- Speed-to-market is a critical factor: Sprints deliver functional increments quickly, allowing for early feedback and value delivery.
-- Innovation and creativity are desired: Scrum empowers teams and encourages collaborative problem-solving.
-- Cross-functional teamwork is essential: Scrum roles and events foster close collaboration between different skill sets.
-- 
-## Application Examples
-
-Examples of application areas beyond software include:
-- Research and development
-- Marketing campaigns
-- Product management
-- Organizational change initiatives
-- Education (e.g., project-based learning)
-- Event planning
-For ICT students, Scrum is highly relevant for group projects, capstone projects, and understanding modern development practices prevalent in the industry.
-
-# Step-by-Step Guide (Simplified Project Lifecycle)
-
-This is a simplified view of how a project might flow using Scrum:
-
-1.	**Vision & Product Backlog Creation**:
-- The Product Owner, with input from stakeholders, defines the product vision and creates an initial
-- Product Backlog – a prioritized list of features, requirements, enhancements, and fixes.
-- Actionable for students: For a group project, define your project goal and list all the features you want to build. Prioritize them.
-  
-2.	**Sprint Planning**:
-- The Scrum Team (Product Owner, Scrum Master, Developers) meets.
-- The Product Owner presents the top-priority items from the Product Backlog.
-- The Developers select how much work they can commit to completing in the upcoming Sprint (typically 2-4 weeks). This becomes the Sprint Backlog.
-- The team defines a Sprint Goal – an objective for the Sprint.
-- Actionable for students: As a team, decide which features from your project list you can realistically complete in the next 2 weeks. Define a clear goal for this period.
-  
-3.	**The Sprint (Execution)**:
-- The Developers work on the items in the Sprint Backlog to create a potentially releasable product Increment.
-- Daily Scrum: Each day, the Developers meet for 15 minutes to discuss:
-    - What did I do yesterday that helped the Development Team meet the Sprint Goal?
-    - What will I do today to help the Development Team meet the Sprint Goal?
-    - Do I see any impediments that prevent me or the Development Team from meeting the Sprint Goal?
-
-- The Scrum Master helps remove any identified impediments.
-- The Product Owner is available to answer questions about the Product Backlog items.
-- Actionable for students: Work on your selected tasks. Have a brief daily check-in to discuss progress, plans, and any roadblocks.
-  
-4.	**Sprint Review**:
-- At the end of the Sprint, the Scrum Team and stakeholders (e.g., a professor, other students) review what was accomplished (the Increment).
-- The Developers demonstrate the working product.
-- The Product Owner discusses the Product Backlog and potential future work.
-- Feedback is gathered.
-- Actionable for students: Demonstrate what you've built to your coaches or peers. Get feedback.
-  
-5.	**Sprint Retrospective**:
-- After the Sprint Review and before the next Sprint Planning.
-- The Scrum Team reflects on the past Sprint: What went well? What could be improved? What will we commit to improve in the next Sprint?
-- The goal is to identify actionable improvements to the team's process, tools, or collaboration.
-- Actionable for students: Discuss as a team what worked well during the 2-week period, what didn't, and what you'll do differently next time.
-  
-6.	**Repeat**:
-- The cycle (Sprint Planning, Sprint, Daily Scrums, Sprint Review, Sprint Retrospective) repeats until the product vision is achieved or the Product Owner decides to stop development. The Product Backlog evolves throughout the project.
-  
-# Considerations
-
-- **Team Size**: Scrum is most effective with small, co-located (or well-connected virtually) teams, typically 3-9 Developers.
-- **Commitment & Discipline**: Scrum requires commitment from all team members and discipline to follow the framework's events and principles.
-- **Definition of "Done"**: A clear, shared understanding of what "Done" means for an Increment is crucial for transparency and quality. This should be established early.
-- **Self-Organization**: Developers are expected to self-organize to determine how best to accomplish their work. This requires trust and empowerment.
-- Scrum Master Role: The Scrum Master is not a project manager in the traditional sense. They are a facilitator, coach, and impediment remover.
-- **Product Owner Availability**: The Product Owner must be available to the team to clarify requirements and make decisions about the Product Backlog.
-- **Adaptability**: Be prepared to adapt the process. Scrum is a framework, not a rigid methodology. The Sprint Retrospective is key for this.
-- **Learning Curve**: While simple to understand, Scrum can be challenging to master. It often requires a shift in mindset.
-- **Tooling**: Various tools can support Scrum (e.g., Jira, Trello, Asana), but they are secondary to understanding and implementing the principles. Simple physical boards can be very effective.
-  
-# Resource Links
-
-- **The Scrum Guide**: The definitive guide to Scrum, co-authored by Ken Schwaber and Jeff Sutherland. This is the primary source for understanding Scrum.
-  - URL: https://scrumguides.org
-- **Scrum.org**: Offers resources, assessments, and certifications for Scrum.
-  - URL: https://www.scrum.org
-- **Scrum Alliance**: Another organization offering resources, certifications, and community for Scrum practitioners.
-  - URL: https://www.scrumalliance.org
+This module provides functionality to process documents (markdown, docx, pdf) 
+and split them into chunks based on their table of contents structure.
 """
 
-# docs = text_splitter.create_documents([text], metadatas=[{"source": "example_text"}])
-
-# for i, doc in enumerate(docs):
-#     print(f"Chunk {i+1}: {doc.page_content} \n ============ END OF CHUNK ============ \n")
-
+import os
+import re
+import pandas as pd
+from typing import List, Tuple
+from dotenv import load_dotenv
 import pypandoc
 
-# output = pypandoc.convert_file('kb_new/SCRUM.md', 'plain', format='md', extra_args = ["--toc", "--standalone"])
-# print(output)
+# Optional imports for semantic chunking (currently unused)
+# from langchain_experimental.text_splitter import SemanticChunker
+# import chromadb.utils.embedding_functions as embedding_functions
+# from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
-import re
+# Load environment variables
+load_dotenv()
 
-def identify_doc_type(doc):
-    '''
-    categorizes a plaintext doc based on the format of the toc.
-    '''
+# Configuration constants
+ROOT_DIR = 'kb_new'
+ALLOWED_FILETYPES = ['.md', '.docx', '.pdf']
+DEBUG_MODE = True  # Set to False to reduce verbose output
+
+def identify_doc_type(doc: str) -> str:
+    """
+    Categorizes a plaintext document based on the format of the table of contents.
+    
+    Args:
+        doc (str): The document content as a string
+        
+    Returns:
+        str: Document type classification
+    """
     # Look for TOC pattern: lines starting with "- " followed by double newline and then content
     if re.search(r'- .*\r?\n\r?\n[A-Z]', doc):
         return "TOC_WITHOUT_TITLE"
     else:
         return "NO_TOC_TITLE"
 
-def read_doc(path):
-    '''
-    reads a text file and returns toc and full text.
-    '''
-    doc = str(pypandoc.convert_file(path, 'plain', format='md', extra_args = ["--toc", "--standalone"]))
-    doc_type = identify_doc_type(doc)
 
-    if doc_type == "TOC_WITH_TITLE":
-        doc = re.sub('.*\n\n\n-', '-', doc)
-        toc, text = doc.split('\n\n', 1)
-    elif doc_type == "TOC_WITHOUT_TITLE":
-        # Split on double newline/carriage return to separate TOC from content
-        parts = re.split(r'\r?\n\r?\n', doc, 1)
-        if len(parts) >= 2:
-            toc, text = parts[0], parts[1]
+def read_doc(path: str) -> Tuple[str, str]:
+    """
+    Reads a document file and extracts the table of contents and full text.
+    
+    Args:
+        path (str): File path to the document
+        
+    Returns:
+        Tuple[str, str]: A tuple containing (table_of_contents, full_text)
+        
+    Raises:
+        Exception: If the file cannot be processed by pypandoc
+    """
+    try:
+        doc = str(pypandoc.convert_file(
+            path, 'plain', format='md', 
+            extra_args=["--toc", "--standalone"]
+        ))
+        doc_type = identify_doc_type(doc)
+
+        if doc_type == "TOC_WITH_TITLE":
+            doc = re.sub('.*\n\n\n-', '-', doc)
+            toc, text = doc.split('\n\n', 1)
+        elif doc_type == "TOC_WITHOUT_TITLE":
+            # Split on double newline/carriage return to separate TOC from content
+            parts = re.split(r'\r?\n\r?\n', doc, 1)
+            if len(parts) >= 2:
+                toc, text = parts[0], parts[1]
+            else:
+                toc, text = "", doc
         else:
             toc, text = "", doc
-    else:
-        toc, text = "", doc
 
-    return toc, text
+        return toc, text
+    
+    except Exception as e:
+        if DEBUG_MODE:
+            print(f"Error processing file {path}: {e}")
+        return "", ""
 
-def cleanup_plaintext(text):
-    '''
-    gets the full text of a document and returns cleaned-up text.
-    '''
-    # Remove images
+def cleanup_plaintext(text: str) -> str:
+    """
+    Cleans up the full text of a document by normalizing whitespace and removing artifacts.
+    
+    Args:
+        text (str): Raw text content from the document
+        
+    Returns:
+        str: Cleaned text with normalized formatting
+    """
+    # Remove image artifacts
     text = text.replace("[image]", "")
     text = text.replace("[]", "")
 
-    # First normalize line endings - convert \r\n to \n
+    # Normalize line endings - convert \r\n to \n
     text = text.replace('\r\n', '\n')
     text = text.replace('\r', '\n')
 
@@ -224,13 +111,20 @@ def cleanup_plaintext(text):
 
     # Replace multiple spaces with single space
     text = re.sub('(?<!\n) +', ' ', text)
+    
     return text
 
-def split_text(toc, text):
-    '''
-    gets the toc and cleaned text, and returns chunks of texts:
-    ["Heading [SEP] Text", ]
-    '''
+def split_text(toc: str, text: str) -> List[str]:
+    """
+    Splits text into chunks based on headings from the table of contents.
+    
+    Args:
+        toc (str): Table of contents with headings
+        text (str): Cleaned document text
+        
+    Returns:
+        List[str]: List of text chunks in format "Heading [SEP] Content"
+    """
     # Handle empty TOC case
     if not toc.strip():
         headings = []
@@ -245,7 +139,6 @@ def split_text(toc, text):
                 headings.append(cleaned_line)
     
     paragraphs = text.split("\n\n")
-
     current_heading = ""
     current_content = []
     text_chunks = []
@@ -271,7 +164,7 @@ def split_text(toc, text):
         # Accumulate content under the current heading
         current_content.append(para.strip())
 
-    # Don't forget to add the last heading and its content
+    # Add the last heading and its content
     if current_heading and current_content:
         combined_content = " ".join(current_content)
         text_chunks.append(f"{current_heading} [SEP] {combined_content}".strip())
@@ -282,40 +175,112 @@ def split_text(toc, text):
 
     return text_chunks
 
-import pandas as pd
+def process_single_file(file_path: str) -> List[dict]:
+    """
+    Process a single document file and return its chunks with metadata.
+    
+    Args:
+        file_path (str): Path to the file to process
+        
+    Returns:
+        List[dict]: List of dictionaries containing chunk data and metadata
+    """
+    directory, filename_with_ext = os.path.split(file_path)
+    filename, filetype = os.path.splitext(filename_with_ext)
+    
+    if DEBUG_MODE:
+        print(f"Processing file: {file_path}")
+    
+    # Extract TOC and text
+    toc, text = read_doc(file_path)
+    if DEBUG_MODE:
+        print(f"  TOC length: {len(toc)}, Text length: {len(text)}")
+    
+    # Clean the text
+    text_cleaned = cleanup_plaintext(text)
+    if DEBUG_MODE:
+        print(f"  Cleaned text length: {len(text_cleaned)}")
+    
+    # Split into chunks
+    text_chunks = split_text(toc, text_cleaned)
+    if DEBUG_MODE:
+        print(f"  Number of chunks: {len(text_chunks)}")
+        if not text_chunks:
+            print(f"    No chunks generated for {file_path}")
+        else:
+            for i, chunk in enumerate(text_chunks, 1):
+                print(f"==========    Chunk {i}: \n{chunk}\n==========")
+    
+    # Create list of dictionaries with chunk data and metadata
+    chunk_data = []
+    for chunk in text_chunks:
+        chunk_data.append({
+            'text': chunk,
+            'directory': directory,
+            'filename': filename,
+            'filetype': filetype
+        })
+    
+    return chunk_data
 
-df = pd.DataFrame()
-root_dir = 'kb_new'
-allowed_filetypes = ['.md', '.docx', '.pdf']
 
-print(f"Walking directory: {os.path.abspath(root_dir)}") # Check if the path is correct
+def process_documents(root_dir: str = ROOT_DIR, 
+                     allowed_filetypes: List[str] = ALLOWED_FILETYPES) -> pd.DataFrame:
+    """
+    Process all documents in a directory and return a DataFrame of chunks.
+    
+    Args:
+        root_dir (str): Root directory to search for documents
+        allowed_filetypes (List[str]): List of allowed file extensions
+        
+    Returns:
+        pd.DataFrame: DataFrame containing all chunks with metadata
+    """
+    if DEBUG_MODE:
+        print(f"Walking directory: {os.path.abspath(root_dir)}")
+    
+    all_chunk_data = []
+    
+    for directory, subdirectories, files in os.walk(root_dir):
+        if DEBUG_MODE:
+            print(f"In directory: {directory}")
+        
+        for file in files:
+            filename, filetype = os.path.splitext(file)
+            if filetype in allowed_filetypes:
+                full_path = os.path.join(directory, file)
+                chunk_data = process_single_file(full_path)
+                all_chunk_data.extend(chunk_data)
+            elif DEBUG_MODE:
+                print(f"Skipping file (wrong type): {os.path.join(directory, file)}")
+    
+    # Create DataFrame from all chunk data
+    df = pd.DataFrame(all_chunk_data)
+    df.reset_index(drop=True, inplace=True)
+    
+    return df
 
-for directory, subdirectories, files in os.walk(root_dir):
-    print(f"In directory: {directory}") # Check which directory is being processed
-    for file in files:
-        filename, filetype = os.path.splitext(file)
-        if filetype in allowed_filetypes:
-            full_path = os.path.join(directory, file)
-            print(f"Processing file: {full_path}") # Check if files are being found
 
-            toc, text = read_doc(full_path)
-            print(f"  TOC length: {len(toc)}, Text length: {len(text)}") # Check output of read_doc
-
-            text_cleaned = cleanup_plaintext(text)
-            print(f"  Cleaned text length: {len(text_cleaned)}") # Check output of cleanup_plaintext
-
-            text_chunks = split_text(toc, text_cleaned)
-            print(f"  Number of chunks: {len(text_chunks)}") # Crucial check: is text_chunks empty?
-            if not text_chunks:
-                print(f"    No chunks generated for {full_path}")
-            for chunk in text_chunks:
-                print(f"==========    Chunk: \n{chunk}\n==========") # Check output of split_text
-            df_new = pd.DataFrame(text_chunks, columns=["text"])
-            df_new[["directory", "filename", "filetype"]] = directory, filename, filetype
-            df = pd.concat([df, df_new])
-        # else: # Optional: print files that are skipped
-        #     print(f"Skipping file (wrong type): {os.path.join(directory, file)}")
+def main():
+    """
+    Main function to process documents and display results.
+    """
+    try:
+        df = process_documents()
+        print("\n" + "="*50)
+        print("PROCESSING COMPLETE")
+        print("="*50)
+        print(f"Total chunks created: {len(df)}")
+        print("\nFirst 100 rows of results:")
+        print(df.head(100))
+        
+        # Optionally save to CSV
+        # df.to_csv('document_chunks.csv', index=False)
+        # print("\nResults saved to 'document_chunks.csv'")
+        
+    except Exception as e:
+        print(f"Error in main processing: {e}")
 
 
-df.reset_index(drop=True, inplace=True)
-print(df.head(100))
+if __name__ == "__main__":
+    main()
