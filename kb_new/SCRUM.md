@@ -13,9 +13,9 @@ The framework is built upon three core pillars:
 - **Inspection**: Scrum artifacts and progress toward agreed goals must be inspected frequently and diligently to detect potentially undesirable variances or problems. To help with inspection, Scrum provides cadence in the form of its five events.
 - **Adaptation**: If an inspector determines that one or more aspects of a process deviate outside acceptable limits, and that the resulting product will be unacceptable, the process or the material being processed must be adjusted. The adjustment must be made as soon as possible to minimize further deviation. Adaptation becomes more difficult when the people involved are not empowered or self-managing.
 
-## Roles
+Scrum defines three **roles**, five **events**, and three **artifacts**.
 
-Scrum defines three roles, five events, and three artifacts:
+## Roles
 
 **Scrum roles**:
 - **Product Owner (PO)**: Responsible for maximizing the value of the product resulting from the work of the Scrum Team. The PO manages the Product Backlog, which includes clearly expressing Product Backlog items, ordering them to best achieve goals and missions, and ensuring the Product Backlog is visible, transparent, and clear to all.
@@ -95,11 +95,11 @@ This is a simplified view of how a project might flow using Scrum:
 - **Adaptability**: Be prepared to adapt the process. Scrum is a framework, not a rigid methodology. The Sprint Retrospective is key for this.
 - **Learning Curve**: While simple to understand, Scrum can be challenging to master. It often requires a shift in mindset.
 - **Tooling**: Various tools can support Scrum (e.g., Jira, Trello, Asana), but they are secondary to understanding and implementing the principles. Simple physical boards can be very effective.
-# Resource Link(s)
-•	**The Scrum Guide**: The definitive guide to Scrum, co-authored by Ken Schwaber and Jeff Sutherland. This is the primary source for understanding Scrum.
-o	URL: https://scrumguides.org
-•	**Scrum.org**: Offers resources, assessments, and certifications for Scrum.
-o	URL: https://www.scrum.org
-•	**Scrum Alliance**: Another organization offering resources, certifications, and community for Scrum practitioners.
-o	URL: https://www.scrumalliance.org
+# Resource Links
+- **The Scrum Guide**: The definitive guide to Scrum, co-authored by Ken Schwaber and Jeff Sutherland. This is the primary source for understanding Scrum.
+  - URL: https://scrumguides.org
+- **Scrum.org**: Offers resources, assessments, and certifications for Scrum.
+  - URL: https://www.scrum.org
+- **Scrum Alliance**: Another organization offering resources, certifications, and community for Scrum practitioners.
+  - URL: https://www.scrumalliance.org
 
