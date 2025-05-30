@@ -12,10 +12,7 @@ from typing import List, Tuple
 from dotenv import load_dotenv
 import pypandoc
 import tiktoken
-# Optional imports for semantic chunking (currently unused)
-# from langchain_experimental.text_splitter import SemanticChunker
-# import chromadb.utils.embedding_functions as embedding_functions
-# from langchain_google_genai import GoogleGenerativeAIEmbeddings
+
 
 # Load environment variables
 load_dotenv()
@@ -391,10 +388,6 @@ def main():
         print(f"Total chunks created: {len(df)}")
         print("\nFirst 100 rows of results:")
         print(df.head(100))
-        
-        # Optionally save to CSV
-        # df.to_csv('document_chunks.csv', index=False)
-        # print("\nResults saved to 'document_chunks.csv'")
         
     except Exception as e:
         print(f"Error in main processing: {e}")
