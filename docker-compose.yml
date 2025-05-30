@@ -1,15 +1,15 @@
 version: "3.8"
 
 services:
-  api:
-    build: .
-    command: uvicorn APIendpoint:app --host 0.0.0.0 --port 8000 --reload
-    volumes:
-      - ./:/app
-    ports:
-      - "8000:8000"
-    environment:
-      - USER_UPLOADS_DIR=/app/uploads
+  # api:
+  #   build: .
+  #   command: uvicorn APIendpoint:app --host 0.0.0.0 --port 8000 --reload
+  #   volumes:
+  #     - ./:/app
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     - USER_UPLOADS_DIR=/app/uploads
 
   web:
     build: .
