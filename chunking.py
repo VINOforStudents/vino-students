@@ -11,7 +11,7 @@ import pandas as pd
 from typing import List, Tuple
 from dotenv import load_dotenv
 import pypandoc
-
+import tiktoken
 # Optional imports for semantic chunking (currently unused)
 # from langchain_experimental.text_splitter import SemanticChunker
 # import chromadb.utils.embedding_functions as embedding_functions
@@ -211,14 +211,19 @@ def process_single_file(file_path: str) -> List[dict]:
             for i, chunk in enumerate(text_chunks, 1):
                 print(f"==========    Chunk {i}: \n{chunk}\n==========")
     
+    # Initialize TikToken for chunk length calculation
+    encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
+    
     # Create list of dictionaries with chunk data and metadata
     chunk_data = []
     for chunk in text_chunks:
+        tokens = encoding.encode(chunk)
         chunk_data.append({
             'text': chunk,
             'directory': directory,
             'filename': filename,
-            'filetype': filetype
+            'filetype': filetype,
+            'chunk_length': len(tokens),
         })
     
     return chunk_data
