@@ -24,6 +24,7 @@ load_dotenv()
 ROOT_DIR = 'kb_new'
 ALLOWED_FILETYPES = ['.md', '.docx', '.pdf']
 DEBUG_MODE = True  # Set to False to reduce verbose output
+MAX_CHUNK_TOKENS = 250  # Maximum tokens per chunk before splitting
 
 def identify_doc_type(doc: str) -> str:
     """
@@ -195,8 +196,7 @@ def process_single_file(file_path: str) -> List[dict]:
     toc, text = read_doc(file_path)
     if DEBUG_MODE:
         print(f"  TOC length: {len(toc)}, Text length: {len(text)}")
-    
-    # Clean the text
+      # Clean the text
     text_cleaned = cleanup_plaintext(text)
     if DEBUG_MODE:
         print(f"  Cleaned text length: {len(text_cleaned)}")
@@ -204,19 +204,32 @@ def process_single_file(file_path: str) -> List[dict]:
     # Split into chunks
     text_chunks = split_text(toc, text_cleaned)
     if DEBUG_MODE:
-        print(f"  Number of chunks: {len(text_chunks)}")
+        print(f"  Number of chunks before oversized splitting: {len(text_chunks)}")
         if not text_chunks:
             print(f"    No chunks generated for {file_path}")
         else:
             for i, chunk in enumerate(text_chunks, 1):
-                print(f"==========    Chunk {i}: \n{chunk}\n==========")
+                print(f"\n==========    Chunk {i} processed successfully    ==========\n")
+      # Apply oversized chunk splitting
+    final_chunks = []
+    chunk_counter = 1
+    for chunk in text_chunks:
+        split_chunks = split_oversized_chunk(chunk, MAX_CHUNK_TOKENS)
+        if DEBUG_MODE:
+            for split_chunk in split_chunks:
+                print(f"==========    Chunk {chunk_counter}: \n{split_chunk}\n==========")
+                chunk_counter += 1
+        final_chunks.extend(split_chunks)
+
+    if DEBUG_MODE:
+        print(f"  Number of chunks after oversized splitting: {len(final_chunks)}")
     
     # Initialize TikToken for chunk length calculation
     encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
     
     # Create list of dictionaries with chunk data and metadata
     chunk_data = []
-    for chunk in text_chunks:
+    for chunk in final_chunks:
         tokens = encoding.encode(chunk)
         chunk_data.append({
             'text': chunk,
@@ -264,6 +277,106 @@ def process_documents(root_dir: str = ROOT_DIR,
     df.reset_index(drop=True, inplace=True)
     
     return df
+
+
+def split_oversized_chunk(chunk_text: str, max_tokens: int = MAX_CHUNK_TOKENS) -> List[str]:
+    """
+    Split an oversized chunk into smaller chunks while preserving meaning.
+    
+    Args:
+        chunk_text (str): The chunk text to split (format: "Heading [SEP] Content")
+        max_tokens (int): Maximum tokens per chunk
+        
+    Returns:
+        List[str]: List of smaller chunks maintaining context
+    """
+    encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
+    
+    # Check if chunk needs splitting
+    if len(encoding.encode(chunk_text)) <= max_tokens:
+        return [chunk_text]
+    
+    # Extract heading and content
+    if "[SEP]" in chunk_text:
+        heading, content = chunk_text.split("[SEP]", 1)
+        heading = heading.strip()
+        content = content.strip()
+    else:
+        heading = ""
+        content = chunk_text.strip()
+    
+    # Split content by natural breaks (in order of preference)
+    split_chunks = []
+    
+    # First try splitting by bullet points or numbered lists
+    if re.search(r'\n- |\n\d+\.', content):
+        # Split on bullet points or numbered items, keeping the delimiter
+        parts = re.split(r'(\n- |\n\d+\.)', content)
+        current_chunk = ""
+        
+        for i in range(0, len(parts)):
+            if i == 0:
+                current_chunk = parts[i]
+            else:
+                test_chunk = current_chunk + parts[i]
+                test_text = f"{heading} [SEP] {test_chunk}".strip() if heading else test_chunk
+                
+                if len(encoding.encode(test_text)) > max_tokens and current_chunk.strip():
+                    # Save current chunk and start new one
+                    final_text = f"{heading} [SEP] {current_chunk}".strip() if heading else current_chunk.strip()
+                    split_chunks.append(final_text)
+                    current_chunk = parts[i] if i + 1 < len(parts) else ""
+                else:
+                    current_chunk = test_chunk
+        
+        # Add remaining content
+        if current_chunk.strip():
+            final_text = f"{heading} [SEP] {current_chunk}".strip() if heading else current_chunk.strip()
+            split_chunks.append(final_text)
+    
+    # If no bullet points, try splitting by sentences
+    elif '.' in content:
+        sentences = re.split(r'(?<=[.!?])\s+', content)
+        current_chunk = ""
+        
+        for sentence in sentences:
+            test_chunk = current_chunk + " " + sentence if current_chunk else sentence
+            test_text = f"{heading} [SEP] {test_chunk}".strip() if heading else test_chunk
+            
+            if len(encoding.encode(test_text)) > max_tokens and current_chunk.strip():
+                # Save current chunk and start new one
+                final_text = f"{heading} [SEP] {current_chunk}".strip() if heading else current_chunk.strip()
+                split_chunks.append(final_text)
+                current_chunk = sentence
+            else:
+                current_chunk = test_chunk
+        
+        # Add remaining content
+        if current_chunk.strip():
+            final_text = f"{heading} [SEP] {current_chunk}".strip() if heading else current_chunk.strip()
+            split_chunks.append(final_text)
+    
+    # Last resort: split by approximate token count
+    else:
+        words = content.split()
+        # Rough estimate: 1 token ≈ 0.75 words
+        words_per_chunk = int(max_tokens * 0.75)
+        
+        for i in range(0, len(words), words_per_chunk):
+            chunk_words = words[i:i + words_per_chunk]
+            chunk_content = " ".join(chunk_words)
+            final_text = f"{heading} [SEP] {chunk_content}".strip() if heading else chunk_content.strip()
+            split_chunks.append(final_text)
+    
+    # If we still have oversized chunks, recursively split them
+    final_chunks = []
+    for chunk in split_chunks:
+        if len(encoding.encode(chunk)) > max_tokens:
+            final_chunks.extend(split_oversized_chunk(chunk, max_tokens))
+        else:
+            final_chunks.append(chunk)
+    
+    return final_chunks if final_chunks else [chunk_text]
 
 
 def main():
