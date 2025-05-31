@@ -8,8 +8,8 @@ from collections import Counter
 import PyPDF2
 
 # Local imports
-from config import CHUNK_SIZE, CHUNK_OVERLAP
-from models import KBMetadata, ProcessingResult, DocumentMetadata, FileMetadata
+from config import CHUNK_SIZE, CHUNK_OVERLAP,NEW_DOCUMENTS_DIR
+from models import ProcessingResult, DocumentMetadata, FileMetadata
 
 from typing import Mapping
 
@@ -134,6 +134,7 @@ def process_document_content(file_path: str, content: str, page_count: int = 0, 
     
     # For supported file types that can use the advanced chunking
     file_extension = os.path.splitext(file_path)[1].lower()
+    print(f"Processing file: {file_name} (type: {file_extension})")
     if file_extension in ['.md', '.docx', '.pdf']:
         try:
             # Use the advanced chunking from chunking.py
@@ -148,9 +149,11 @@ def process_document_content(file_path: str, content: str, page_count: int = 0, 
             # Extract chunks and create metadata for each chunk
             for i, chunk_data in enumerate(chunk_data_list):
                 # Add the chunk text to documents
-                result.documents.append(chunk_text[i])
+                result.documents.append(chunk_text[i].text)
                 # Create DocumentMetadata for each chunk with rich metadata
-                result.doc_metadatas.append(chunk_data[i])
+                result.doc_metadatas.append(chunk_data)
+                # Generate unique ID for each chunk
+                result.ids.append(f"{file_name}_chunk_{i+1}")
             
             print(f"Successfully processed {len(chunk_data_list)} chunks from {file_name}")
             return result
@@ -217,16 +220,18 @@ def load_documents_from_directory(directory_path, source="system_upload"):
 
     for file_path in file_paths:
         try:
-            page_count = 0
+            page_count = 1
             # Handle different file types
             if file_path.lower().endswith('.pdf'):
                 content, page_count = extract_text_from_pdf(file_path)
             else:  # Assume it's a text file
                 with open(file_path, 'r', encoding='utf-8') as file:
-                    content = file.read()            
+                    content = file.read()
+                    page_count = max(1, int(len(content.splitlines())/40))  # Count pages as 40 lines for text files
             result = process_document_content(file_path, content, page_count, source)
             all_documents.extend(result.documents)
-            all_metadatas.extend(result.doc_metadatas, result.file_metadatas)
+            all_metadatas.extend(result.doc_metadatas)
+            all_metadatas.extend(result.file_metadatas)
             all_ids.extend(result.ids)
 
             # Log the number of chunks loaded

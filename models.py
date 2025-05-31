@@ -28,7 +28,7 @@ class DocumentMetadata(BaseModel):
     doc_id: str
     chunk_number: int
     chunk_length: int # Length of the chunk in tokens
-    parent: Optional[str] = None  # Name of the section this chunk belongs to
+    section: Optional[str] = None  # Name of the section this chunk belongs to
 
 class DocumentChunk(BaseModel):
     """A document chunk combining content and metadata."""
@@ -45,7 +45,6 @@ class FileMetadata(BaseModel):
     word_count: int
     char_count: int
     keywords: List[str]
-    source: str
     abstract: str
 
 class ProcessingResult(BaseModel):
@@ -53,7 +52,7 @@ class ProcessingResult(BaseModel):
     ids: List[str] = Field(default_factory=list)
     documents: List[str] = Field(default_factory=list)
     doc_metadatas: List[DocumentMetadata] = Field(default_factory=list)
-    file_metadatas: FileMetadata
+    file_metadatas: List[FileMetadata] = Field(default_factory=list)
     chunk_count: int = Field(default=0, ge=0)
     
 class ChatRequest(BaseModel):

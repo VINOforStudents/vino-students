@@ -224,24 +224,31 @@ def process_single_file(file_path: str) -> List[dict]:
     
     # Initialize TikToken for chunk length calculation
     encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
-    
-    # Create list of dictionaries with chunk data and metadata
-    chunk_data = DocumentMetadata
-    chunk_text = DocumentChunk
+      # Create list of dictionaries with chunk data and metadata
+    chunk_data = []
+    chunk_text = []
 
     for chunk in final_chunks:
         tokens = encoding.encode(chunk)
         section_name = chunk.split("[SEP]")[0].strip() if "[SEP]" in chunk else "No Heading"
-        chunk_data.append({
-            'id': f"{filename}_{chunk_counter}",
-            'chunk_number': chunk_counter,
-            'chunk_length': len(tokens),
-            'parent': section_name,  # Name of the section this chunk belongs to
-        })
-        chunk_text.append({
-            'metadata': chunk_data[-1],
-            'text': chunk
-        })
+        
+        # Create DocumentMetadata object
+        metadata = DocumentMetadata(
+            doc_id=f"{filename}_{chunk_counter}",
+            chunk_number=chunk_counter,
+            chunk_length=len(tokens),
+            section=section_name  # Name of the section this chunk belongs to
+        )
+        
+        # Create DocumentChunk object
+        doc_chunk = DocumentChunk(
+            metadata=metadata,
+            text=chunk
+        )
+        
+        chunk_data.append(metadata)
+        chunk_text.append(doc_chunk)
+        chunk_counter += 1
     
     return chunk_data, chunk_text
 
