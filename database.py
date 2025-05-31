@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 
 # Local imports
-from config import CHROMA_DB_PATH, KB_DOCUMENTS_DIR
+from config import CHROMA_DB_PATH, KB_DOCUMENTS_DIR, NEW_DOCUMENTS_DIR
 from document_processor import load_documents_from_directory
 
 # Third-party imports
@@ -39,26 +39,24 @@ def initialize_vector_db():
         # Process documents only if needed
         if collection_fw.count() == 0:
             print("Frameworks collection is empty. Loading documents...")
-            metadata, content = load_documents_from_directory(KB_DOCUMENTS_DIR)
+            documents, metadatas, ids = load_documents_from_directory(NEW_DOCUMENTS_DIR)
             
             # Add documents to collection if any were loaded
-            if content:
-                ids = [f"doc_{i}" for i in range(len(content))]
+            if documents:
                 collection_fw.add(
-                    documents=content,
-                    metadatas=metadata,
+                    documents=documents,
+                    metadatas=metadatas,
                     ids=ids
                 )
-                print(f"Added {len(content)} document chunks to the frameworks collection.")
+                print(f"Added {len(documents)} document chunks to the frameworks collection.")
             else:
                 print("No documents were loaded. Please check the directory path.")
         else:
             print(f"Using existing frameworks collection with {collection_fw.count()} document chunks.")
         
         print(f"User documents collection has {collection_user.count()} document chunks.")
-        
         return collection_fw, collection_user
-        
+
     except Exception as e:
         print(f"Error initializing ChromaDB collection: {e}")
         raise
@@ -98,15 +96,27 @@ def list_documents_in_collection(collection_name=None):
             "count": collection.count(),
             "documents": []
         }
-        
-        # Add document details
+          # Add document details
         for i in range(len(documents["ids"])):
+            metadata = documents["metadatas"][i] if documents["metadatas"] else None
+            
+            # Format metadata in consistent order if it exists
+            if metadata:
+                formatted_metadata = {
+                    "doc_id": metadata.get("doc_id"),
+                    "chunk_number": metadata.get("chunk_number"),
+                    "chunk_length": metadata.get("chunk_length"),
+                    "section": metadata.get("section")
+                }
+                print(formatted_metadata)
+            else:
+                print("No metadata")
+            
             doc_info = {
                 "id": documents["ids"][i],
-                "metadata": documents["metadatas"][i] if documents["metadatas"] else None,
+                "metadata": metadata,
                 "text_preview": documents["documents"][i][:100] + "..." if documents["documents"][i] else None
             }
-            #print(doc_info["metadata"])
             collection_data["documents"].append(doc_info)
         
         results[collection.name] = collection_data
@@ -165,4 +175,5 @@ def delete_all_documents(collection_name=None):
     return results
 
 #delete_all_documents("user_documents")
-#list_documents_in_collection()
+list_documents_in_collection("frameworks")
+#initialize_vector_db()

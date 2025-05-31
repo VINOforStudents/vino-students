@@ -380,7 +380,7 @@ def process_documents(root_dir: str = ROOT_DIR,
                 all_chunk_data.extend(chunk_data)
             elif DEBUG_MODE:
                 print(f"Skipping file (wrong type): {os.path.join(directory, file)}")
-    
+    print(f"Total chunks created: {len(all_chunk_data)}")
     # Create DataFrame from all chunk data
     df = pd.DataFrame(all_chunk_data)
     df.reset_index(drop=True, inplace=True)

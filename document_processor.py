@@ -230,8 +230,9 @@ def load_documents_from_directory(directory_path, source="system_upload"):
                     page_count = max(1, int(len(content.splitlines())/40))  # Count pages as 40 lines for text files
             result = process_document_content(file_path, content, page_count, source)
             all_documents.extend(result.documents)
-            all_metadatas.extend(result.doc_metadatas)
-            all_metadatas.extend(result.file_metadatas)
+            # Convert Pydantic models to dictionaries for ChromaDB
+            all_metadatas.extend([metadata.model_dump() for metadata in result.doc_metadatas])
+            all_metadatas.extend([metadata.model_dump() for metadata in result.file_metadatas])
             all_ids.extend(result.ids)
 
             # Log the number of chunks loaded
