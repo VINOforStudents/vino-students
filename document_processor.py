@@ -9,7 +9,7 @@ import PyPDF2
 
 # Local imports
 from config import CHUNK_SIZE, CHUNK_OVERLAP
-from models import KBMetadata, ProcessingResult, DocumentMetadata
+from models import KBMetadata, ProcessingResult, DocumentMetadata, FileMetadata
 
 from typing import Mapping
 
@@ -151,7 +151,6 @@ def process_document_content(file_path: str, content: str, page_count: int = 0, 
                 result.documents.append(chunk_text[i])
                 # Create DocumentMetadata for each chunk with rich metadata
                 result.doc_metadatas.append(chunk_data[i])
-                i += 1
             
             print(f"Successfully processed {len(chunk_data_list)} chunks from {file_name}")
             return result
@@ -159,21 +158,27 @@ def process_document_content(file_path: str, content: str, page_count: int = 0, 
         except Exception as e:
             print(f"Error using advanced chunking for {file_name}: {e}")
             print("Falling back to simple processing...")
-      # Fallback for unsupported file types or if advanced chunking fails
+    # Fallback for unsupported file types or if advanced chunking fails
     # Create basic document-level metadata
     char_count, word_count = char_word_count(content)
     file_size = os.path.getsize(file_path)
     keywords = extract_keywords(content)
     abstract = generate_abstract(content)
 
-    chunk_data_list, chunk_text = process_single_file(file_path)
-    result.documents.append(chunk_data_list[0])  # Add the full document as a single chunk
+    #chunk_data_list, chunk_text = process_single_file(file_path)
+    result.documents.append(content)  # Add the full document as a single chunk
     result.ids.append(file_name)  # Use file name as ID for the full document
     
     chunk_metadata = DocumentMetadata(
+        doc_id=file_name,
+        chunk_number=1,
+        chunk_length=len(content.split()),
+        parent=None  # No parent for full document
+    )
+
+    file_metadata = FileMetadata(
         source=source,
         filename=file_name,
-        chunk=1,
         file_size=file_size,
         file_type=os.path.splitext(file_path)[1].lstrip('.'),
         page_count=page_count,
@@ -182,8 +187,9 @@ def process_document_content(file_path: str, content: str, page_count: int = 0, 
         keywords=keywords,
         abstract=abstract
     )
-    result.metadatas.append(chunk_metadata)
-    
+    result.doc_metadatas.append(chunk_metadata)
+    result.file_metadatas.append(file_metadata)
+
     print(f"Processed 1 chunk (full document) from {file_name}")
     return result
 
