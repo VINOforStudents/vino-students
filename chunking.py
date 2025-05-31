@@ -12,7 +12,7 @@ from typing import List, Tuple
 from dotenv import load_dotenv
 import pypandoc
 import tiktoken
-from models import ChunkMetadata
+from models import DocumentChunk
 
 
 # Load environment variables
@@ -207,7 +207,8 @@ def process_single_file(file_path: str) -> List[dict]:
             print(f"    No chunks generated for {file_path}")
         else:
             for i, chunk in enumerate(text_chunks, 1):
-                print(f"\n==========    Chunk {i} processed successfully    ==========\n")
+                print(f"==========    Chunk {i} processed successfully    ==========\n")
+
     # Apply oversized chunk splitting
     final_chunks = []
     chunk_counter = 1
@@ -218,7 +219,6 @@ def process_single_file(file_path: str) -> List[dict]:
                 print(f"==========    Chunk {chunk_counter}: \n{split_chunk}\n==========")
                 chunk_counter += 1
         final_chunks.extend(split_chunks)
-
     if DEBUG_MODE:
         print(f"  Number of chunks after oversized splitting: {len(final_chunks)}")
     
@@ -226,16 +226,17 @@ def process_single_file(file_path: str) -> List[dict]:
     encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
     
     # Create list of dictionaries with chunk data and metadata
-    chunk_data = ChunkMetadata
+    chunk_data = DocumentChunk
     chunk_data = []
 
     for chunk in final_chunks:
         tokens = encoding.encode(chunk)
+        section_name = chunk.split("[SEP]")[0].strip() if "[SEP]" in chunk else "No Heading"
         chunk_data.append({
             'id': f"{filename}_{chunk_counter}",
             'chunk_number': chunk_counter,
             'chunk_length': len(tokens),
-            'parent': None,  # Name of the section this chunk belongs to
+            'parent': section_name,  # Name of the section this chunk belongs to
             'text': chunk
         })
     
