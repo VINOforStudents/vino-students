@@ -17,23 +17,34 @@ planner_details: Optional[str] = None # To store the plan generated in Step 3
 # DATA MODELS
 #------------------------------------------------------------------------------
 
+class ChunkMetadata(BaseModel):
+    """A chunk of text with its metadata and ID."""
+    id: str
+    chunk_number: int
+    chunk_length: int
+    parent: Optional[str] = None  # Name of the section this chunk belongs to
+    text: str
+
 class DocumentMetadata(BaseModel):
     """Metadata for a document chunk."""
     source: str
     filename: str
-    chunk: int
-
-class DocumentChunk(BaseModel):
-    """A chunk of text with its metadata and ID."""
-    text: str
-    metadata: DocumentMetadata
-    id: str
+    file_size: Optional[int] = None
+    file_type: Optional[str] = None
+    page_count: Optional[int] = None
+    word_count: Optional[int] = None
+    char_count: Optional[int] = None
+    keywords: Optional[List[str]] = None
+    abstract: Optional[str] = None
 
 class ProcessingResult(BaseModel):
     """Results from processing a document."""
     documents: List[str] = Field(default_factory=list)
     metadatas: List[DocumentMetadata] = Field(default_factory=list)
-    #chunk_count: int = 0
+    chunk_metadatas: List[ChunkMetadata] = Field(default_factory=list)
+    chunk_count: int = Field(default_factory=lambda: 0)
+
+    
 
 class ChatRequest(BaseModel):
     question: str

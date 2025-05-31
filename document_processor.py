@@ -9,9 +9,12 @@ import PyPDF2
 
 # Local imports
 from config import CHUNK_SIZE, CHUNK_OVERLAP
-from models import KBMetadata, ProcessingResult
+from models import KBMetadata, ProcessingResult, DocumentMetadata
 
 from typing import Mapping
+
+from chunking import process_single_file
+
 #------------------------------------------------------------------------------
 # DOCUMENT PROCESSING
 #------------------------------------------------------------------------------
@@ -127,25 +130,74 @@ def process_document_content(file_path: str, content: str, page_count: int = 0, 
     """
     result = ProcessingResult()
     file_name = os.path.basename(file_path)
+    
     # Skip if no content was extracted
     if not content.strip():
         print(f"Warning: No content extracted from {file_name}")
         return result
+      # For supported file types that can use the advanced chunking
+    file_extension = os.path.splitext(file_path)[1].lower()
+    if file_extension in ['.md', '.docx', '.pdf']:
+        try:
+            # Use the advanced chunking from chunking.py
+            chunk_data_list = process_single_file(file_path)
+            
+            # Calculate rich metadata once for the entire document
+            char_count, word_count = char_word_count(content)
+            file_size = os.path.getsize(file_path)
+            keywords = extract_keywords(content)
+            abstract = generate_abstract(content)
+            
+            # Extract chunks and create metadata for each chunk
+            for i, chunk_data in enumerate(chunk_data_list):
+                # Add the chunk text to documents
+                result.documents.append(chunk_data['text'])
+                
+                # Create DocumentMetadata for each chunk with rich metadata
+                chunk_metadata = DocumentMetadata(
+                    source=source,
+                    filename=file_name,
+                    chunk=i + 1,
+                    file_size=file_size,
+                    file_type=file_extension.lstrip('.'),
+                    page_count=page_count,
+                    word_count=word_count,
+                    char_count=char_count,
+                    keywords=keywords,
+                    abstract=abstract
+                )
+                result.metadatas.append(chunk_metadata)
+            
+            print(f"Successfully processed {len(chunk_data_list)} chunks from {file_name}")
+            return result
+            
+        except Exception as e:
+            print(f"Error using advanced chunking for {file_name}: {e}")
+            print("Falling back to simple processing...")
+      # Fallback for unsupported file types or if advanced chunking fails
+    # Create basic document-level metadata
     char_count, word_count = char_word_count(content)
     file_size = os.path.getsize(file_path)
     keywords = extract_keywords(content)
     abstract = generate_abstract(content)
-    metadata = KBMetadata(file_name=file_name,
-                        file_size=file_size,
-                        file_type=file_name.split('.')[-1],
-                        page_count=page_count,
-                        word_count=word_count,
-                        char_count=char_count,
-                        keywords=keywords,
-                        source=source,
-                        abstract=abstract,
-                        ).model_dump() 
-    result.metadatas.append(metadata)
+    
+    result.documents.append(content)
+    
+    chunk_metadata = DocumentMetadata(
+        source=source,
+        filename=file_name,
+        chunk=1,
+        file_size=file_size,
+        file_type=os.path.splitext(file_path)[1].lstrip('.'),
+        page_count=page_count,
+        word_count=word_count,
+        char_count=char_count,
+        keywords=keywords,
+        abstract=abstract
+    )
+    result.metadatas.append(chunk_metadata)
+    
+    print(f"Processed 1 chunk (full document) from {file_name}")
     return result
 
 def load_documents_from_directory(directory_path, source="system_upload"):
@@ -175,15 +227,13 @@ def load_documents_from_directory(directory_path, source="system_upload"):
                 content, page_count = extract_text_from_pdf(file_path)
             else:  # Assume it's a text file
                 with open(file_path, 'r', encoding='utf-8') as file:
-                    content = file.read()
-
-            # Process the document content with source parameter
+                    content = file.read()            
             result = process_document_content(file_path, content, page_count, source)
             all_metadatas.extend(result.metadatas)
-            all_contents.append(content)
+            all_contents.extend(result.documents) 
 
-            #file_name = os.path.basename(file_path)
-            #print(f"Loaded {result.chunk_count} chunks from document: {file_name}")
+            file_name = os.path.basename(file_path)
+            print(f"Loaded {len(result.documents)} chunks from document: {file_name}")
 
         except Exception as e:
             print(f"Error loading {file_path}: {e}")
@@ -198,10 +248,8 @@ def load_user_document(file_path):
         file_path: Path to the document file
         
     Returns:
-        tuple: (documents, metadatas, ids, message)
+        tuple: (metadatas, documents, message)
     """
-    all_metadatas = []
-    all_contents = []
     page_count = 1 # Default to 1 for non-PDF files
     try:
         # Handle different file types
@@ -218,13 +266,13 @@ def load_user_document(file_path):
                     content = content.replace('\u0000', '')
         else:
             return None, None, f"Unsupported file type: {file_path}. Supported types are PDF and text files."
+        
         result = process_document_content(file_path, content, page_count, source="user_upload")
-        metadata = result.metadatas
-
-        #if not result.documents:
-        #    return None, None, f"No content extracted from {os.path.basename(file_path)}"
+        
+        if not result.documents:
+            return None, None, f"No content extracted from {os.path.basename(file_path)}"
             
-        return metadata, content, f"Successfully processed {os.path.basename(file_path)}"
+        return result.metadatas, result.documents, f"Successfully processed {len(result.documents)} chunks from {os.path.basename(file_path)}"
         
     except Exception as e:
         return None, None,  f"Error loading {file_path}: {str(e)}"
