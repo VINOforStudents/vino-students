@@ -137,7 +137,7 @@ def process_document_content(file_path: str, content: str, page_count: int = 0, 
     if file_extension in ['.md', '.docx', '.pdf']:
         try:
             # Use the advanced chunking from chunking.py
-            chunk_data_list = process_single_file(file_path)
+            chunk_data_list, chunk_text = process_single_file(file_path)
             
             # Calculate rich metadata once for the entire document
             char_count, word_count = char_word_count(content)
@@ -148,22 +148,10 @@ def process_document_content(file_path: str, content: str, page_count: int = 0, 
             # Extract chunks and create metadata for each chunk
             for i, chunk_data in enumerate(chunk_data_list):
                 # Add the chunk text to documents
-                result.documents.append(chunk_data['text'])
-                
+                result.documents.append(chunk_text[i])
                 # Create DocumentMetadata for each chunk with rich metadata
-                chunk_metadata = DocumentMetadata(
-                    source=source,
-                    filename=file_name,
-                    chunk=i + 1,
-                    file_size=file_size,
-                    file_type=file_extension.lstrip('.'),
-                    page_count=page_count,
-                    word_count=word_count,
-                    char_count=char_count,
-                    keywords=keywords,
-                    abstract=abstract
-                )
-                result.metadatas.append(chunk_metadata)
+                result.doc_metadatas.append(chunk_data[i])
+                i += 1
             
             print(f"Successfully processed {len(chunk_data_list)} chunks from {file_name}")
             return result
@@ -177,8 +165,10 @@ def process_document_content(file_path: str, content: str, page_count: int = 0, 
     file_size = os.path.getsize(file_path)
     keywords = extract_keywords(content)
     abstract = generate_abstract(content)
-    
-    result.documents.append(content)
+
+    chunk_data_list, chunk_text = process_single_file(file_path)
+    result.documents.append(chunk_data_list[0])  # Add the full document as a single chunk
+    result.ids.append(file_name)  # Use file name as ID for the full document
     
     chunk_metadata = DocumentMetadata(
         source=source,
@@ -209,12 +199,15 @@ def load_documents_from_directory(directory_path, source="system_upload"):
         tuple: (documents, metadatas, ids)
     """
 
+    all_documents = []
     all_metadatas = []
-    all_contents = []
+    all_ids = []
+
     # Get all .txt and .pdf files in the directory
     txt_files = glob.glob(os.path.join(directory_path, "*.txt"))
     pdf_files = glob.glob(os.path.join(directory_path, "*.pdf"))
-    file_paths = txt_files + pdf_files
+    md_files = glob.glob(os.path.join(directory_path, "*.md"))
+    file_paths = txt_files + pdf_files + md_files
 
     for file_path in file_paths:
         try:
@@ -226,16 +219,18 @@ def load_documents_from_directory(directory_path, source="system_upload"):
                 with open(file_path, 'r', encoding='utf-8') as file:
                     content = file.read()            
             result = process_document_content(file_path, content, page_count, source)
-            all_metadatas.extend(result.metadatas)
-            all_contents.extend(result.documents) 
+            all_documents.extend(result.documents)
+            all_metadatas.extend(result.doc_metadatas, result.file_metadatas)
+            all_ids.extend(result.ids)
 
+            # Log the number of chunks loaded
             file_name = os.path.basename(file_path)
             print(f"Loaded {len(result.documents)} chunks from document: {file_name}")
 
         except Exception as e:
             print(f"Error loading {file_path}: {e}")
 
-    return all_metadatas, all_contents
+    return all_documents, all_metadatas, all_ids
 
 def load_user_document(file_path):
     """

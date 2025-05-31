@@ -12,7 +12,7 @@ from typing import List, Tuple
 from dotenv import load_dotenv
 import pypandoc
 import tiktoken
-from models import DocumentChunk
+from models import DocumentChunk, DocumentMetadata
 
 
 # Load environment variables
@@ -226,8 +226,8 @@ def process_single_file(file_path: str) -> List[dict]:
     encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
     
     # Create list of dictionaries with chunk data and metadata
-    chunk_data = DocumentChunk
-    chunk_data = []
+    chunk_data = DocumentMetadata
+    chunk_text = DocumentChunk
 
     for chunk in final_chunks:
         tokens = encoding.encode(chunk)
@@ -237,10 +237,13 @@ def process_single_file(file_path: str) -> List[dict]:
             'chunk_number': chunk_counter,
             'chunk_length': len(tokens),
             'parent': section_name,  # Name of the section this chunk belongs to
+        })
+        chunk_text.append({
+            'metadata': chunk_data[-1],
             'text': chunk
         })
     
-    return chunk_data
+    return chunk_data, chunk_text
 
 def split_oversized_chunk(chunk_text: str, max_tokens: int = MAX_CHUNK_TOKENS) -> List[str]:
     """

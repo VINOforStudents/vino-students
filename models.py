@@ -25,7 +25,7 @@ planner_details: Optional[str] = None # To store the plan generated in Step 3
 
 class DocumentMetadata(BaseModel):
     """A document chunk with its ID and metadata."""
-    id: str
+    doc_id: str
     chunk_number: int
     chunk_length: int # Length of the chunk in tokens
     parent: Optional[str] = None  # Name of the section this chunk belongs to
