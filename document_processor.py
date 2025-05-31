@@ -55,13 +55,9 @@ def char_word_count(text:str) -> tuple[int, int]:
         tuple: (number of characters, number of words)
     """
     # Count characters and words
-    charCount = 0
-    wordCount = 0
-    for i in text:
-        charCount += 1
-        if i == ' ':
-            wordCount += 2
-    return charCount, wordCount
+    char_count = len(text)
+    word_count = len(text.split()) if text.strip() else 0
+    return char_count, word_count
 
 def extract_keywords(text, max_keywords=5):
     """
@@ -135,7 +131,8 @@ def process_document_content(file_path: str, content: str, page_count: int = 0, 
     if not content.strip():
         print(f"Warning: No content extracted from {file_name}")
         return result
-      # For supported file types that can use the advanced chunking
+    
+    # For supported file types that can use the advanced chunking
     file_extension = os.path.splitext(file_path)[1].lower()
     if file_extension in ['.md', '.docx', '.pdf']:
         try:
