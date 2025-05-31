@@ -21,7 +21,7 @@ load_dotenv()
 ROOT_DIR = 'kb_new'
 ALLOWED_FILETYPES = ['.md', '.docx', '.pdf']
 DEBUG_MODE = True  # Set to False to reduce verbose output
-MAX_CHUNK_TOKENS = 250  # Maximum tokens per chunk before splitting
+MAX_CHUNK_TOKENS = 300  # Maximum tokens per chunk before splitting
 
 def identify_doc_type(doc: str) -> str:
     """
@@ -238,44 +238,6 @@ def process_single_file(file_path: str) -> List[dict]:
     
     return chunk_data
 
-
-def process_documents(root_dir: str = ROOT_DIR, 
-                     allowed_filetypes: List[str] = ALLOWED_FILETYPES) -> pd.DataFrame:
-    """
-    Process all documents in a directory and return a DataFrame of chunks.
-    
-    Args:
-        root_dir (str): Root directory to search for documents
-        allowed_filetypes (List[str]): List of allowed file extensions
-        
-    Returns:
-        pd.DataFrame: DataFrame containing all chunks with metadata
-    """
-    if DEBUG_MODE:
-        print(f"Walking directory: {os.path.abspath(root_dir)}")
-    
-    all_chunk_data = []
-    
-    for directory, subdirectories, files in os.walk(root_dir):
-        if DEBUG_MODE:
-            print(f"In directory: {directory}")
-        
-        for file in files:
-            filename, filetype = os.path.splitext(file)
-            if filetype in allowed_filetypes:
-                full_path = os.path.join(directory, file)
-                chunk_data = process_single_file(full_path)
-                all_chunk_data.extend(chunk_data)
-            elif DEBUG_MODE:
-                print(f"Skipping file (wrong type): {os.path.join(directory, file)}")
-    
-    # Create DataFrame from all chunk data
-    df = pd.DataFrame(all_chunk_data)
-    df.reset_index(drop=True, inplace=True)
-    
-    return df
-
-
 def split_oversized_chunk(chunk_text: str, max_tokens: int = MAX_CHUNK_TOKENS) -> List[str]:
     """
     Split an oversized chunk into smaller chunks while preserving meaning.
@@ -375,6 +337,41 @@ def split_oversized_chunk(chunk_text: str, max_tokens: int = MAX_CHUNK_TOKENS) -
     
     return final_chunks if final_chunks else [chunk_text]
 
+def process_documents(root_dir: str = ROOT_DIR, 
+                     allowed_filetypes: List[str] = ALLOWED_FILETYPES) -> pd.DataFrame:
+    """
+    Process all documents in a directory and return a DataFrame of chunks.
+    
+    Args:
+        root_dir (str): Root directory to search for documents
+        allowed_filetypes (List[str]): List of allowed file extensions
+        
+    Returns:
+        pd.DataFrame: DataFrame containing all chunks with metadata
+    """
+    if DEBUG_MODE:
+        print(f"Walking directory: {os.path.abspath(root_dir)}")
+    
+    all_chunk_data = []
+    
+    for directory, subdirectories, files in os.walk(root_dir):
+        if DEBUG_MODE:
+            print(f"In directory: {directory}")
+        
+        for file in files:
+            filename, filetype = os.path.splitext(file)
+            if filetype in allowed_filetypes:
+                full_path = os.path.join(directory, file)
+                chunk_data = process_single_file(full_path)
+                all_chunk_data.extend(chunk_data)
+            elif DEBUG_MODE:
+                print(f"Skipping file (wrong type): {os.path.join(directory, file)}")
+    
+    # Create DataFrame from all chunk data
+    df = pd.DataFrame(all_chunk_data)
+    df.reset_index(drop=True, inplace=True)
+    
+    return df
 
 def main():
     """
