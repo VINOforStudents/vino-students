@@ -12,6 +12,7 @@ from typing import List, Tuple
 from dotenv import load_dotenv
 import pypandoc
 import tiktoken
+from models import ChunkMetadata
 
 
 # Load environment variables
@@ -207,7 +208,7 @@ def process_single_file(file_path: str) -> List[dict]:
         else:
             for i, chunk in enumerate(text_chunks, 1):
                 print(f"\n==========    Chunk {i} processed successfully    ==========\n")
-      # Apply oversized chunk splitting
+    # Apply oversized chunk splitting
     final_chunks = []
     chunk_counter = 1
     for chunk in text_chunks:
@@ -225,15 +226,17 @@ def process_single_file(file_path: str) -> List[dict]:
     encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
     
     # Create list of dictionaries with chunk data and metadata
+    chunk_data = ChunkMetadata
     chunk_data = []
+
     for chunk in final_chunks:
         tokens = encoding.encode(chunk)
         chunk_data.append({
-            'text': chunk,
-            'directory': directory,
-            'filename': filename,
-            'filetype': filetype,
+            'id': f"{filename}_{chunk_counter}",
+            'chunk_number': chunk_counter,
             'chunk_length': len(tokens),
+            'parent': None,  # Name of the section this chunk belongs to
+            'text': chunk
         })
     
     return chunk_data

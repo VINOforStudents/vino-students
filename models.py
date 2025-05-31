@@ -18,7 +18,7 @@ planner_details: Optional[str] = None # To store the plan generated in Step 3
 #------------------------------------------------------------------------------
 
 class ChunkMetadata(BaseModel):
-    """A chunk of text with its metadata and ID."""
+    """A chunk of text with its ID and metadata."""
     id: str
     chunk_number: int
     chunk_length: int
