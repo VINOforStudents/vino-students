@@ -15,6 +15,8 @@ from typing import Mapping
 
 from chunking import process_single_file, process_documents
 
+
+DEBUG_MODE = True  # Set to True to enable debug output
 #------------------------------------------------------------------------------
 # DOCUMENT PROCESSING
 #------------------------------------------------------------------------------
@@ -158,15 +160,15 @@ def process_document_content(file_path: str, content: str, page_count: int = 0, 
                 abstract=abstract
             )
             # Extract chunks and create metadata for each chunk
-            for i, all_chunk_data in enumerate(all_chunk_data):
+            for i, chunk_data in enumerate(all_chunk_data):
                 # Add the chunk text to documents
-                result.documents.append(all_chunk_data[i].text)
+                result.documents.append(chunk_data.text)
                 # Create DocumentMetadata for each chunk with rich metadata
-                result.doc_metadatas.append(all_chunk_data[i].metadata)
+                result.doc_metadatas.append(chunk_data.metadata)
                 # Add file metadata to file_metadatas
                 result.file_metadatas.append(file_metadata)
                 # Generate unique ID for each chunk
-                result.ids.append(all_chunk_data[i].metadata.doc_id)
+                result.ids.append(chunk_data.metadata.doc_id)
             
             print(f"Successfully processed {len(all_chunk_data)} chunks from {file_name}")
             return result
@@ -174,6 +176,7 @@ def process_document_content(file_path: str, content: str, page_count: int = 0, 
         except Exception as e:
             print(f"Error using advanced chunking for {file_name}: {e}")
             print("Falling back to simple processing...")
+    
     # Fallback for unsupported file types or if advanced chunking fails
     # Create basic document-level metadata
     char_count, word_count = char_word_count(content)
@@ -181,7 +184,6 @@ def process_document_content(file_path: str, content: str, page_count: int = 0, 
     keywords = extract_keywords(content)
     abstract = generate_abstract(content)
 
-    #all_chunk_data, chunk_text = process_single_file(file_path)
     result.documents.append(content)  # Add the full document as a single chunk
     result.ids.append(file_name)  # Use file name as ID for the full document
 
@@ -196,13 +198,22 @@ def process_document_content(file_path: str, content: str, page_count: int = 0, 
         keywords=keywords,
         abstract=abstract
     )
-    result.doc_metadatas.append(all_chunk_data)
+    
+    # Create a basic document metadata for the fallback case
+    doc_metadata = DocumentMetadata(
+        doc_id=f"{os.path.splitext(file_name)[0]}_1",
+        chunk_number=1,
+        chunk_length=len(content),
+        section="Full Document"
+    )
+    
+    result.doc_metadatas.append(doc_metadata)
     result.file_metadatas.append(file_metadata)
 
     print(f"Processed 1 chunk (full document) from {file_name}")
     return result
 
-def load_documents_from_directory(directory_path, source="system_upload"):
+def load_documents_from_directory(directory_path: str = NEW_DOCUMENTS_DIR, source: str = "system_upload"): 
     """
     Read and process all supported documents from a directory.
     
@@ -225,6 +236,7 @@ def load_documents_from_directory(directory_path, source="system_upload"):
     file_paths = txt_files + pdf_files + md_files
 
     for file_path in file_paths:
+        file_name = os.path.basename(file_path)
         try:
             page_count = 1
             # Handle different file types
@@ -237,52 +249,36 @@ def load_documents_from_directory(directory_path, source="system_upload"):
             result = process_document_content(file_path, content, page_count, source)
             all_documents.extend(result.documents)
             # Convert Pydantic models to dictionaries for ChromaDB
-            all_metadatas.extend([metadata.model_dump() for metadata in result.doc_metadatas])
-            all_metadatas.extend([metadata.model_dump() for metadata in result.file_metadatas])
+            for doc_meta, file_meta in zip(result.doc_metadatas, result.file_metadatas):
+                combined_metadata = {
+                    **doc_meta.model_dump(),  # Document-specific metadata
+                    **file_meta.model_dump()  # File-level metadata
+                }
+                all_metadatas.append(combined_metadata)
             all_ids.extend(result.ids)
-
+            
+            if DEBUG_MODE:
+                # Format metadata output nicely
+                print("\n" + "="*60)
+                print(f"DOCUMENT PROCESSED: {file_name}")
+                print("="*60)
+                print(f"Number of chunks: {len(result.documents)}")
+                print(f"File size: {os.path.getsize(file_path):,} bytes")
+                print(f"Page count: {page_count}")
+                
+                # Show sample of metadata for first chunk (formatted)
+                if result.file_metadatas:
+                    file_meta = result.file_metadatas[0]
+                    print(f"Word count: {file_meta.word_count:,}")
+                    print(f"Character count: {file_meta.char_count:,}")
+                    print(f"Keywords: {', '.join(file_meta.keywords)}")
+                    print(f"Abstract: {file_meta.abstract[:100]}...")
+                print("="*60 + "\n")
+        
             # Log the number of chunks loaded
-            file_name = os.path.basename(file_path)
-            print(f"Loaded {len(result.documents)} chunks from document: {file_name}")
+            print(f"✓ Successfully loaded {len(result.documents)} chunks from: {file_name}")
 
         except Exception as e:
-            print(f"Error loading {file_path}: {e}")
-
-    return all_documents, all_metadatas, all_ids
-
-def load_user_document(file_path):
-    """
-    Load a single document provided by the user.
+            print(f"Error loading {file_name}: {e}")
+        return all_documents, all_metadatas, all_ids
     
-    Args:
-        file_path: Path to the document file
-        
-    Returns:
-        tuple: (metadatas, documents, message)
-    """
-    page_count = 1 # Default to 1 for non-PDF files
-    try:
-        # Handle different file types
-        if file_path.lower().endswith('.pdf'):
-            content, page_count = extract_text_from_pdf(file_path)
-        elif file_path.lower().endswith(('.txt', '.md', '.py', '.js', '.html', '.css', '.json')):
-            try:
-                with open(file_path, 'r', encoding='utf-8') as file:
-                    content = file.read()
-                content = content.replace('\u0000', '')
-            except UnicodeDecodeError:
-                with open(file_path, 'rb') as file:
-                    content = file.read().decode('utf-8', errors='replace')
-                    content = content.replace('\u0000', '')
-        else:
-            return None, None, f"Unsupported file type: {file_path}. Supported types are PDF and text files."
-        
-        result = process_document_content(file_path, content, page_count, source="user_upload")
-        
-        if not result.documents:
-            return None, None, f"No content extracted from {os.path.basename(file_path)}"
-            
-        return result.metadatas, result.documents, f"Successfully processed {len(result.documents)} chunks from {os.path.basename(file_path)}"
-        
-    except Exception as e:
-        return None, None,  f"Error loading {file_path}: {str(e)}"
