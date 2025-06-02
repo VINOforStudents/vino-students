@@ -13,7 +13,7 @@ from models import ProcessingResult, DocumentMetadata, FileMetadata
 
 from typing import Mapping
 
-from chunking import process_single_file
+from chunking import process_single_file, process_documents
 
 #------------------------------------------------------------------------------
 # DOCUMENT PROCESSING
@@ -138,7 +138,7 @@ def process_document_content(file_path: str, content: str, page_count: int = 0, 
     if file_extension in ['.md', '.docx', '.pdf']:
         try:
             # Use the advanced chunking from chunking.py
-            chunk_data_list, chunk_text = process_single_file(file_path)
+            all_chunk_data = process_single_file(file_path)
             
             # Calculate rich metadata once for the entire document
             char_count, word_count = char_word_count(content)
@@ -146,16 +146,29 @@ def process_document_content(file_path: str, content: str, page_count: int = 0, 
             keywords = extract_keywords(content)
             abstract = generate_abstract(content)
             
+            file_metadata = FileMetadata(
+                source=source,
+                filename=file_name,
+                file_size=file_size,
+                file_type=os.path.splitext(file_path)[1].lstrip('.'),
+                page_count=page_count,
+                word_count=word_count,
+                char_count=char_count,
+                keywords=keywords,
+                abstract=abstract
+            )
             # Extract chunks and create metadata for each chunk
-            for i, chunk_data in enumerate(chunk_data_list):
+            for i, all_chunk_data in enumerate(all_chunk_data):
                 # Add the chunk text to documents
-                result.documents.append(chunk_text[i].text)
+                result.documents.append(all_chunk_data[i].text)
                 # Create DocumentMetadata for each chunk with rich metadata
-                result.doc_metadatas.append(chunk_data)
+                result.doc_metadatas.append(all_chunk_data[i].metadata)
+                # Add file metadata to file_metadatas
+                result.file_metadatas.append(file_metadata)
                 # Generate unique ID for each chunk
-                result.ids.append(f"{file_name}_chunk_{i+1}")
+                result.ids.append(all_chunk_data[i].metadata.doc_id)
             
-            print(f"Successfully processed {len(chunk_data_list)} chunks from {file_name}")
+            print(f"Successfully processed {len(all_chunk_data)} chunks from {file_name}")
             return result
             
         except Exception as e:
@@ -168,16 +181,9 @@ def process_document_content(file_path: str, content: str, page_count: int = 0, 
     keywords = extract_keywords(content)
     abstract = generate_abstract(content)
 
-    #chunk_data_list, chunk_text = process_single_file(file_path)
+    #all_chunk_data, chunk_text = process_single_file(file_path)
     result.documents.append(content)  # Add the full document as a single chunk
     result.ids.append(file_name)  # Use file name as ID for the full document
-    
-    chunk_metadata = DocumentMetadata(
-        doc_id=file_name,
-        chunk_number=1,
-        chunk_length=len(content.split()),
-        parent=None  # No parent for full document
-    )
 
     file_metadata = FileMetadata(
         source=source,
@@ -190,7 +196,7 @@ def process_document_content(file_path: str, content: str, page_count: int = 0, 
         keywords=keywords,
         abstract=abstract
     )
-    result.doc_metadatas.append(chunk_metadata)
+    result.doc_metadatas.append(all_chunk_data)
     result.file_metadatas.append(file_metadata)
 
     print(f"Processed 1 chunk (full document) from {file_name}")

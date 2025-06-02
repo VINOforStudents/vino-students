@@ -410,7 +410,7 @@ def main():
         print("\n" + "="*50)
         print("PROCESSING COMPLETE")
         print("="*50)
-        print(result)
+        #print(result)
         
     except Exception as e:
         print(f"Error in main processing: {e}")
