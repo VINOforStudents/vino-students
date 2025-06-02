@@ -352,7 +352,7 @@ def split_oversized_chunk(chunk_text: str, max_tokens: int = MAX_CHUNK_TOKENS) -
     return final_chunks if final_chunks else [chunk_text]
 
 def process_documents(root_dir: str = ROOT_DIR, 
-                     allowed_filetypes: List[str] = ALLOWED_FILETYPES) -> pd.DataFrame:
+                     allowed_filetypes: List[str] = ALLOWED_FILETYPES) -> List[str]:
     """
     Process all documents in a directory and return a DataFrame of chunks.
     
@@ -384,22 +384,22 @@ def process_documents(root_dir: str = ROOT_DIR,
     # Create DataFrame from all chunk data
     #df = pd.DataFrame(all_chunk_data)
     #df.reset_index(drop=True, inplace=True)
-    for i in all_chunk_data:
-        print(f"{i}\n=======\n")
-    for i, chunk in enumerate(all_chunk_data, 1):
-        print(f"\n{'='*60}")
-        print(f"CHUNK {i}")
-        print(f"{'='*60}")
-        print(f"Doc ID: {chunk.metadata.doc_id}")
-        print(f"Section: {chunk.metadata.section}")
-        print(f"Chunk Number: {chunk.metadata.chunk_number}")
-        print(f"Token Length: {chunk.metadata.chunk_length}")
-        print(f"{'-'*60}")
-        print("TEXT:")
-        print(f"{'-'*60}")
-        print(chunk.text)
-        print(f"{'='*60}\n")
-    return "success"
+
+    if DEBUG_MODE:
+        for i, chunk in enumerate(all_chunk_data, 1):
+            print(f"\n{'='*60}")
+            print(f"CHUNK {i}")
+            print(f"{'='*60}")
+            print(f"Doc ID: {chunk.metadata.doc_id}")
+            print(f"Section: {chunk.metadata.section}")
+            print(f"Chunk Number: {chunk.metadata.chunk_number}")
+            print(f"Token Length: {chunk.metadata.chunk_length}")
+            print(f"{'-'*60}")
+            print("TEXT:")
+            print(f"{'-'*60}")
+            print(chunk.text)
+            print(f"{'='*60}\n")
+    return all_chunk_data 
 
 def main():
     """
