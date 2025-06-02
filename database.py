@@ -41,6 +41,10 @@ def initialize_vector_db():
             print("Frameworks collection is empty. Loading documents...")
             documents, metadatas, ids = load_documents_from_directory(NEW_DOCUMENTS_DIR)
             
+            for metadata in metadatas:
+                if metadata and 'keywords' in metadata and isinstance(metadata['keywords'], list):
+                    metadata['keywords'] = ', '.join(metadata['keywords'])
+            
             # Add documents to collection if any were loaded
             if documents:
                 collection_fw.add(
@@ -96,21 +100,36 @@ def list_documents_in_collection(collection_name=None):
             "count": collection.count(),
             "documents": []
         }
-          # Add document details
+        
+        # Add document details
         for i in range(len(documents["ids"])):
             metadata = documents["metadatas"][i] if documents["metadatas"] else None
             
-            # Format metadata in consistent order if it exists
+            # Display all metadata fields as they exist in the database
             if metadata:
-                formatted_metadata = {
-                    "doc_id": metadata.get("doc_id"),
-                    "chunk_number": metadata.get("chunk_number"),
-                    "chunk_length": metadata.get("chunk_length"),
-                    "section": metadata.get("section")
-                }
-                print(formatted_metadata)
+                print(f"\n--- Document {i+1} ---")
+                print(f"ID: {documents['ids'][i]}")
+                
+                # Document-level metadata
+                print(f"Doc ID: {metadata.get('doc_id')}")
+                print(f"Chunk Number: {metadata.get('chunk_number')}")
+                print(f"Chunk Length: {metadata.get('chunk_length')}")
+                print(f"Section: {metadata.get('section')}")
+                
+                # File-level metadata
+                print(f"Source: {metadata.get('source')}")
+                print(f"Filename: {metadata.get('filename')}")
+                print(f"File Size: {metadata.get('file_size')} bytes")
+                print(f"File Type: {metadata.get('file_type')}")
+                print(f"Page Count: {metadata.get('page_count')}")
+                print(f"Word Count: {metadata.get('word_count')}")
+                print(f"Character Count: {metadata.get('char_count')}")
+                print(f"Keywords: {metadata.get('keywords')}")
+                print(f"Abstract: {metadata.get('abstract', '')[:100]}...")
             else:
-                print("No metadata")
+                print(f"\n--- Document {i+1} ---")
+                print(f"ID: {documents['ids'][i]}")
+                print("No metadata available")
             
             doc_info = {
                 "id": documents["ids"][i],
@@ -118,9 +137,14 @@ def list_documents_in_collection(collection_name=None):
                 "text_preview": documents["documents"][i][:100] + "..." if documents["documents"][i] else None
             }
             collection_data["documents"].append(doc_info)
+            
+            # Show text preview
+            print(f"Text Preview: {documents['documents'][i][:150]}...")
+            print("-" * 50)
         
         results[collection.name] = collection_data
-        print(f"Collection '{collection.name}' has {collection.count()} documents.")
+        print(f"\nCollection '{collection.name}' has {collection.count()} documents total.\n")
+        
     return results
 
 
@@ -174,6 +198,6 @@ def delete_all_documents(collection_name=None):
     
     return results
 
-#delete_all_documents("user_documents")
-list_documents_in_collection("frameworks")
-#initialize_vector_db()
+# delete_all_documents("frameworks")
+# initialize_vector_db()
+# list_documents_in_collection("frameworks")
