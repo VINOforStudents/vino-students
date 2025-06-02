@@ -21,7 +21,7 @@ load_dotenv()
 # Configuration constants
 ROOT_DIR = 'kb_new'
 ALLOWED_FILETYPES = ['.md', '.docx', '.pdf']
-DEBUG_MODE = True  # Set to False to reduce verbose output
+DEBUG_MODE = False  # Set to False to reduce verbose output
 MAX_CHUNK_TOKENS = 300  # Maximum tokens per chunk before splitting
 
 def identify_doc_type(doc: str) -> str:
@@ -174,7 +174,7 @@ def split_text(toc: str, text: str) -> List[str]:
 
     return text_chunks
 
-def process_single_file(file_path: str) -> List[dict]:
+def process_single_file(file_path: str) -> List[DocumentChunk]:
     """
     Process a single document file and return its chunks with metadata.
     
@@ -182,7 +182,7 @@ def process_single_file(file_path: str) -> List[dict]:
         file_path (str): Path to the file to process
         
     Returns:
-        List[dict]: List of dictionaries containing chunk data and metadata
+        List[DocumentChunk]: List of DocumentChunk objects containing chunk data and metadata
     """
     directory, filename_with_ext = os.path.split(file_path)
     filename, filetype = os.path.splitext(filename_with_ext)
@@ -224,9 +224,10 @@ def process_single_file(file_path: str) -> List[dict]:
     
     # Initialize TikToken for chunk length calculation
     encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
-      # Create list of dictionaries with chunk data and metadata
-    chunk_data = []
-    chunk_text = []
+    
+    # Create list of DocumentChunk objects
+    document_chunks = []
+    chunk_counter = 1
 
     for chunk in final_chunks:
         tokens = encoding.encode(chunk)
@@ -246,11 +247,10 @@ def process_single_file(file_path: str) -> List[dict]:
             text=chunk
         )
         
-        chunk_data.append(metadata)
-        chunk_text.append(doc_chunk)
+        document_chunks.append(doc_chunk)
         chunk_counter += 1
     
-    return chunk_data, chunk_text
+    return document_chunks
 
 def split_oversized_chunk(chunk_text: str, max_tokens: int = MAX_CHUNK_TOKENS) -> List[str]:
     """
@@ -382,23 +382,35 @@ def process_documents(root_dir: str = ROOT_DIR,
                 print(f"Skipping file (wrong type): {os.path.join(directory, file)}")
     print(f"Total chunks created: {len(all_chunk_data)}")
     # Create DataFrame from all chunk data
-    df = pd.DataFrame(all_chunk_data)
-    df.reset_index(drop=True, inplace=True)
-    
-    return df
+    #df = pd.DataFrame(all_chunk_data)
+    #df.reset_index(drop=True, inplace=True)
+    for i in all_chunk_data:
+        print(f"{i}\n=======\n")
+    for i, chunk in enumerate(all_chunk_data, 1):
+        print(f"\n{'='*60}")
+        print(f"CHUNK {i}")
+        print(f"{'='*60}")
+        print(f"Doc ID: {chunk.metadata.doc_id}")
+        print(f"Section: {chunk.metadata.section}")
+        print(f"Chunk Number: {chunk.metadata.chunk_number}")
+        print(f"Token Length: {chunk.metadata.chunk_length}")
+        print(f"{'-'*60}")
+        print("TEXT:")
+        print(f"{'-'*60}")
+        print(chunk.text)
+        print(f"{'='*60}\n")
+    return "success"
 
 def main():
     """
     Main function to process documents and display results.
     """
     try:
-        df = process_documents()
+        result = process_documents()
         print("\n" + "="*50)
         print("PROCESSING COMPLETE")
         print("="*50)
-        print(f"Total chunks created: {len(df)}")
-        print("\nFirst 100 rows of results:")
-        print(df.head(100))
+        print(result)
         
     except Exception as e:
         print(f"Error in main processing: {e}")
