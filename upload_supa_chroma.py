@@ -6,7 +6,7 @@ as well as to ChromaDB.
 
 
 from database import *
-#from upload_supa import *
+from upload_supa import *
 from typing import Dict, List, Optional, Tuple, Any
 
 from config import *
@@ -17,7 +17,7 @@ api_key = os.getenv("GOOGLE_API_KEY")
 if not api_key:
     raise ValueError("API key not found. Please set the GOOGLE_API_KEY environment variable.")
 
-#def upload_to_supa(source: str) -> None:
+def upload_to_supa(source: str) -> None:
     """
     Uploads documents to Supabase.
     """
@@ -93,8 +93,8 @@ def upload_documents_to_chromadb(source: str = "system_upload") -> str:
     except Exception as e:
         print(f"❌ Error uploading documents to ChromaDB: {e}")
         return f"Error uploading documents to ChromaDB: {e}"
-
-#def upload_documents(source: str) -> None:
+    
+def upload_documents(source: str) -> None:
     """
     Uploads documents to both Supabase and ChromaDB based on source type.
     
@@ -106,14 +106,15 @@ def upload_documents_to_chromadb(source: str = "system_upload") -> str:
     
 
     # Upload to ChromaDB
-    chroma_result = upload_documents_to_chromadb(source)
-    print(chroma_result)
+    # chroma_result = upload_documents_to_chromadb(source)
+    # print(chroma_result)
 
     # Upload to Supabase
     supa_result = upload_to_supa(source)
     print(supa_result)
-    
-    print(f"Upload process completed for source: {source}")
 
-result = upload_documents_to_chromadb("system_upload")  # or "user_upload"
+    print(f"Upload process completed for source: {source}")
+    return "Success"
+
+result = upload_documents("system_upload")  
 print(result)

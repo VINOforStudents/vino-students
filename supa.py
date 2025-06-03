@@ -27,11 +27,24 @@ def upload_move_to_processed(from_dir, to_dir):
                 response = supabase.storage.from_('knowledge-base').upload(file, source)
             if from_dir == NEW_USER_UPLOADS_DIR:
                 response = supabase.storage.from_('user-uploads').upload(file, source)
-            print(f"Successfully uploaded: {file}")
+            
+            # Check if upload was successful or if it's a duplicate
+            if hasattr(response, 'get') and response.get('statusCode') == 409:
+                print(f"File {file} already exists in storage, skipping upload but moving file...")
+            else:
+                print(f"Successfully uploaded: {file}")
+            
             destination = os.path.join(to_dir, file)
             os.rename(source, destination)
         except Exception as e:
             print(f"Error uploading {file}: {e}")
+            # Still move the file even if upload failed
+            try:
+                destination = os.path.join(to_dir, file)
+                os.rename(source, destination)
+                print(f"Moved {file} despite upload error")
+            except:
+                print(f"Failed to move {file}")
             continue
     return 'Files uploaded and moved successfully'
 
@@ -46,6 +59,7 @@ def upload_documents_to_sql(metadata_list, content_list):
     Returns:
         str: Success message or error information
     """
+    ######## CHANGE THE METADATA TYPE TO THE NEW FORMAT ########
     try:
         # Process all documents
         for i, meta in enumerate(metadata_list):
@@ -54,6 +68,18 @@ def upload_documents_to_sql(metadata_list, content_list):
                 doc_content = content_list[i]
             else:
                 print(f"Warning: Content missing for document {meta['file_name']}")
+                continue
+                
+            # Check if document already exists
+            existing_doc = (
+                supabase.table("filemetadata")
+                .select("id")
+                .eq("file_name", meta['file_name'])
+                .execute()
+            )
+            
+            if existing_doc.data:
+                print(f"Document {meta['file_name']} already exists in database, skipping...")
                 continue
                 
             # Insert metadata into the filemetadata table
@@ -73,6 +99,11 @@ def upload_documents_to_sql(metadata_list, content_list):
                 .execute()
             )
             
+            # Check if metadata insertion was successful
+            if not metadata_response.data:
+                print(f"Failed to insert metadata for {meta['file_name']}")
+                continue
+                
             # Get the ID of the newly inserted metadata record
             metadata_id = metadata_response.data[0]['id']
             
@@ -92,4 +123,5 @@ def upload_documents_to_sql(metadata_list, content_list):
     except Exception as e:
         error_message = f"Error uploading documents to Supabase: {str(e)}"
         print(error_message)
+        print(f"Error details: {type(e).__name__}")
         return error_message
