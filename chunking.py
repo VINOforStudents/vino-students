@@ -28,7 +28,7 @@ from chunking_config import *
 # Load environment variables
 load_dotenv()
 
-DEBUG_MODE = True  # Set to True to show debug output
+DEBUG_MODE = False  # Set to True to show debug output
 
 def identify_doc_type(doc: str) -> str:
     """

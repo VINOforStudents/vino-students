@@ -24,7 +24,7 @@ from models import ProcessingResult, DocumentMetadata, FileMetadata
 from chunking import process_single_file, process_documents
 
 # Configuration constants
-DEBUG_MODE = True  # Set to True to enable debug output
+DEBUG_MODE = False  # Set to True to enable debug output
 DEFAULT_MAX_KEYWORDS = 5
 DEFAULT_ABSTRACT_LENGTH = 300
 LINES_PER_PAGE = 40  # Estimate for text files

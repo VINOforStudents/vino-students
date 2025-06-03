@@ -36,28 +36,44 @@ def initialize_vector_db():
             embedding_function=google_ef
         )
 
-        # Process documents only if needed
-        if collection_fw.count() == 0:
-            print("Frameworks collection is empty. Loading documents...")
-            documents, metadatas, ids = load_documents_from_directory(NEW_DOCUMENTS_DIR)
-            
-            for metadata in metadatas:
-                if metadata and 'keywords' in metadata and isinstance(metadata['keywords'], list):
-                    metadata['keywords'] = ', '.join(metadata['keywords'])
-            
-            # Add documents to collection if any were loaded
-            if documents:
-                collection_fw.add(
-                    documents=documents,
-                    metadatas=metadatas,
-                    ids=ids
-                )
-                print(f"Added {len(documents)} document chunks to the frameworks collection.")
-            else:
-                print("No documents were loaded. Please check the directory path.")
-        else:
-            print(f"Using existing frameworks collection with {collection_fw.count()} document chunks.")
+        # Always check for new documents in NEW_DOCUMENTS_DIR
+        print("Checking for new documents...")
+        documents, metadatas, ids = load_documents_from_directory(NEW_DOCUMENTS_DIR)
         
+        if documents:
+            # Get existing document IDs to avoid duplicates
+            existing_docs = collection_fw.get()
+            existing_ids = set(existing_docs["ids"])
+            
+            new_documents = []
+            new_metadatas = []
+            new_ids = []
+            
+            for doc, metadata, doc_id in zip(documents, metadatas, ids):
+                if doc_id not in existing_ids:
+                    new_documents.append(doc)
+                    new_metadatas.append(metadata)
+                    new_ids.append(doc_id)
+            
+            if new_documents:
+                for metadata in new_metadatas:
+                    if metadata and 'keywords' in metadata and isinstance(metadata['keywords'], list):
+                        metadata['keywords'] = ', '.join(metadata['keywords'])
+                
+                # Add new documents to collection
+                for doc, metadata, doc_id in zip(new_documents, new_metadatas, new_ids):
+                    if metadata.get('source') == 'user_upload':
+                        collection_user.add(documents=[doc], metadatas=[metadata], ids=[doc_id])
+                    else:
+                        collection_fw.add(documents=[doc], metadatas=[metadata], ids=[doc_id])
+                
+                print(f"Added {len(new_documents)} new document chunks to the collection.")
+            else:
+                print("All documents in NEW_DOCUMENTS_DIR already exist in the collection.")
+        else:
+            print("No documents found in NEW_DOCUMENTS_DIR.")
+        
+        print(f"Frameworks collection has {collection_fw.count()} document chunks.")
         print(f"User documents collection has {collection_user.count()} document chunks.")
         return collection_fw, collection_user
 
