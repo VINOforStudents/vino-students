@@ -419,6 +419,3 @@ def load_documents_from_directory(directory_path: str = NEW_DOCUMENTS_DIR,
     
     print(f"\nProcessing complete: {len(all_documents)} total chunks from {len(file_paths)} files")
     return all_documents, all_metadatas, all_ids
-
-a, b, c = load_documents_from_directory()
-print(b)
