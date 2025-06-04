@@ -31,9 +31,9 @@ def process_directory(from_dir, to_dir, source="system_upload"):
         bool: True if documents were processed, False otherwise.
     """
     if check_not_empty(from_dir):
-        metadata, content, ids = load_documents_from_directory(from_dir, source)
+        documents, metadatas, ids = load_documents_from_directory(from_dir, source)
         try:
-            upload_documents_to_sql(metadata, content)
+            upload_documents_to_sql(metadatas, documents)
             # Only move files if upload was successful
             upload_move_to_processed(from_dir, to_dir)
             print(f"Successfully processed documents from {from_dir}")

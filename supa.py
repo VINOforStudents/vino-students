@@ -53,73 +53,101 @@ def upload_documents_to_sql(metadata_list, content_list):
     Upload multiple document metadata and content to Supabase.
     
     Args:
-        metadata_list: List of metadata dictionaries for documents.
-        content_list: List of document contents.
+        metadata_list: List of combined metadata dictionaries (file + chunk metadata).
+        content_list: List of chunk contents.
         
     Returns:
         str: Success message or error information
     """
-    ######## CHANGE THE METADATA TYPE TO THE NEW FORMAT ########
-    try:
-        # Process all documents
+    try:        # Group chunks by filename to store whole files instead of individual chunks
+        files_data = {}
+        
+        # Group metadata and content by filename
         for i, meta in enumerate(metadata_list):
-            # Get the corresponding content
-            if isinstance(content_list, list) and i < len(content_list):
-                doc_content = content_list[i]
-            else:
-                print(f"Warning: Content missing for document {meta['file_name']}")
+            if i >= len(content_list):
+                print(f"Warning: Content missing for metadata at index {i}")
+                continue
+            
+            # Validate metadata format
+            if not isinstance(meta, dict):
+                print(f"Warning: Expected dictionary but got {type(meta)} at index {i}")
                 continue
                 
+            filename = meta.get('filename', 'unknown')
+            
+            if filename not in files_data:
+                files_data[filename] = {
+                    'file_metadata': meta,  # Use first chunk's metadata for file-level info
+                    'chunks': []
+                }
+            
+            # Add chunk content
+            files_data[filename]['chunks'].append(content_list[i])
+        
+        # Process each file
+        uploaded_count = 0
+        for filename, file_data in files_data.items():
+            meta = file_data['file_metadata']
+            chunks = file_data['chunks']
+            
+            # Reconstruct full document from chunks
+            full_document = '\n\n'.join(chunks)
+            
             # Check if document already exists
             existing_doc = (
                 supabase.table("filemetadata")
                 .select("id")
-                .eq("file_name", meta['file_name'])
+                .eq("file_name", filename)
                 .execute()
             )
             
             if existing_doc.data:
-                print(f"Document {meta['file_name']} already exists in database, skipping...")
+                print(f"Document {filename} already exists in database, skipping...")
                 continue
                 
-            # Insert metadata into the filemetadata table
+            # Insert file metadata into the filemetadata table
             metadata_response = (
                 supabase.table("filemetadata")
                 .insert({
-                    "file_name": meta['file_name'],
-                    "file_size": meta['file_size'],
-                    "file_type": meta['file_type'],
-                    "page_count": meta['page_count'],
-                    "word_count": meta['word_count'],
-                    "char_count": meta['char_count'],
-                    "keywords": meta['keywords'],
-                    "source": meta['source'],
-                    "abstract": meta['abstract']
+                    "file_name": filename,
+                    "file_size": meta.get('file_size', 0),
+                    "file_type": meta.get('file_type', 'unknown'),
+                    "page_count": meta.get('page_count', 0),
+                    "word_count": meta.get('word_count', 0),
+                    "char_count": meta.get('char_count', 0),
+                    "keywords": meta.get('keywords', []),
+                    "source": meta.get('source', 'system_upload'),
+                    "abstract": meta.get('abstract', '')
                 })
                 .execute()
             )
             
             # Check if metadata insertion was successful
             if not metadata_response.data:
-                print(f"Failed to insert metadata for {meta['file_name']}")
+                print(f"Failed to insert metadata for {filename}")
                 continue
                 
             # Get the ID of the newly inserted metadata record
             metadata_id = metadata_response.data[0]['id']
             
-            # Insert content into the largeobject table with reference to metadata
+            # Insert full document content into the largeobject table
             content_response = (
                 supabase.table("largeobject")
                 .insert({
                     "oid": metadata_id,
-                    "plain_text": doc_content
+                    "plain_text": full_document
                 })
                 .execute()
             )
             
-            print(f"Uploaded document: {meta['file_name']}")
+            uploaded_count += 1
+            print(f"Uploaded document: {filename} ({len(chunks)} chunks combined)")
         
-        return "All documents uploaded successfully"
+        if uploaded_count > 0:
+            return f"Successfully uploaded {uploaded_count} documents to database"
+        else:
+            return "No new documents were uploaded"
+            
     except Exception as e:
         error_message = f"Error uploading documents to Supabase: {str(e)}"
         print(error_message)

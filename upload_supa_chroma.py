@@ -4,9 +4,11 @@ This module provides functionality to upload documents to Supabase and ChromaDB,
 as well as to ChromaDB.
 """
 
+import os
 
-from database import *
+from database import initialize_vector_db
 from upload_supa import *
+from document_processor import load_documents_from_directory
 from typing import Dict, List, Optional, Tuple, Any
 
 from config import *
