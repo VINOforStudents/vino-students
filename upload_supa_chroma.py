@@ -118,5 +118,5 @@ def upload_documents(source: str) -> None:
     print(f"Upload process completed for source: {source}")
     return "Success"
 
-result = upload_documents("user_upload")  # Change to "system_upload" as needed
+result = upload_documents("system_upload")  # Change to "system_upload" or "user_upload" as needed
 print(result)
