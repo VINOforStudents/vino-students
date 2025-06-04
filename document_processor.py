@@ -1,22 +1,50 @@
+"""
+Document processing module for text extraction, chunking, and metadata generation.
+
+This module provides functionality to:
+- Extract text from various document formats (PDF, TXT, MD)
+- Generate document metadata (keywords, abstracts, statistics)
+- Process documents into chunks for vector storage
+- Load and process documents from directories
+"""
+
 # Standard library imports
 import os
 import glob
 import re
 from collections import Counter
+from typing import Tuple, List
 
 # Third-party imports
 import PyPDF2
 
 # Local imports
-from config import CHUNK_SIZE, CHUNK_OVERLAP
-from models import KBMetadata, ProcessingResult
+from config import CHUNK_SIZE, CHUNK_OVERLAP, NEW_DOCUMENTS_DIR
+from models import ProcessingResult, DocumentMetadata, FileMetadata
+from chunking import process_single_file, process_documents
+from chunking_config import MAX_CHUNK_TOKENS, OVERLAP_TOKENS, ENCODING_MODEL
 
-from typing import Mapping
+# Third-party imports for token counting
+import tiktoken
+
+# Configuration constants
+DEBUG_MODE = False  # Set to True to enable debug output
+DEFAULT_MAX_KEYWORDS = 5
+DEFAULT_ABSTRACT_LENGTH = 300
+LINES_PER_PAGE = 40  # Estimate for text files
+SUPPORTED_EXTENSIONS = ['.md', '.docx', '.pdf']
+
+# Common English stopwords for keyword extraction
+STOPWORDS = {
+    'and', 'the', 'is', 'in', 'to', 'of', 'for', 'with', 'on', 'at', 'from',
+    'by', 'about', 'as', 'it', 'this', 'that', 'be', 'are', 'was', 'were',
+    'an', 'or', 'but', 'if', 'then', 'because', 'when', 'where', 'why', 'how'
+}
 #------------------------------------------------------------------------------
-# DOCUMENT PROCESSING
+# TEXT EXTRACTION FUNCTIONS
 #------------------------------------------------------------------------------
 
-def extract_text_from_pdf(pdf_path: str) -> tuple[str, int]:
+def extract_text_from_pdf(pdf_path: str) -> Tuple[str, int]:
     """
     Extract text content from a PDF file.
     
@@ -24,43 +52,74 @@ def extract_text_from_pdf(pdf_path: str) -> tuple[str, int]:
         pdf_path: Path to the PDF file
         
     Returns:
-        tuple: (extracted text as string, page count)
+        Tuple of (extracted text as string, page count)
     """
     text = ""
     page_count = 0
+    
     try:
         with open(pdf_path, 'rb') as file:
             pdf_reader = PyPDF2.PdfReader(file)
             page_count = len(pdf_reader.pages)
+            
             for page_num in range(page_count):
                 page = pdf_reader.pages[page_num]
                 page_text = page.extract_text() or ""
+                # Remove null characters that can cause issues
                 page_text = page_text.replace('\u0000', '')
                 text += page_text + "\n"
+                
     except Exception as e:
         print(f"Error extracting text from PDF {pdf_path}: {e}")
+        
     return text, page_count
 
-def char_word_count(text:str) -> tuple[int, int]:
+
+def extract_text_from_file(file_path: str) -> Tuple[str, int]:
+    """
+    Extract text content from various file types.
+    
+    Args:
+        file_path: Path to the file
+        
+    Returns:
+        Tuple of (extracted text, estimated page count)
+    """
+    if file_path.lower().endswith('.pdf'):
+        return extract_text_from_pdf(file_path)
+    else:
+        # Handle text files (txt, md, etc.)
+        try:
+            with open(file_path, 'r', encoding='utf-8') as file:
+                content = file.read()
+                # Estimate page count based on line count
+                page_count = max(1, len(content.splitlines()) // LINES_PER_PAGE)
+                return content, page_count
+        except Exception as e:
+            print(f"Error reading text file {file_path}: {e}")
+            return "", 1
+
+
+#------------------------------------------------------------------------------
+# METADATA GENERATION FUNCTIONS
+#------------------------------------------------------------------------------
+
+def char_word_count(text: str) -> Tuple[int, int]:
     """
     Count the number of characters and words in a string.
     
     Args:
-        word: The input string
+        text: The input string
         
     Returns:
-        tuple: (number of characters, number of words)
+        Tuple of (character count, word count)
     """
-    # Count characters and words
-    charCount = 0
-    wordCount = 0
-    for i in text:
-        charCount += 1
-        if i == ' ':
-            wordCount += 2
-    return charCount, wordCount
+    char_count = len(text)
+    word_count = len(text.split()) if text.strip() else 0
+    return char_count, word_count
 
-def extract_keywords(text, max_keywords=5):
+
+def extract_keywords(text: str, max_keywords: int = DEFAULT_MAX_KEYWORDS) -> List[str]:
     """
     Extract keywords from text using simple frequency analysis.
     
@@ -69,25 +128,20 @@ def extract_keywords(text, max_keywords=5):
         max_keywords: Maximum number of keywords to return
         
     Returns:
-        list: Top keywords
+        List of top keywords
     """
-    # Convert to lowercase and split into words
+    # Convert to lowercase and extract words (3+ characters)
     words = re.findall(r'\b[a-zA-Z]{3,}\b', text.lower())
     
-    # Common English stopwords to filter out
-    stopwords = {'and', 'the', 'is', 'in', 'to', 'of', 'for', 'with', 'on', 'at', 'from', 
-                'by', 'about', 'as', 'it', 'this', 'that', 'be', 'are', 'was', 'were'}
-    
     # Filter out stopwords
-    filtered_words = [word for word in words if word not in stopwords]
+    filtered_words = [word for word in words if word not in STOPWORDS]
     
-    # Count word frequencies
+    # Count word frequencies and get most common
     word_counts = Counter(filtered_words)
-    
-    # Get the most common words
     return [word for word, _ in word_counts.most_common(max_keywords)]
 
-def generate_abstract(text, max_length=300):
+
+def generate_abstract(text: str, max_length: int = DEFAULT_ABSTRACT_LENGTH) -> str:
     """
     Generate a simple abstract by taking the first part of the document.
     
@@ -96,7 +150,7 @@ def generate_abstract(text, max_length=300):
         max_length: Maximum length of abstract
         
     Returns:
-        str: Document abstract
+        Document abstract
     """
     # Clean up whitespace
     text = re.sub(r'\s+', ' ', text.strip())
@@ -104,16 +158,54 @@ def generate_abstract(text, max_length=300):
     # Take the first part of the document
     abstract = text[:max_length]
     
-    # Try to end at a sentence boundary
+    # Try to end at a sentence boundary for better readability
     if len(text) > max_length:
         last_period = abstract.rfind('.')
-        if last_period > max_length // 2:  # Only trim if we have a decent amount of text
+        if last_period > max_length // 2:  # Only trim if we have enough text
             abstract = abstract[:last_period + 1]
     
     return abstract
 
-def process_document_content(file_path: str, content: str, page_count: int = 0,  source: str = "system_upload"
-                            ) -> ProcessingResult:
+
+def create_file_metadata(file_path: str, content: str, page_count: int, 
+                        source: str = "system_upload") -> FileMetadata:
+    """
+    Create file-level metadata for a document.
+    
+    Args:
+        file_path: Path to the source document
+        content: Document content
+        page_count: Number of pages in the document
+        source: Source identifier for the document
+        
+    Returns:
+        FileMetadata object containing document statistics and metadata
+    """
+    file_name = os.path.basename(file_path)
+    char_count, word_count = char_word_count(content)
+    file_size = os.path.getsize(file_path)
+    keywords = extract_keywords(content)
+    abstract = generate_abstract(content)
+    
+    return FileMetadata(
+        source=source,
+        filename=file_name,
+        file_size=file_size,
+        file_type=os.path.splitext(file_path)[1].lstrip('.'),
+        page_count=page_count,
+        word_count=word_count,
+        char_count=char_count,
+        keywords=keywords,
+        abstract=abstract
+    )
+
+
+#------------------------------------------------------------------------------
+# DOCUMENT PROCESSING FUNCTIONS
+#------------------------------------------------------------------------------
+
+def process_document_content(file_path: str, content: str, page_count: int = 0, 
+                           source: str = "system_upload") -> ProcessingResult:
     """
     Process document content into chunks with metadata and IDs.
     
@@ -121,34 +213,183 @@ def process_document_content(file_path: str, content: str, page_count: int = 0, 
         file_path: Path to the source document
         content: Text content to be chunked
         page_count: Number of pages in the document (for PDFs)
+        source: Source identifier for the document
         
     Returns:
         ProcessingResult containing document chunks, metadata, ids and chunk count
     """
     result = ProcessingResult()
     file_name = os.path.basename(file_path)
+    
     # Skip if no content was extracted
     if not content.strip():
         print(f"Warning: No content extracted from {file_name}")
         return result
-    char_count, word_count = char_word_count(content)
-    file_size = os.path.getsize(file_path)
-    keywords = extract_keywords(content)
-    abstract = generate_abstract(content)
-    metadata = KBMetadata(file_name=file_name,
-                        file_size=file_size,
-                        file_type=file_name.split('.')[-1],
-                        page_count=page_count,
-                        word_count=word_count,
-                        char_count=char_count,
-                        keywords=keywords,
-                        source=source,
-                        abstract=abstract,
-                        ).model_dump() 
-    result.metadatas.append(metadata)
+    
+    file_extension = os.path.splitext(file_path)[1].lower()
+    print(f"Processing file: {file_name} (type: {file_extension})")
+    
+    # Use fixed-size chunking for PDF files
+    if file_extension == '.pdf':
+        try:
+            return _process_with_fixed_size_chunking(file_path, content, page_count, source)
+        except Exception as e:
+            print(f"Error using fixed-size chunking for PDF {file_name}: {e}")
+            print("Falling back to simple processing...")
+    
+    # Try advanced chunking for other supported file types
+    elif file_extension in SUPPORTED_EXTENSIONS:
+        try:
+            return _process_with_advanced_chunking(file_path, content, page_count, source)
+        except Exception as e:
+            print(f"Error using advanced chunking for {file_name}: {e}")
+            print("Falling back to simple processing...")
+    
+    # Fallback to simple processing
+    return _process_with_simple_chunking(file_path, content, page_count, source)
+
+
+def _process_with_advanced_chunking(file_path: str, content: str, page_count: int, 
+                                  source: str) -> ProcessingResult:
+    """
+    Process document using advanced chunking from chunking.py module.
+    
+    Args:
+        file_path: Path to the source document
+        content: Text content of the document
+        page_count: Number of pages in the document
+        source: Source identifier for the document
+        
+    Returns:
+        ProcessingResult with advanced chunking applied
+    """
+    result = ProcessingResult()
+    file_name = os.path.basename(file_path)
+    
+    # Use the advanced chunking from chunking.py
+    all_chunk_data = process_single_file(file_path)
+    
+    # Create file metadata once for the entire document
+    file_metadata = create_file_metadata(file_path, content, page_count, source)
+    
+    # Process each chunk
+    for chunk_data in all_chunk_data:
+        result.documents.append(chunk_data.text)
+        result.doc_metadatas.append(chunk_data.metadata)
+        result.file_metadatas.append(file_metadata)
+        result.ids.append(chunk_data.metadata.doc_id)
+    
+    print(f"Successfully processed {len(all_chunk_data)} chunks from {file_name}")
     return result
 
-def load_documents_from_directory(directory_path, source="system_upload"):
+
+def _process_with_simple_chunking(file_path: str, content: str, page_count: int, 
+                                source: str) -> ProcessingResult:
+    """
+    Process document using simple chunking (entire document as one chunk).
+    
+    Args:
+        file_path: Path to the source document
+        content: Text content of the document
+        page_count: Number of pages in the document
+        source: Source identifier for the document
+        
+    Returns:
+        ProcessingResult with simple chunking applied
+    """
+    result = ProcessingResult()
+    file_name = os.path.basename(file_path)
+    
+    # Add the full document as a single chunk
+    result.documents.append(content)
+    result.ids.append(file_name)
+    
+    # Create metadata
+    file_metadata = create_file_metadata(file_path, content, page_count, source)
+    doc_metadata = DocumentMetadata(
+        doc_id=f"{os.path.splitext(file_name)[0]}_1",
+        chunk_number=1,
+        chunk_length=len(content),
+        section="Full Document"
+    )
+    
+    result.doc_metadatas.append(doc_metadata)
+    result.file_metadatas.append(file_metadata)
+    
+    print(f"Processed 1 chunk (full document) from {file_name}")
+    return result
+
+
+def _print_debug_info(file_name: str, result: ProcessingResult, file_path: str, 
+                     page_count: int) -> None:
+    """
+    Print detailed debug information for processed documents.
+    
+    Args:
+        file_name: Name of the processed file
+        result: Processing result containing metadata
+        file_path: Path to the source file
+        page_count: Number of pages in the document
+    """
+    print("\n" + "="*60)
+    print(f"DOCUMENT PROCESSED: {file_name}")
+    print("="*60)
+    print(f"Number of chunks: {len(result.documents)}")
+    print(f"File size: {os.path.getsize(file_path):,} bytes")
+    print(f"Page count: {page_count}")
+    
+    # Show sample of metadata for first chunk
+    if result.file_metadatas:
+        file_meta = result.file_metadatas[0]
+        print(f"Word count: {file_meta.word_count:,}")
+        print(f"Character count: {file_meta.char_count:,}")
+        print(f"Keywords: {', '.join(file_meta.keywords)}")
+        print(f"Abstract: {file_meta.abstract[:100]}...")
+      # Show chunk size information for fixed-size chunking
+    if result.doc_metadatas and len(result.documents) > 1:
+        avg_chunk_length = sum(meta.chunk_length for meta in result.doc_metadatas) / len(result.doc_metadatas)
+        print(f"Average chunk length: {avg_chunk_length:.0f} tokens")
+        print(f"Chunk size range: {min(meta.chunk_length for meta in result.doc_metadatas)} - {max(meta.chunk_length for meta in result.doc_metadatas)} tokens")
+    
+    print("="*60 + "\n")
+
+
+def _get_supported_files(directory_path: str) -> List[str]:
+    """
+    Get all supported document files from a directory or check if a single file is supported.
+    
+    Args:
+        directory_path: Path to the directory to scan or path to a single file
+        
+    Returns:
+        List of file paths for supported document types
+    """
+    file_patterns = ["*.txt", "*.pdf", "*.md"]
+    all_files = []
+    
+    # Check if it's a single file path
+    if os.path.isfile(directory_path):
+        # Check if the file has a supported extension
+        _, ext = os.path.splitext(directory_path)
+        if ext.lower() in ['.txt', '.pdf', '.md']:
+            return [directory_path]
+        else:
+            return []
+    
+    # It's a directory, use glob patterns
+    for pattern in file_patterns:
+        files = glob.glob(os.path.join(directory_path, pattern))
+        all_files.extend(files)
+    
+    return all_files
+
+
+#------------------------------------------------------------------------------
+# MAIN PROCESSING FUNCTIONS
+#------------------------------------------------------------------------------
+
+def load_documents_from_directory(directory_path: str = NEW_DOCUMENTS_DIR, 
+                                source: str = "system_upload") -> Tuple[List[str], List[dict], List[str]]:
     """
     Read and process all supported documents from a directory.
     
@@ -157,74 +398,132 @@ def load_documents_from_directory(directory_path, source="system_upload"):
         source: Source identifier for the documents
         
     Returns:
-        tuple: (documents, metadatas, ids)
+        Tuple of (documents, metadatas, ids)
     """
-
+    all_documents = []
     all_metadatas = []
-    all_contents = []
-    # Get all .txt and .pdf files in the directory
-    txt_files = glob.glob(os.path.join(directory_path, "*.txt"))
-    pdf_files = glob.glob(os.path.join(directory_path, "*.pdf"))
-    file_paths = txt_files + pdf_files
+    all_ids = []    
+    
+    # Get all supported files in the directory
+    file_paths = _get_supported_files(directory_path)
+    
+    if not file_paths:
+        print(f"No supported documents found in {directory_path}")
+        return all_documents, all_metadatas, all_ids, "No supported documents found"
+
+    print(f"Found {len(file_paths)} documents to process in {directory_path}")
 
     for file_path in file_paths:
+        file_name = os.path.basename(file_path)
         try:
-            page_count = 0
-            # Handle different file types
-            if file_path.lower().endswith('.pdf'):
-                content, page_count = extract_text_from_pdf(file_path)
-            else:  # Assume it's a text file
-                with open(file_path, 'r', encoding='utf-8') as file:
-                    content = file.read()
-
-            # Process the document content with source parameter
+            # Extract text content based on file type
+            content, page_count = extract_text_from_file(file_path)
+            
+            # Process the document content
             result = process_document_content(file_path, content, page_count, source)
-            all_metadatas.extend(result.metadatas)
-            all_contents.append(content)
-
-            #file_name = os.path.basename(file_path)
-            #print(f"Loaded {result.chunk_count} chunks from document: {file_name}")
+            
+            # Aggregate results
+            all_documents.extend(result.documents)
+            all_ids.extend(result.ids)
+            
+            # Convert Pydantic models to dictionaries for ChromaDB
+            for doc_meta, file_meta in zip(result.doc_metadatas, result.file_metadatas):
+                combined_metadata = {
+                    **doc_meta.model_dump(),  # Document-specific metadata
+                    **file_meta.model_dump()  # File-level metadata
+                }
+                all_metadatas.append(combined_metadata)
+            
+            # Debug output if enabled
+            if DEBUG_MODE:
+                _print_debug_info(file_name, result, file_path, page_count)
+        
+            # Log successful processing
+            print(f"✓ Successfully loaded {len(result.documents)} chunks from: {file_name}")
 
         except Exception as e:
-            print(f"Error loading {file_path}: {e}")
+            print(f"✗ Error loading {file_name}: {e}")
+            continue  # Continue with next file instead of stopping
+    
+    print(f"\nProcessing complete: {len(all_documents)} total chunks from {len(file_paths)} files")
+    return all_documents, all_metadatas, all_ids, "Successfully processed all documents."
 
-    return all_metadatas, all_contents
 
-def load_user_document(file_path):
+def _process_with_fixed_size_chunking(file_path: str, content: str, page_count: int, 
+                                    source: str, max_tokens: int = MAX_CHUNK_TOKENS, 
+                                    overlap_tokens: int = OVERLAP_TOKENS) -> ProcessingResult:
     """
-    Load a single document provided by the user.
+    Process document using fixed-size chunking strategy based on tokens.
     
     Args:
-        file_path: Path to the document file
+        file_path: Path to the source document
+        content: Text content of the document
+        page_count: Number of pages in the document
+        source: Source identifier for the document
+        max_tokens: Maximum tokens per chunk
+        overlap_tokens: Number of tokens to overlap between chunks
         
     Returns:
-        tuple: (documents, metadatas, ids, message)
+        ProcessingResult with fixed-size chunking applied
     """
-    all_metadatas = []
-    all_contents = []
-    page_count = 1 # Default to 1 for non-PDF files
+    result = ProcessingResult()
+    file_name = os.path.basename(file_path)
+    doc_id_base = os.path.splitext(file_name)[0]
+    
+    # Initialize tokenizer
     try:
-        # Handle different file types
-        if file_path.lower().endswith('.pdf'):
-            content, page_count = extract_text_from_pdf(file_path)
-        elif file_path.lower().endswith(('.txt', '.md', '.py', '.js', '.html', '.css', '.json')):
-            try:
-                with open(file_path, 'r', encoding='utf-8') as file:
-                    content = file.read()
-                content = content.replace('\u0000', '')
-            except UnicodeDecodeError:
-                with open(file_path, 'rb') as file:
-                    content = file.read().decode('utf-8', errors='replace')
-                    content = content.replace('\u0000', '')
-        else:
-            return None, None, f"Unsupported file type: {file_path}. Supported types are PDF and text files."
-        result = process_document_content(file_path, content, page_count, source="user_upload")
-        metadata = result.metadatas
-
-        #if not result.documents:
-        #    return None, None, f"No content extracted from {os.path.basename(file_path)}"
-            
-        return metadata, content, f"Successfully processed {os.path.basename(file_path)}"
+        encoding = tiktoken.encoding_for_model(ENCODING_MODEL)
+    except Exception:
+        # Fallback to a default encoding if model not found
+        encoding = tiktoken.get_encoding("cl100k_base")
+    
+    # Create file metadata once for the entire document
+    file_metadata = create_file_metadata(file_path, content, page_count, source)
+    
+    # Tokenize the entire content
+    tokens = encoding.encode(content)
+    total_tokens = len(tokens)
+    
+    if total_tokens == 0:
+        print(f"Warning: No tokens found in {file_name}")
+        return result
+    
+    print(f"Processing {file_name}: {total_tokens} tokens total")
+    
+    # Implement token-based fixed-size chunking
+    start_token = 0
+    chunk_number = 1
+    
+    while start_token < total_tokens:
+        # Calculate end token for this chunk
+        end_token = min(start_token + max_tokens, total_tokens)
         
-    except Exception as e:
-        return None, None,  f"Error loading {file_path}: {str(e)}"
+        # Extract chunk tokens and decode back to text
+        chunk_tokens = tokens[start_token:end_token]
+        chunk_text = encoding.decode(chunk_tokens)
+        
+        # Skip empty chunks
+        if not chunk_text.strip():
+            start_token += max_tokens - overlap_tokens
+            continue
+        
+        # Create DocumentMetadata object
+        doc_metadata = DocumentMetadata(
+            doc_id=f"{doc_id_base}_chunk_{chunk_number}",
+            chunk_number=chunk_number,
+            chunk_length=len(chunk_tokens),  # Store token count instead of character count
+            section=f"Chunk {chunk_number}"
+        )
+        
+        result.documents.append(chunk_text)
+        result.doc_metadatas.append(doc_metadata)
+        result.file_metadatas.append(file_metadata)
+        result.ids.append(f"{doc_id_base}_chunk_{chunk_number}")
+        
+        # Move to next chunk with overlap
+        start_token += max_tokens - overlap_tokens
+        chunk_number += 1
+    
+    print(f"Successfully processed {len(result.documents)} token-based chunks from {file_name}")
+    print(f"Average tokens per chunk: {total_tokens / len(result.documents):.0f}")
+    return result

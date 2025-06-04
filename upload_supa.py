@@ -31,17 +31,20 @@ def process_directory(from_dir, to_dir, source="system_upload"):
         bool: True if documents were processed, False otherwise.
     """
     if check_not_empty(from_dir):
-        metadata, content = load_documents_from_directory(from_dir, source)
+        documents, metadatas, ids, message = load_documents_from_directory(from_dir, source)
         try:
-            upload_documents_to_sql(metadata, content)
+            upload_documents_to_sql(metadatas, documents)
+            # Only move files if upload was successful
             upload_move_to_processed(from_dir, to_dir)
             print(f"Successfully processed documents from {from_dir}")
             return True
         except Exception as e:
             error_message = f"Error uploading documents from {from_dir} to Supabase: {str(e)}"
             print(error_message)
+            # Don't move files on error - return False
+            return False
     else:
-        print(f"No documents to upload from {from_dir}")
+        print(f"No documents to     upload from {from_dir}")
     return False
 
 def upload_documents():
