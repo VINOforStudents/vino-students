@@ -22,6 +22,10 @@ import PyPDF2
 from config import CHUNK_SIZE, CHUNK_OVERLAP, NEW_DOCUMENTS_DIR
 from models import ProcessingResult, DocumentMetadata, FileMetadata
 from chunking import process_single_file, process_documents
+from chunking_config import MAX_CHUNK_TOKENS, OVERLAP_TOKENS, ENCODING_MODEL
+
+# Third-party imports for token counting
+import tiktoken
 
 # Configuration constants
 DEBUG_MODE = False  # Set to True to enable debug output
@@ -225,8 +229,16 @@ def process_document_content(file_path: str, content: str, page_count: int = 0,
     file_extension = os.path.splitext(file_path)[1].lower()
     print(f"Processing file: {file_name} (type: {file_extension})")
     
-    # Try advanced chunking for supported file types
-    if file_extension in SUPPORTED_EXTENSIONS:
+    # Use fixed-size chunking for PDF files
+    if file_extension == '.pdf':
+        try:
+            return _process_with_fixed_size_chunking(file_path, content, page_count, source)
+        except Exception as e:
+            print(f"Error using fixed-size chunking for PDF {file_name}: {e}")
+            print("Falling back to simple processing...")
+    
+    # Try advanced chunking for other supported file types
+    elif file_extension in SUPPORTED_EXTENSIONS:
         try:
             return _process_with_advanced_chunking(file_path, content, page_count, source)
         except Exception as e:
@@ -333,6 +345,12 @@ def _print_debug_info(file_name: str, result: ProcessingResult, file_path: str,
         print(f"Character count: {file_meta.char_count:,}")
         print(f"Keywords: {', '.join(file_meta.keywords)}")
         print(f"Abstract: {file_meta.abstract[:100]}...")
+      # Show chunk size information for fixed-size chunking
+    if result.doc_metadatas and len(result.documents) > 1:
+        avg_chunk_length = sum(meta.chunk_length for meta in result.doc_metadatas) / len(result.doc_metadatas)
+        print(f"Average chunk length: {avg_chunk_length:.0f} tokens")
+        print(f"Chunk size range: {min(meta.chunk_length for meta in result.doc_metadatas)} - {max(meta.chunk_length for meta in result.doc_metadatas)} tokens")
+    
     print("="*60 + "\n")
 
 
@@ -429,3 +447,83 @@ def load_documents_from_directory(directory_path: str = NEW_DOCUMENTS_DIR,
     
     print(f"\nProcessing complete: {len(all_documents)} total chunks from {len(file_paths)} files")
     return all_documents, all_metadatas, all_ids, "Successfully processed all documents."
+
+
+def _process_with_fixed_size_chunking(file_path: str, content: str, page_count: int, 
+                                    source: str, max_tokens: int = MAX_CHUNK_TOKENS, 
+                                    overlap_tokens: int = OVERLAP_TOKENS) -> ProcessingResult:
+    """
+    Process document using fixed-size chunking strategy based on tokens.
+    
+    Args:
+        file_path: Path to the source document
+        content: Text content of the document
+        page_count: Number of pages in the document
+        source: Source identifier for the document
+        max_tokens: Maximum tokens per chunk
+        overlap_tokens: Number of tokens to overlap between chunks
+        
+    Returns:
+        ProcessingResult with fixed-size chunking applied
+    """
+    result = ProcessingResult()
+    file_name = os.path.basename(file_path)
+    doc_id_base = os.path.splitext(file_name)[0]
+    
+    # Initialize tokenizer
+    try:
+        encoding = tiktoken.encoding_for_model(ENCODING_MODEL)
+    except Exception:
+        # Fallback to a default encoding if model not found
+        encoding = tiktoken.get_encoding("cl100k_base")
+    
+    # Create file metadata once for the entire document
+    file_metadata = create_file_metadata(file_path, content, page_count, source)
+    
+    # Tokenize the entire content
+    tokens = encoding.encode(content)
+    total_tokens = len(tokens)
+    
+    if total_tokens == 0:
+        print(f"Warning: No tokens found in {file_name}")
+        return result
+    
+    print(f"Processing {file_name}: {total_tokens} tokens total")
+    
+    # Implement token-based fixed-size chunking
+    start_token = 0
+    chunk_number = 1
+    
+    while start_token < total_tokens:
+        # Calculate end token for this chunk
+        end_token = min(start_token + max_tokens, total_tokens)
+        
+        # Extract chunk tokens and decode back to text
+        chunk_tokens = tokens[start_token:end_token]
+        chunk_text = encoding.decode(chunk_tokens)
+        
+        # Skip empty chunks
+        if not chunk_text.strip():
+            start_token += max_tokens - overlap_tokens
+            continue
+        
+        # Create DocumentMetadata object
+        doc_metadata = DocumentMetadata(
+            doc_id=f"{doc_id_base}_chunk_{chunk_number}",
+            chunk_number=chunk_number,
+            chunk_length=len(chunk_tokens),  # Store token count instead of character count
+            section=f"Chunk {chunk_number}"
+        )
+        
+        result.documents.append(chunk_text)
+        result.doc_metadatas.append(doc_metadata)
+        result.file_metadatas.append(file_metadata)
+        result.ids.append(f"{doc_id_base}_chunk_{chunk_number}")
+        
+        # Move to next chunk with overlap
+        start_token += max_tokens - overlap_tokens
+        chunk_number += 1
+    
+    print(f"Successfully processed {len(result.documents)} token-based chunks from {file_name}")
+    print(f"Average tokens per chunk: {total_tokens / len(result.documents):.0f}")
+    return result

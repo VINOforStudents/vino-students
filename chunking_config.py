@@ -23,9 +23,9 @@ ALLOWED_FILETYPES = ['.md', '.docx', '.pdf', '.txt']
 MAX_FILE_SIZE_MB = int(os.getenv('MAX_FILE_SIZE_MB', '50'))
 
 # Chunking settings
-MAX_CHUNK_TOKENS = int(os.getenv('MAX_CHUNK_TOKENS', '300'))
-MIN_CHUNK_TOKENS = int(os.getenv('MIN_CHUNK_TOKENS', '50'))
-OVERLAP_TOKENS = int(os.getenv('OVERLAP_TOKENS', '20'))
+MAX_CHUNK_TOKENS = int(os.getenv('MAX_CHUNK_TOKENS', '300'))  # Increased from 300 to 800 tokens
+MIN_CHUNK_TOKENS = int(os.getenv('MIN_CHUNK_TOKENS', '50'))   # Increased from 50 to 100 tokens
+OVERLAP_TOKENS = int(os.getenv('OVERLAP_TOKENS', '80'))        # Increased from 20 to 80 tokens
 
 # Text processing settings
 REMOVE_ARTIFACTS = ['[image]', '[]', '[figure]', '[table]']
