@@ -39,7 +39,7 @@ def initialize_vector_db():
         # Process documents only if needed
         if collection_fw.count() == 0:
             print("Frameworks collection is empty. Loading documents...")
-            documents, metadatas, ids = load_documents_from_directory(NEW_DOCUMENTS_DIR)
+            documents, metadatas, ids, message = load_documents_from_directory(NEW_DOCUMENTS_DIR)
             
             for metadata in metadatas:
                 if metadata and 'keywords' in metadata and isinstance(metadata['keywords'], list):
@@ -199,6 +199,7 @@ def delete_all_documents(collection_name=None):
     
     return results
 
-delete_all_documents("frameworks")
+# delete_all_documents("frameworks")
+# delete_all_documents("user_documents")
 # initialize_vector_db()
-# list_documents_in_collection("frameworks")
+# list_documents_in_collection("user_documents")

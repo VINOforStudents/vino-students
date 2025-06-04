@@ -31,7 +31,7 @@ def process_directory(from_dir, to_dir, source="system_upload"):
         bool: True if documents were processed, False otherwise.
     """
     if check_not_empty(from_dir):
-        documents, metadatas, ids = load_documents_from_directory(from_dir, source)
+        documents, metadatas, ids, message = load_documents_from_directory(from_dir, source)
         try:
             upload_documents_to_sql(metadatas, documents)
             # Only move files if upload was successful
@@ -44,7 +44,7 @@ def process_directory(from_dir, to_dir, source="system_upload"):
             # Don't move files on error - return False
             return False
     else:
-        print(f"No documents to upload from {from_dir}")
+        print(f"No documents to     upload from {from_dir}")
     return False
 
 def upload_documents():

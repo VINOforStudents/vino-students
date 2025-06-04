@@ -65,7 +65,7 @@ def upload_documents_to_chromadb(source: str = "system_upload") -> str:
             return f"Unknown source: {source}. No documents uploaded."
         
         # Load documents from the appropriate directory
-        documents, metadatas, ids = load_documents_from_directory(directory)
+        documents, metadatas, ids, message = load_documents_from_directory(directory)
         
         if not documents:
             return f"No documents found in {directory}."
@@ -108,8 +108,8 @@ def upload_documents(source: str) -> None:
     
 
     # Upload to ChromaDB
-    # chroma_result = upload_documents_to_chromadb(source)
-    # print(chroma_result)
+    chroma_result = upload_documents_to_chromadb(source)
+    print(chroma_result)
 
     # Upload to Supabase
     supa_result = upload_to_supa(source)
@@ -118,5 +118,5 @@ def upload_documents(source: str) -> None:
     print(f"Upload process completed for source: {source}")
     return "Success"
 
-result = upload_documents("system_upload")  
+result = upload_documents("user_upload")  # Change to "system_upload" as needed
 print(result)

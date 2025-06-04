@@ -338,10 +338,10 @@ def _print_debug_info(file_name: str, result: ProcessingResult, file_path: str,
 
 def _get_supported_files(directory_path: str) -> List[str]:
     """
-    Get all supported document files from a directory.
+    Get all supported document files from a directory or check if a single file is supported.
     
     Args:
-        directory_path: Path to the directory to scan
+        directory_path: Path to the directory to scan or path to a single file
         
     Returns:
         List of file paths for supported document types
@@ -349,6 +349,16 @@ def _get_supported_files(directory_path: str) -> List[str]:
     file_patterns = ["*.txt", "*.pdf", "*.md"]
     all_files = []
     
+    # Check if it's a single file path
+    if os.path.isfile(directory_path):
+        # Check if the file has a supported extension
+        _, ext = os.path.splitext(directory_path)
+        if ext.lower() in ['.txt', '.pdf', '.md']:
+            return [directory_path]
+        else:
+            return []
+    
+    # It's a directory, use glob patterns
     for pattern in file_patterns:
         files = glob.glob(os.path.join(directory_path, pattern))
         all_files.extend(files)
@@ -374,14 +384,14 @@ def load_documents_from_directory(directory_path: str = NEW_DOCUMENTS_DIR,
     """
     all_documents = []
     all_metadatas = []
-    all_ids = []
-
+    all_ids = []    
+    
     # Get all supported files in the directory
     file_paths = _get_supported_files(directory_path)
     
     if not file_paths:
         print(f"No supported documents found in {directory_path}")
-        return all_documents, all_metadatas, all_ids
+        return all_documents, all_metadatas, all_ids, "No supported documents found"
 
     print(f"Found {len(file_paths)} documents to process in {directory_path}")
 
@@ -418,4 +428,4 @@ def load_documents_from_directory(directory_path: str = NEW_DOCUMENTS_DIR,
             continue  # Continue with next file instead of stopping
     
     print(f"\nProcessing complete: {len(all_documents)} total chunks from {len(file_paths)} files")
-    return all_documents, all_metadatas, all_ids
+    return all_documents, all_metadatas, all_ids, "Successfully processed all documents."

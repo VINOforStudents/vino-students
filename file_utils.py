@@ -9,7 +9,7 @@ import os
 
 # Local imports
 from config import USER_UPLOADS_DIR
-from document_processor import load_user_document
+from document_processor import load_documents_from_directory
 
 
 #------------------------------------------------------------------------------
@@ -102,8 +102,8 @@ def process_uploaded_files(collection_user):
             continue
             
         # Process the file
-        docs, metas, ids, message = load_user_document(file_path)
-        
+        docs, metas, ids, message = load_documents_from_directory(file_path, source="user_upload")  
+
         if docs is None:
             results.append(f"Error: {message}")
             error_count += 1
@@ -160,7 +160,7 @@ def upload_file(file_path, collection_user):
         return f"Error copying file to uploads directory: {str(e)}"
     
     # Process the file
-    docs, metas, ids, message = load_user_document(destination_path)
+    docs, metas, ids, message = load_documents_from_directory(destination_path, source="user_upload")
     
     if docs is None:
         return message
