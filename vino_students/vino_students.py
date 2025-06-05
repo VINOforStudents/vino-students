@@ -62,17 +62,26 @@ def qa(question: str, answer: str) -> rx.Component:
 def action_bar() -> rx.Component:
     """Renders the question input field and send button."""
     return rx.hstack(
-        rx.input(
+        rx.text_area(  # Changed from rx.input to rx.text_area
             value=State.question,
             placeholder="Ask a question",
             color=rx.color("sand", 3),
             on_change=State.set_question,
+            # Behavior of the "Enter" key:
+            # Option 1: Keep "Enter" to submit the form (as it was with rx.input).
+            # This will prevent "Enter" from creating a new line in the textarea.
             on_key_down=lambda key: rx.cond(
                 key == "Enter",
                 State.answer,
                 rx.noop()
             ),
-            style=style.input_style,
+            
+            rows=1, 
+            
+            # Controls manual resizing by the user. "vertical" allows vertical drag-to-resize.
+            # "none" disables manual resizing if auto-sizing is preferred.
+            resize="vertical", 
+            width="100%", # Makes the textarea take the available width in the hstack
         ),
         rx.button(
             "Send",
@@ -80,6 +89,7 @@ def action_bar() -> rx.Component:
             style=style.button_style,
         ),
         width="45em",
+        align_items="flex-end",  # Aligns the button to the bottom of the textarea as it grows
     )
 
 

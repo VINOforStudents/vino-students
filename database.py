@@ -200,6 +200,6 @@ def delete_all_documents(collection_name=None):
     return results
 
 # delete_all_documents("frameworks")
-delete_all_documents("user_documents")
+# delete_all_documents("user_documents")
 # initialize_vector_db()
 # list_documents_in_collection("user_documents")
