@@ -1,7 +1,6 @@
 """Welcome to Reflex! This file outlines the steps to create a basic app."""
 
 import reflex as rx
-from rxconfig import config
 from vino_students.state import State
 from vino_students import style
 

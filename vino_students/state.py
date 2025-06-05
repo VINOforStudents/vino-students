@@ -1,6 +1,4 @@
 import reflex as rx
-import os
-import asyncio
 import httpx
 
 BACKEND_API_URL = "http://127.0.0.1:8000"

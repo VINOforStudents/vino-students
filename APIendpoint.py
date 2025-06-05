@@ -1,8 +1,6 @@
 import os
-import uvicorn
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from pydantic import BaseModel
-from fastapi import FastAPI, UploadFile, File, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Dict, Any
 import shutil
@@ -11,7 +9,6 @@ from main import (
     query_and_respond,
     load_user_document,
     list_uploaded_files,
-    model,
     USER_UPLOADS_DIR
 )
 
