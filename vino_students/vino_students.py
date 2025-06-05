@@ -44,13 +44,13 @@ def qa(question: str, answer: str) -> rx.Component:
     return rx.box(
         rx.box(
             # Change rx.text to rx.markdown for the question
-            rx.markdown(question, style=style.question_style, max_width="20em"),
+            rx.markdown(question, style=style.question_style, max_width="34vh"),
             text_align="right",
             
         ),
         rx.box(
             # Change rx.text to rx.markdown for the answer
-            rx.markdown(answer, style=style.answer_style, max_width="20em",),
+            rx.markdown(answer, style=style.answer_style, max_width="34vh",),
             text_align="left",
         ),
         margin_y="1em",
@@ -67,6 +67,11 @@ def action_bar() -> rx.Component:
             placeholder="Ask a question",
             color=rx.color("sand", 3),
             on_change=State.set_question,
+            on_key_down=lambda key: rx.cond(
+                key == "Enter",
+                State.answer,
+                rx.noop()
+            ),
             style=style.input_style,
         ),
         rx.button(

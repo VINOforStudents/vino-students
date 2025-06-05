@@ -65,9 +65,60 @@ UNIVERSAL_MATRIX_STEPS = {
             "What are the final refinements to the plan based on these boundaries?",
         ]
     }
-    # Steps 7-12 could be added here if needed later
 }
 
+SIMPLIFIED_UNIVERSAL_MATRIX_STEPS = {
+    1: {
+        "name": "Starting Point",
+        "concept": "Define the project's starting point, core problem, or main idea.",
+        "questions": [
+            "What is the fundamental idea or problem this project addresses?",
+            "What are the essential starting components or goals?"
+        ]
+    },
+    2: {
+        "name": "Key Connections",
+        "concept": "Identify key elements, their relationships, and define the initial project scope.",
+        "questions": [
+            "What are the critical elements that need to interact or be connected?",
+            "What is the initial scope based on these connections and the core idea?"
+        ]
+    },
+    3: {
+        "name": "Initial Plan / Key Milestones",
+        "concept": "Develop the first draft of the project plan, outlining key phases or milestones.",
+        "questions": [
+            "What is a high-level, step-by-step plan to achieve the project goal?",
+            "What are the major milestones for this initial plan?"
+        ]
+    },
+    4: {
+        "name": "Develop Options / Refine Plan",
+        "concept": "Explore different approaches to implement the plan and refine it based on practical possibilities.",
+        "questions": [
+            "What are different practical ways to execute the current plan?",
+            "How can the plan be improved or made more concrete based on these options?"
+        ]
+    },
+    5: {
+        "name": "Select Best Path / Focus",
+        "concept": "Choose the most effective approach and define the project's main direction and priorities.",
+        "questions": [
+            "What is the most effective and efficient path forward from the options identified?",
+            "How should the plan be adjusted to focus on this chosen direction and priorities?"
+        ]
+    },
+    6: {
+        "name": "Finalize Scope / Deliverables",
+        "concept": "Define the project's final scope, clear boundaries, and key deliverables for the current phase.",
+        "questions": [
+            "What are the precise boundaries and final deliverables for this project or phase?",
+            "What are the critical tasks to complete and deliver this stage?"
+        ]
+    }
+}
+
+# ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 # AUGMENTED PROMPT TEMPLATES
 # ------------------------------------------------------------------------------
@@ -79,7 +130,7 @@ Your goal is to help the user clarify their project step-by-step, leveraging pro
 Always focus on the user's CURRENT STEP in the 6-step process.
 Use the concepts and guiding questions for the current step to direct the conversation.
 After Step 3, you will help the user define and refine a 6-step planner based on the Universal Matrix structure.
-Be concise, clear, and action-oriented."""
+Be concise, clear, and action-oriented. Keep it short."""
 
 STEP_SPECIFIC_SYSTEM_PROMPT_TEMPLATE = BASE_SYSTEM_PROMPT + """
 
@@ -153,7 +204,7 @@ def get_universal_matrix_prompt(
             ("human", "Context:\n{general_context}\n\nUser: {question}")
         ]).partial(general_context=general_context, question=question) # History added separately
 
-    step_info = UNIVERSAL_MATRIX_STEPS[current_step]
+    step_info = SIMPLIFIED_UNIVERSAL_MATRIX_STEPS[current_step]
     step_name = step_info["name"]
     step_concept = step_info["concept"]
     # Format guiding questions for readability in the prompt
