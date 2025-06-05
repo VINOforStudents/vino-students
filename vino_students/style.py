@@ -29,7 +29,7 @@ input_style = dict(
     box_shadow=shadow,
     width="47em",
     border="1px solid #222221",
-    background_color=rx.color("mauve", 12),
+    background_color="white",
 )
 button_style = dict(
     background_color=rx.color("sand", 5),

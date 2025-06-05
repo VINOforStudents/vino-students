@@ -94,7 +94,7 @@ def file_upload_area() -> rx.Component:
             padding="1em",
         ),
         id="my_upload",
-        background_color=rx.color("sand", 12),
+        background_color="white",
         width="45em",
         height="5em",
         margin_top="1em",
@@ -146,7 +146,7 @@ def navbar_link(
     text: str = None
 ) -> rx.Component:
     """Creates a navbar link with active/inactive states for navigation steps."""
-    active_height = "1em" if step_number == 1 else "4em"
+    active_height = "0.5em" if step_number == 1 else "4em"
     
     if active_image_src and step_number is not None:
         # Link with active/inactive states
@@ -157,7 +157,7 @@ def navbar_link(
                 rx.image(
                     src=active_image_src,
                     width="100%",
-                    height="7em",
+                    height="8em",
                     alt=text or f"Step {step_number}",
                     fit="contain",
                     background_color="white",
@@ -239,7 +239,7 @@ def navbar() -> rx.Component:
                 justify_content="center",
             ),
         ),
-        bg=rx.color("sand", 12),
+        bg="white",
         padding="0",
         position="fixed",
         top="2em",
@@ -283,7 +283,7 @@ def index() -> rx.Component:
             ),
         ),
         width="100%",
-        background_color=rx.color("sand", 12),
+        background_color="white",
     )
 
 
