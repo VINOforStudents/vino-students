@@ -75,8 +75,22 @@ def action_bar() -> rx.Component:
                 State.answer,
                 rx.noop()
             ),
+            # Option 2: To allow "Enter" to create new lines in the textarea,
+            # remove or comment out the `on_key_down` prop above.
+            # Users would then need to click the "Send" button to submit.
+
+            style=style.input_style,  # IMPORTANT: You may need to adjust `style.input_style`.
+                                      # Ensure it does not set a fixed `height`.
+                                      # Consider using `min_height` if you want a specific starting size.
+                                      # For example, in your style.py:
+                                      # input_style = {
+                                      #     "width": "100%",
+                                      #     "min_height": "40px", # example starting height
+                                      #     "padding": "0.5em",
+                                      # }
             
-            rows=1, 
+            # You can set an initial number of visible text lines, e.g., `rows=2`.
+            # rows=2, 
             
             # Controls manual resizing by the user. "vertical" allows vertical drag-to-resize.
             # "none" disables manual resizing if auto-sizing is preferred.
