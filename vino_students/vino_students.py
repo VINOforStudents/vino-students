@@ -62,40 +62,17 @@ def qa(question: str, answer: str) -> rx.Component:
 def action_bar() -> rx.Component:
     """Renders the question input field and send button."""
     return rx.hstack(
-        rx.text_area(  # Changed from rx.input to rx.text_area
+        rx.input(
             value=State.question,
             placeholder="Ask a question",
             color=rx.color("sand", 3),
             on_change=State.set_question,
-            # Behavior of the "Enter" key:
-            # Option 1: Keep "Enter" to submit the form (as it was with rx.input).
-            # This will prevent "Enter" from creating a new line in the textarea.
             on_key_down=lambda key: rx.cond(
                 key == "Enter",
                 State.answer,
                 rx.noop()
             ),
-            # Option 2: To allow "Enter" to create new lines in the textarea,
-            # remove or comment out the `on_key_down` prop above.
-            # Users would then need to click the "Send" button to submit.
-
-            style=style.input_style,  # IMPORTANT: You may need to adjust `style.input_style`.
-                                      # Ensure it does not set a fixed `height`.
-                                      # Consider using `min_height` if you want a specific starting size.
-                                      # For example, in your style.py:
-                                      # input_style = {
-                                      #     "width": "100%",
-                                      #     "min_height": "40px", # example starting height
-                                      #     "padding": "0.5em",
-                                      # }
-            
-            # You can set an initial number of visible text lines, e.g., `rows=2`.
-            # rows=2, 
-            
-            # Controls manual resizing by the user. "vertical" allows vertical drag-to-resize.
-            # "none" disables manual resizing if auto-sizing is preferred.
-            resize="vertical", 
-            width="100%", # Makes the textarea take the available width in the hstack
+            style=style.input_style,
         ),
         rx.button(
             "Send",
@@ -103,7 +80,6 @@ def action_bar() -> rx.Component:
             style=style.button_style,
         ),
         width="45em",
-        align_items="flex-end",  # Aligns the button to the bottom of the textarea as it grows
     )
 
 

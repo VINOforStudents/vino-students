@@ -9,6 +9,7 @@ from document_processor import load_documents_from_directory
 # Third-party imports
 import chromadb
 import chromadb.utils.embedding_functions as embedding_functions
+
 #------------------------------------------------------------------------------
 # DATABASE OPERATIONS
 #------------------------------------------------------------------------------
@@ -202,4 +203,4 @@ def delete_all_documents(collection_name=None):
 # delete_all_documents("frameworks")
 # delete_all_documents("user_documents")
 # initialize_vector_db()
-# list_documents_in_collection("user_documents")
+# list_documents_in_collection("frameworks") # Change it to "user_documents" to list user documents

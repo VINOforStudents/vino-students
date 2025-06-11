@@ -1,15 +1,22 @@
 SCRUM Methodology
 ===================
 
-# Summary
+<!-- TOC -->
 
-Scrum is an agile framework for developing, delivering, and sustaining complex products, with an initial emphasis on software development, although it has been used in other fields. It is designed for teams of ten or fewer members, who break their work into goals that can be completed within time-boxed iterations, called sprints, typically two weeks to one month long. The Scrum Team tracks progress in 15-minute daily stand-up meetings, called Daily Scrums. At the end of the sprint, a Sprint Review is held to demonstrate the work done, and a Sprint Retrospective is conducted to continuously improve processes. Scrum is based on empiricism, meaning knowledge comes from experience and making decisions based on what is observed.
+- [SCRUM Methodology](#scrum-methodology)
+- [Summary](#summary)
+- [Full Description](#full-description)
+    - [Core principles](#core-principles)
+    - [Roles](#roles)
+    - [Events](#events)
+    - [Artifacts](#artifacts)
+- [Application Area](#application-area)
+    - [Application Examples](#application-examples)
+- [Step-by-Step Guide Simplified Project Lifecycle](#step-by-step-guide-simplified-project-lifecycle)
+- [Considerations](#considerations)
+- [Resource Links](#resource-links)
 
-# Full Description
-
-Scrum is a lightweight yet powerful framework that helps teams and organizations generate value through adaptive solutions for complex problems. It is not a definitive methodology but rather a framework within which various processes and techniques can be employed. Scrum emphasizes teamwork, accountability, and iterative progress toward a well-defined goal.
-
-## Core principles
+<!-- /TOC -->iples
 
 The framework is built upon three core pillars:
 
