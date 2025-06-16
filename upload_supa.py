@@ -1,7 +1,7 @@
 """ Program to upload a files to Supabase storage."""
 import os
 
-from supa import upload_move_to_processed, upload_documents_to_sql
+from supa import upload_move_to_processed, upload_documents_to_sql, upload_single_file_to_storage
 from document_processor import load_documents_from_directory
 
 from config import NEW_DOCUMENTS_DIR, NEW_USER_UPLOADS_DIR, KB_DOCUMENTS_DIR, USER_UPLOADS_DIR
@@ -21,6 +21,7 @@ def check_not_empty(directory):
 def process_directory(from_dir, to_dir, source="system_upload"):
     """
     Process documents from a specific directory and upload to Supabase.
+    Each file is processed individually - successful files are moved even if others fail.
     
     Args:
         from_dir: Path to the directory to process.
@@ -28,23 +29,78 @@ def process_directory(from_dir, to_dir, source="system_upload"):
         source: Source identifier for the documents.
         
     Returns:
-        bool: True if documents were processed, False otherwise.
+        bool: True if any documents were processed successfully, False otherwise.
     """
     if check_not_empty(from_dir):
         documents, metadatas, ids, message = load_documents_from_directory(from_dir, source)
-        try:
-            upload_documents_to_sql(metadatas, documents)
-            # Only move files if upload was successful
-            upload_move_to_processed(from_dir, to_dir)
-            print(f"Successfully processed documents from {from_dir}")
+        
+        if not documents:
+            print(f"No documents to upload from {from_dir}")
+            return False
+            
+        # Group documents by filename for individual processing
+        files_data = {}
+        for i, meta in enumerate(metadatas):
+            if i >= len(documents):
+                continue
+                
+            filename = meta.get('filename', 'unknown')
+            if filename not in files_data:
+                files_data[filename] = {
+                    'documents': [],
+                    'metadatas': [],
+                    'ids': []
+                }
+            
+            files_data[filename]['documents'].append(documents[i])
+            files_data[filename]['metadatas'].append(meta)
+            files_data[filename]['ids'].append(ids[i])
+        
+        processed_any = False
+          # Process each file individually
+        for filename, file_data in files_data.items():
+            try:
+                # Try to upload this specific file's data
+                upload_documents_to_sql(file_data['metadatas'], file_data['documents'])
+                
+                # If successful, move the file
+                source_path = os.path.join(from_dir, filename)
+                destination_path = os.path.join(to_dir, filename)
+                
+                if os.path.exists(source_path):
+                    try:
+                        # Upload to storage first
+                        storage_success = upload_single_file_to_storage(source_path, filename, from_dir)
+                        if storage_success:
+                            # Then move the file
+                            os.rename(source_path, destination_path)
+                            print(f"✓ Successfully processed and moved: {filename}")
+                            processed_any = True
+                        else:
+                            print(f"⚠ Storage upload failed for {filename}, not moving file")
+                    except Exception as move_error:
+                        print(f"⚠ Failed to move {filename}: {move_error}")
+                        # File was uploaded to SQL successfully but couldn't be moved
+                        # This is still considered a partial success
+                        processed_any = True
+                else:
+                    print(f"⚠ Warning: Source file not found: {filename}")
+                    # Still consider this processed since the data was uploaded to SQL
+                    
+            except Exception as e:
+                print(f"✗ Error processing {filename}: {e}")
+                print(f"Failed to move {filename}")
+                # Don't move this file - continue with next file
+                continue
+        
+        if processed_any:
+            print(f"Successfully processed some documents from {from_dir}")
             return True
-        except Exception as e:
-            error_message = f"Error uploading documents from {from_dir} to Supabase: {str(e)}"
-            print(error_message)
-            # Don't move files on error - return False
+        else:
+            print(f"No documents were successfully processed from {from_dir}")
             return False
     else:
-        print(f"No documents to     upload from {from_dir}")
+        print(f"No documents to upload from {from_dir}")
     return False
 
 def upload_documents():

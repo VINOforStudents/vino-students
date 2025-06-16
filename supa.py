@@ -58,6 +58,9 @@ def upload_documents_to_sql(metadata_list, content_list):
         
     Returns:
         str: Success message or error information
+        
+    Raises:
+        Exception: If there's an error processing the documents
     """
     try:        # Group chunks by filename to store whole files instead of individual chunks
         files_data = {}
@@ -86,70 +89,123 @@ def upload_documents_to_sql(metadata_list, content_list):
         
         # Process each file
         uploaded_count = 0
+        failed_files = []
+        
         for filename, file_data in files_data.items():
-            meta = file_data['file_metadata']
-            chunks = file_data['chunks']
-            
-            # Reconstruct full document from chunks
-            full_document = '\n\n'.join(chunks)
-            
-            # Check if document already exists
-            existing_doc = (
-                supabase.table("filemetadata")
-                .select("id")
-                .eq("file_name", filename)
-                .execute()
-            )
-            
-            if existing_doc.data:
-                print(f"Document {filename} already exists in database, skipping...")
-                continue
+            try:
+                meta = file_data['file_metadata']
+                chunks = file_data['chunks']
                 
-            # Insert file metadata into the filemetadata table
-            metadata_response = (
-                supabase.table("filemetadata")
-                .insert({
-                    "file_name": filename,
-                    "file_size": meta.get('file_size', 0),
-                    "file_type": meta.get('file_type', 'unknown'),
-                    "page_count": meta.get('page_count', 0),
-                    "word_count": meta.get('word_count', 0),
-                    "char_count": meta.get('char_count', 0),
-                    "keywords": meta.get('keywords', []),
-                    "source": meta.get('source', 'system_upload'),
-                    "abstract": meta.get('abstract', '')
-                })
-                .execute()
-            )
-            
-            # Check if metadata insertion was successful
-            if not metadata_response.data:
-                print(f"Failed to insert metadata for {filename}")
-                continue
+                # Reconstruct full document from chunks
+                full_document = '\n\n'.join(chunks)
                 
-            # Get the ID of the newly inserted metadata record
-            metadata_id = metadata_response.data[0]['id']
-            
-            # Insert full document content into the largeobject table
-            content_response = (
-                supabase.table("largeobject")
-                .insert({
-                    "oid": metadata_id,
-                    "plain_text": full_document
-                })
-                .execute()
-            )
-            
-            uploaded_count += 1
-            print(f"Uploaded document: {filename} ({len(chunks)} chunks combined)")
+                # Check if document already exists
+                existing_doc = (
+                    supabase.table("filemetadata")
+                    .select("id")
+                    .eq("file_name", filename)
+                    .execute()
+                )
+                
+                if existing_doc.data:
+                    # Document already exists - this is now considered an error for individual processing
+                    error_msg = f"Document {filename} already exists in database"
+                    print(f"Error uploading {filename}: {{'statusCode': 409, 'error': 'Duplicate', 'message': 'The resource already exists'}}")
+                    failed_files.append(filename)
+                    continue
+                    
+                # Insert file metadata into the filemetadata table
+                metadata_response = (
+                    supabase.table("filemetadata")
+                    .insert({
+                        "file_name": filename,
+                        "file_size": meta.get('file_size', 0),
+                        "file_type": meta.get('file_type', 'unknown'),
+                        "page_count": meta.get('page_count', 0),
+                        "word_count": meta.get('word_count', 0),
+                        "char_count": meta.get('char_count', 0),
+                        "keywords": meta.get('keywords', []),
+                        "source": meta.get('source', 'system_upload'),
+                        "abstract": meta.get('abstract', '')
+                    })
+                    .execute()
+                )
+                
+                # Check if metadata insertion was successful
+                if not metadata_response.data:
+                    print(f"Failed to insert metadata for {filename}")
+                    failed_files.append(filename)
+                    continue
+                    
+                # Get the ID of the newly inserted metadata record
+                metadata_id = metadata_response.data[0]['id']
+                
+                # Insert full document content into the largeobject table
+                content_response = (
+                    supabase.table("largeobject")
+                    .insert({
+                        "oid": metadata_id,
+                        "plain_text": full_document
+                    })
+                    .execute()
+                )
+                
+                uploaded_count += 1
+                print(f"Uploaded document: {filename} ({len(chunks)} chunks combined)")
+                
+            except Exception as file_error:
+                print(f"Error uploading {filename}: {file_error}")
+                failed_files.append(filename)
+                continue
+        
+        # If processing individual files and any failed, raise an exception
+        if failed_files and len(files_data) == 1:
+            # Single file processing - raise error if it failed
+            raise Exception(f"Failed to upload {failed_files[0]}")
         
         if uploaded_count > 0:
             return f"Successfully uploaded {uploaded_count} documents to database"
         else:
-            return "No new documents were uploaded"
+            if failed_files:
+                raise Exception(f"No documents uploaded - all failed: {', '.join(failed_files)}")
+            else:
+                return "No new documents were uploaded"
             
     except Exception as e:
         error_message = f"Error uploading documents to Supabase: {str(e)}"
-        print(error_message)
         print(f"Error details: {type(e).__name__}")
-        return error_message
+        raise e  # Re-raise the exception for individual file processing
+
+def upload_single_file_to_storage(source_path, filename, from_dir):
+    """
+    Upload a single file to Supabase storage.
+    
+    Args:
+        source_path: Full path to the source file
+        filename: Name of the file
+        from_dir: Directory the file is coming from
+        
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        if from_dir == NEW_DOCUMENTS_DIR:
+            # Upload to Supabase storage
+            response = supabase.storage.from_('knowledge-base').upload(filename, source_path)
+        elif from_dir == NEW_USER_UPLOADS_DIR:
+            response = supabase.storage.from_('user-uploads').upload(filename, source_path)
+        else:
+            print(f"Unknown directory: {from_dir}")
+            return False
+        
+        # Check if upload was successful or if it's a duplicate
+        if hasattr(response, 'get') and response.get('statusCode') == 409:
+            print(f"File {filename} already exists in storage, skipping upload...")
+            return True  # Consider duplicate as success
+        else:
+            print(f"Successfully uploaded to storage: {filename}")
+            return True
+            
+    except Exception as e:
+        print(f"Error uploading {filename} to storage: {e}")
+        return False
