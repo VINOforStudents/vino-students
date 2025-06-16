@@ -4,7 +4,7 @@ Debug: File Movement
 - **Author**: Margarita Fedulova
 - **Date**: 16-06-2025
 - **Version**: 0.1
-- **Stage**: Draft
+- **Stage**: In Review
 
 # Table of Contents
 
