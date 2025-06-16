@@ -439,7 +439,7 @@ The practical simulation successfully replicated the original bug scenario and d
 
 Supabase view:
 
-![supabase_view](supabase_view.png)
+![supabase_view](pics/supabase_view.png)
 
 ## 4. Complete Explanation Of The Changes
 
