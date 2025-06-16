@@ -10,9 +10,9 @@ import tempfile
 import shutil
 import sys
 
-# Add current directory to path
-current_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, current_dir)
+# Add parent directory to path
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, parent_dir)
 
 def simulate_duplicate_scenario():
     """

@@ -11,9 +11,9 @@ import shutil
 from pathlib import Path
 import sys
 
-# Add current directory to path to import modules
-current_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, current_dir)
+# Add parent directory to path to import modules
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, parent_dir)
 
 def create_minimal_test_files(test_dir: str) -> list:
     """Create minimal test files for debugging."""

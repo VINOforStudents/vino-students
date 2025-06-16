@@ -12,6 +12,11 @@ import os
 import shutil
 import tempfile
 from pathlib import Path
+import sys
+
+# Add parent directory to path to import modules
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, parent_dir)
 
 # Import the modified upload functions
 from upload_supa_chroma import upload_documents_to_chromadb, upload_to_supa
