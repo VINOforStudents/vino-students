@@ -51,6 +51,7 @@ class ProcessingResult(BaseModel):
     """Results from processing a document."""
     ids: List[str] = Field(default_factory=list)
     documents: List[str] = Field(default_factory=list)
+    
     doc_metadatas: List[DocumentMetadata] = Field(default_factory=list)
     file_metadatas: List[FileMetadata] = Field(default_factory=list)
     chunk_count: int = Field(default=0, ge=0)
